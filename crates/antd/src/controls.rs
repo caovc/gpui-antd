@@ -2,7 +2,7 @@
 
 use std::rc::Rc;
 use gpui_kit::{
-    App, ClickEvent, ElementId, IntoElement, ParentElement as _, RenderOnce,
+    App, ClickEvent, ElementId, IntoElement, InteractiveElement as _, ParentElement as _, RenderOnce,
     SharedString, StatefulInteractiveElement as _, Styled as _, Window,
     div, px,
 };
