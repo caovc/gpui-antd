@@ -1,0 +1,16 @@
+[workspace]
+members = ["crates/antd", "crates/gallery"]
+default-members = ["crates/gallery"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/caovc/gpui-antd"
+
+[workspace.dependencies]
+gpui-kit = { version = "=0.7.3" }
+
+[profile.release]
+strip = "symbols"
+lto = "thin"

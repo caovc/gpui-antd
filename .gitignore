@@ -1,0 +1,6 @@
+/target/
+/website/node_modules/
+/website/dist/
+/website/src/wasm/
+.DS_Store
+*.swp
