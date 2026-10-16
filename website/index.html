@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="GPUI Ant Design — native Rust UI components inspired by Ant Design, with a real GPUI WebAssembly component preview." />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <title>GPUI Ant Design — Native Rust UI components</title>
+</head>
+<body>
+  <header class="topbar">
+    <button class="mobile-menu" id="menu-btn" aria-label="Toggle navigation">☰</button>
+    <a class="brand" href="#/" aria-label="GPUI Ant Design home">
+      <span class="brand-symbol">A</span>
+      <span class="brand-name">GPUI <strong>Ant Design</strong></span>
+      <span class="brand-pill">Alpha</span>
+    </a>
+    <nav class="top-links" aria-label="Site navigation">
+      <a href="#/" data-top="home">Overview</a>
+      <a href="#/components/Button" data-top="components">Components</a>
+      <a href="#/getting-started" data-top="guide">Get Started</a>
+    </nav>
+    <div class="top-actions">
+      <button id="search-shortcut" class="search-shortcut" type="button" title="Search components">
+        <span class="search-icon">⌕</span><span>Search components</span><kbd>/</kbd>
+      </button>
+      <button class="icon-button" type="button" id="theme-btn" title="Toggle dark mode" aria-label="Toggle dark mode">◐</button>
+      <a class="github-link" href="https://github.com/caovc/gpui-antd" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">GitHub ↗</a>
+    </div>
+  </header>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation">
+      <div class="sidebar-content">
+        <p class="sidebar-heading">INTRODUCTION</p>
+        <a class="nav-item" href="#/" data-nav="home"><span class="nav-icon">⌂</span> Overview</a>
+        <a class="nav-item" href="#/getting-started" data-nav="getting-started"><span class="nav-icon">⌘</span> Getting Started</a>
+        <p class="sidebar-heading components-heading">COMPONENTS <span class="sidebar-count">10</span></p>
+        <div id="sidebar-components"></div>
+        <div class="sidebar-footer">
+          <div class="green-dot"></div>
+          <div><strong>Native Rust · GPUI</strong><small>Showcases compiled to WASM</small></div>
+        </div>
+      </div>
+    </aside>
+    <main id="content" tabindex="-1"></main>
+    <aside id="toc" class="toc" aria-label="On this page"></aside>
+  </div>
+  <div id="search-overlay" class="search-overlay" hidden>
+    <div class="search-backdrop" data-close-search></div>
+    <div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search components">
+      <div class="search-dialog-top"><span>⌕</span><input id="search-input" type="search" placeholder="Search components..." autocomplete="off" /><button type="button" data-close-search>Esc</button></div>
+      <div id="search-results"></div>
+    </div>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
