@@ -1,0 +1,84 @@
+name: Build and deploy GPUI Ant Design
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: gpui-antd-pages
+  cancel-in-progress: false
+
+jobs:
+  wasm-and-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust nightly for GPUI Web
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm-gallery
+
+      - name: Install wasm-bindgen CLI
+        run: cargo install wasm-bindgen-cli --version 0.2.121 --locked
+
+      - name: Build the actual Rust GPUI gallery to WebAssembly
+        run: bash scripts/build-wasm.sh
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install docs dependencies
+        working-directory: website
+        run: npm install --no-audit --no-fund
+
+      - name: Build documentation and gallery
+        working-directory: website
+        run: npm run build
+
+      - name: Verify WASM is included
+        run: |
+          test -f website/dist/index.html
+          test -f website/dist/demo.html
+          find website/dist -name '*.wasm' -print | grep -q . || { echo "WASM missing from Pages artifact"; exit 1; }
+
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: wasm-and-docs
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
