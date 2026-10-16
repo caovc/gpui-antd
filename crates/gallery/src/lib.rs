@@ -11,6 +11,7 @@ use gpui_kit::{
 };
 use gpui_kit::component::input::InputState;
 use gpui_kit::assets::Assets;
+use gpui_kit::base::StyledExt as _;
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Checkbox", "Switch", "Tag", "Badge",

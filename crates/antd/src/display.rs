@@ -2,6 +2,8 @@
 
 use gpui_kit::{AnyElement, IntoElement, ParentElement, RenderOnce, SharedString, Styled as _, App, Window, div, px, relative};
 use crate::tokens::{AntTheme, color};
+use gpui_kit::prelude::FluentBuilder as _;
+use gpui_kit::base::StyledExt as _;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum Tone { #[default] Default, Blue, Green, Gold, Red, Purple }

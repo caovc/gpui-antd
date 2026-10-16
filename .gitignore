@@ -4,3 +4,5 @@
 /website/src/wasm/
 .DS_Store
 *.swp
+
+/crates/gallery/fonts/*.ttf

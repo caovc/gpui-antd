@@ -8,6 +8,7 @@ use gpui_kit::{
 };
 use gpui_kit::base::{Button as BaseButton, Checkbox as BaseCheckbox, CheckboxState, Switch as BaseSwitch};
 use gpui_kit::prelude::FluentBuilder as _;
+use gpui_kit::base::StyledExt as _;
 use crate::tokens::{AntTheme, color};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
