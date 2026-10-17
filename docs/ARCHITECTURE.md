@@ -146,8 +146,9 @@ alpha mask, while TwoTone SVGs render through GPUI `img()` as full-color images.
 GPUI `svg()` discards interior fill colors, which made the TwoTone light layer
 look like a solid black shape. The asset loader injects a 128px intrinsic size
 for TwoTone rasterization (the 1024-unit viewBox and original path/fill art
-remain unchanged) to avoid huge cached textures. `.color()` and `.spin()`
-currently animates only monochrome icons. For TwoTone, `.color(primary)` overrides
+remain unchanged) to avoid huge cached textures. `.spin(true)` uses two native SVG alpha masks rotated in sync, with the
+same theme colors. Static TwoTone keeps full-color `img()` painting.
+For TwoTone, `.color(primary)` overrides
 the primary fill and `.two_tone_colors(primary, secondary)` overrides both fills;
 otherwise colors follow `theme.primary` and `theme.info_bg`, including dark
 mode. The runtime palette parser in `crates/antd/src/icon_palette.rs`

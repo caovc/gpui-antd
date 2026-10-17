@@ -30,7 +30,16 @@ export function iconExplorerHtml() {
     '<div class="icon-explorer-preview">' +
     '<div><span class="section-eyebrow">RUST / GPUI / WASM</span>' +
     '<h3 id="icon-selected-title">SearchOutlined</h3>' +
-    '<p>Original SVG, rendered on the GPUI canvas. Click a name above to change the preview.</p>' +
+    '<p>Official icon rendered by Rust/GPUI. Adjust its colors, size or rotation and copy the Rust API.</p>' +
+    '<div class="icon-preview-controls">' +
+    '<label>Size <select id="icon-size" aria-label="Icon preview size">' +
+      '<option value="32">32px</option><option value="64" selected>64px</option>' +
+      '<option value="96">96px</option><option value="128">128px</option></select></label>' +
+    '<label>Primary <input id="icon-primary" type="color" aria-label="Primary color" value="#1677ff" /></label>' +
+    '<label id="icon-secondary-wrap">Secondary <input id="icon-secondary" type="color" aria-label="Secondary color" value="#e6f4ff" /></label>' +
+    '<label class="icon-spin-toggle"><input id="icon-spin" type="checkbox" /> Spin</label>' +
+    '<button type="button" id="icon-reset" class="icon-reset">Reset</button>' +
+    '</div>' +
     '<pre id="icon-selected-code"><code>AntIcon::new(AntIconName::SearchOutlined)</code></pre>' +
     '<button id="icon-copy" class="icon-copy" type="button">Copy Rust code</button></div>' +
     '<iframe id="icon-live-preview" title="Selected Ant Design icon in real GPUI WebAssembly" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>' +
@@ -61,11 +70,62 @@ export async function initIconExplorer(base, dark) {
   const preview = root.querySelector('#icon-live-preview');
   const copy = root.querySelector('#icon-copy');
   const loadMore = root.querySelector('#icon-load-more');
+  const size = root.querySelector('#icon-size');
+  const primary = root.querySelector('#icon-primary');
+  const secondary = root.querySelector('#icon-secondary');
+  const secondaryWrap = root.querySelector('#icon-secondary-wrap');
+  const spin = root.querySelector('#icon-spin');
+  const reset = root.querySelector('#icon-reset');
+  const themePalette = dark
+    ? { primary:'#1668dc', secondary:'#111d2c', mono:'#f3f3f3' }
+    : { primary:'#1677ff', secondary:'#e6f4ff', mono:'#262626' };
   let visibleLimit = 80;
+  let paletteCustomized = false;
+  let selectedStyle = 'outlined';
 
-  const frameSrc = iconName =>
-    base + 'demo.html?component=' + encodeURIComponent('Icon:' + iconName) +
-    '&dark=' + (dark ? '1' : '0');
+  function resetDisplay() {
+    size.value = '64';
+    spin.checked = false;
+    paletteCustomized = false;
+    primary.value = selectedStyle === 'twotone' ? themePalette.primary : themePalette.mono;
+    secondary.value = themePalette.secondary;
+    secondaryWrap.hidden = selectedStyle !== 'twotone';
+  }
+
+  const selectedName = () => selected.textContent;
+
+  function frameSrc(name) {
+    const options = ['size=' + size.value];
+    if (spin.checked) options.push('spin=1');
+    if (paletteCustomized) {
+      options.push('primary=' + primary.value.slice(1));
+      if (selectedStyle === 'twotone') options.push('secondary=' + secondary.value.slice(1));
+    }
+    return base + 'demo.html?component=' +
+      encodeURIComponent('Icon:' + name + '|' + options.join('|')) +
+      '&dark=' + (dark ? '1' : '0');
+  }
+
+  function refreshPreview() {
+    const name = selectedName();
+    if (!name) return;
+    const nameCode = 'AntIcon::new(AntIconName::' + name + ')';
+    const defaultColor = selectedStyle === 'twotone' ? themePalette.primary : themePalette.mono;
+    let snippet = nameCode + '\\n    .size(' + size.value + '.)\\n    .theme(theme)';
+    if (paletteCustomized) {
+      const p = primary.value.replace('#','0x');
+      if (selectedStyle === 'twotone') {
+        const s = secondary.value.replace('#','0x');
+        snippet += '\\n    .two_tone_colors(gpui_antd::color(' + p + '), gpui_antd::color(' + s + '))';
+      } else {
+        snippet += '\\n    .color(gpui_antd::color(' + p + '))';
+      }
+    }
+    if (spin.checked) snippet += '\\n    .spin(true)';
+    code.textContent = snippet.replaceAll('\\n','\n');
+    const target = frameSrc(name);
+    if (!preview.src.endsWith(target)) preview.src = target;
+  }
 
   let catalog;
   try { catalog = await fetchCatalog(base); }
@@ -82,9 +142,11 @@ export async function initIconExplorer(base, dark) {
   function selectIcon(name) {
     const match = catalog.icons.find(icon => icon.name === name);
     if (!match) return;
+    const switchedStyle = selectedStyle !== match.style;
     selected.textContent = name;
-    code.textContent = 'AntIcon::new(AntIconName::' + name + ')';
-    preview.src = frameSrc(name);
+    selectedStyle = match.style;
+    if (switchedStyle) resetDisplay();
+    refreshPreview();
     grid.querySelectorAll('button[data-icon-name]').forEach(button => {
       const active = button.dataset.iconName === name;
       button.classList.toggle('selected', active);
@@ -121,6 +183,20 @@ export async function initIconExplorer(base, dark) {
     });
   }
 
+  for (const input of [size, spin]) {
+    input.addEventListener('change', refreshPreview);
+  }
+  for (const input of [primary, secondary]) {
+    input.addEventListener('change', () => {
+      paletteCustomized = true;
+      refreshPreview();
+    });
+  }
+  reset.addEventListener('click', () => {
+    resetDisplay();
+    refreshPreview();
+  });
+  resetDisplay();
   query.addEventListener('input', () => { visibleLimit = 80; updateResults(); });
   style.addEventListener('change', () => { visibleLimit = 80; updateResults(); });
   loadMore.addEventListener('click', () => { visibleLimit += 80; updateResults(); });

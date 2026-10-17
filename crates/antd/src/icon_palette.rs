@@ -6,6 +6,46 @@
 
 use gpui_kit::Hsla;
 
+/// Two independent alpha masks provide the original TwoTone shapes with
+/// GPUI's native SVG transformation, without re-rasterizing an image per frame.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum TwoToneLayer {
+    Primary,
+    Secondary,
+}
+
+pub(crate) fn layer_asset_key(path: &str, layer: TwoToneLayer) -> String {
+    let suffix = match layer {
+        TwoToneLayer::Primary => "primary",
+        TwoToneLayer::Secondary => "secondary",
+    };
+    format!("{path}?layer={suffix}")
+}
+
+pub(crate) fn parse_layer_asset_key(path: &str) -> Option<(&str, TwoToneLayer)> {
+    let (path, layer) = path.split_once("?layer=")?;
+    if !path.starts_with("antd-icons/twotone/") {
+        return None;
+    }
+    let layer = match layer {
+        "primary" => TwoToneLayer::Primary,
+        "secondary" => TwoToneLayer::Secondary,
+        _ => return None,
+    };
+    Some((path, layer))
+}
+
+/// Drop the opposite SVG fill layer while retaining official path geometry.
+/// The mask painter uses alpha only; each result is tinted during GPUI paint.
+pub(crate) fn svg_layer_mask(svg: &[u8], layer: TwoToneLayer) -> Vec<u8> {
+    let svg = std::str::from_utf8(svg).expect("Pinned Ant Design SVG is valid UTF-8");
+    let hidden = match layer {
+        TwoToneLayer::Primary => "fill=\"#e6f4ff\"",
+        TwoToneLayer::Secondary => "fill=\"#1677ff\"",
+    };
+    svg.replace(hidden, "fill=\"none\"").into_bytes()
+}
+
 /// Stable CSS #RRGGBBAA for a GPUI HSLA token (including alpha).
 fn rgba_hex(color: Hsla) -> u32 {
     let rgba = color.to_rgb();
@@ -76,6 +116,39 @@ mod tests {
             palette_asset_key(path, color(0xff0000).alpha(0.5), color(0xffffff)),
             "antd-icons/twotone/check-circle.svg?primary=ff000080&secondary=ffffffff"
         );
+    }
+
+    #[test]
+    fn split_color_layers_preserve_shapes_for_the_full_catalog() {
+        let source = AntIconAssets;
+        for name in AntIconName::ALL.iter().copied().filter(|name| name.style() == "twotone") {
+            let original = source.load(name.path()).unwrap().unwrap();
+            for layer in [TwoToneLayer::Primary, TwoToneLayer::Secondary] {
+                let key = layer_asset_key(name.path(), layer);
+                let (path, parsed_layer) = parse_layer_asset_key(&key).expect("valid layer");
+                assert_eq!(path, name.path());
+                assert_eq!(parsed_layer, layer);
+                let data = source.load(&key).unwrap().expect(&key);
+                let svg = std::str::from_utf8(&data).unwrap();
+                assert!(svg.contains(r#"viewBox="0 0 1024 1024""#), "{key}");
+                assert!(svg.contains("<path "), "{key}");
+                assert!(svg.contains("fill=\"none\""), "{key}");
+                assert!(!svg.contains(match layer {
+                    TwoToneLayer::Primary => r##"fill="#e6f4ff""##,
+                    TwoToneLayer::Secondary => r##"fill="#1677ff""##,
+                }), "{key}");
+                assert!(data.len() <= original.len() + 50, "{key}");
+            }
+        }
+        for invalid in [
+            "antd-icons/outlined/check-circle.svg?layer=primary",
+            "antd-icons/twotone/check-circle.svg?layer=malformed",
+            "antd-icons/twotone/check-circle.svg?layer=primary&other=yes",
+            "antd-icons/twotone/check-circle.svg?layer=secondary?layer=primary",
+        ] {
+            assert!(parse_layer_asset_key(invalid).is_none(), "{invalid}");
+            assert!(source.load(invalid).unwrap().is_none(), "{invalid}");
+        }
     }
 
     #[test]

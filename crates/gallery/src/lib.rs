@@ -75,6 +75,55 @@ pub const COMPONENTS: &[&str] = &[
     "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
 ];
 
+/// Options in the browser icon inspector are only display parameters.
+/// State and icons stay in native Rust/GPUI; the docs DOM never paints them.
+#[derive(Debug, Clone, PartialEq)]
+struct IconPreview {
+    name: String,
+    size: f32,
+    primary: Option<u32>,
+    secondary: Option<u32>,
+    spin: bool,
+}
+
+impl IconPreview {
+    fn parse(raw: &str) -> Self {
+        let mut parts = raw.split('|');
+        let mut preview = Self {
+            name: parts.next().unwrap_or_default().to_owned(),
+            size: 64.,
+            primary: None,
+            secondary: None,
+            spin: false,
+        };
+        for part in parts {
+            let Some((key, value)) = part.split_once('=') else { continue; };
+            match key {
+                "size" => {
+                    if let Ok(px) = value.parse::<f32>() {
+                        if px.is_finite() {
+                            preview.size = px.clamp(16., 128.);
+                        }
+                    }
+                }
+                "spin" => preview.spin = value == "1",
+                "primary" | "secondary" if value.len() == 6 && value.is_ascii()
+                    && value.bytes().all(|byte| byte.is_ascii_hexdigit()) => {
+                    if let Ok(rgb) = u32::from_str_radix(value, 16) {
+                        if key == "primary" {
+                            preview.primary = Some(rgb);
+                        } else {
+                            preview.secondary = Some(rgb);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        preview
+    }
+}
+
 pub struct Gallery {
     component: String,
     dark: bool,
@@ -566,15 +615,30 @@ impl Gallery {
             .into_any_element()
     }
 
-    fn icon_single_demo(&self, t: AntTheme, name: &str) -> gpui_kit::AnyElement {
-        let selected=AntIconName::from_ant_name(name);
+    fn icon_single_demo(&self, t: AntTheme, raw: &str) -> gpui_kit::AnyElement {
+        let preview = IconPreview::parse(raw);
+        let selected = AntIconName::from_ant_name(&preview.name);
         div().w_full().flex().flex_col().items_center()
             .justify_center().gap(px(16.)).p(px(18.))
-            .when_some(selected, |this, icon| {
-                this.child(AntIcon::new(icon).size(64.).theme(t))
-                    .child(div().text_color(t.text).text_size(px(18.)).child(name.to_owned()))
+            .when_some(selected, |this, name| {
+                let mut icon = AntIcon::new(name)
+                    .size(preview.size).theme(t).spin(preview.spin);
+                if name.style() == "twotone" {
+                    if preview.primary.is_some() || preview.secondary.is_some() {
+                        icon = icon.two_tone_colors(
+                            preview.primary.map(gpui_antd::color).unwrap_or(t.primary),
+                            preview.secondary.map(gpui_antd::color).unwrap_or(t.info_bg),
+                        );
+                    }
+                } else if let Some(primary) = preview.primary {
+                    icon = icon.color(gpui_antd::color(primary));
+                }
+                this.child(icon)
+                    .child(div().text_color(t.text).text_size(px(18.))
+                        .child(preview.name.clone()))
                     .child(div().text_color(t.text_secondary).text_size(px(12.))
-                        .child(format!("Official SVG · {}",icon.style())))
+                        .child(format!("Official SVG · {} · {}px{}", name.style(),
+                            preview.size, if preview.spin { " · rotating" } else { "" })))
             })
             .when(selected.is_none(), |this| {
                 this.child(div().text_color(t.error).child("Unknown Ant Design icon"))
@@ -649,7 +713,12 @@ impl Gallery {
                         .size(48.).theme(t).two_tone_colors(
                             gpui_antd::color(0xff4d4f), gpui_antd::color(0xfff2f0)))
                     .child(div().text_size(px(11.)).text_color(t.text_secondary)
-                        .child("Custom red"))))
+                        .child("Custom red")))
+                .child(div().flex().flex_col().items_center().gap(px(8.))
+                    .child(AntIcon::new(AntIconName::CheckCircleTwoTone)
+                        .size(48.).theme(t).spin(true))
+                    .child(div().text_size(px(11.)).text_color(t.text_secondary)
+                        .child("TwoTone spin"))))
             .child(label("Theme tint and animated loading", t))
             .child(
                 AntSpace::new().size(SpaceSize::Middle)
@@ -1371,5 +1440,33 @@ mod browser {
             }));
         });
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod icon_preview_tests {
+    use super::*;
+
+    #[test]
+    fn display_parameter_parser_clamps_and_rejects_bad_colors() {
+        let p = IconPreview::parse(
+            "CheckCircleTwoTone|size=96|spin=1|primary=52c41a|secondary=f6ffed");
+        assert_eq!(p.name, "CheckCircleTwoTone");
+        assert_eq!(p.size, 96.);
+        assert!(p.spin);
+        assert_eq!(p.primary, Some(0x52c41a));
+        assert_eq!(p.secondary, Some(0xf6ffed));
+
+        let bad = IconPreview::parse(
+            "CheckCircleTwoTone|size=nan|spin=x|primary=ZZZZZZ|secondary=1234567|unknown=x");
+        assert_eq!(bad.size, 64.);
+        assert!(!bad.spin);
+        assert_eq!(bad.primary, None);
+        assert_eq!(bad.secondary, None);
+
+        let large = IconPreview::parse("SearchOutlined|size=900000|primary=ff4d4f");
+        assert_eq!(large.size, 128.);
+        assert_eq!(large.primary, Some(0xff4d4f));
+        assert_eq!(IconPreview::parse("SearchOutlined|size=-20").size, 16.);
     }
 }

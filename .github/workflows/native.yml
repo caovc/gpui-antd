@@ -28,5 +28,7 @@ jobs:
           key: native-gallery
       - name: Check component library and gallery
         run: cargo check --workspace
-      - name: Unit tests (theme tokens)
+      - name: Component library unit tests
         run: cargo test -p gpui-antd --lib
+      - name: Gallery URL and preview option tests
+        run: cargo test -p gpui-antd-gallery --lib

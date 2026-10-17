@@ -269,6 +269,23 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
   border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .icon-explorer-preview iframe { width: 100%; height: 230px; background: var(--surface);
   border: 1px solid var(--border); border-radius: 10px; }
+/* Inspector edits Rust GPUI preview arguments; SVG pixels stay on the WASM canvas. */
+.icon-preview-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 16px;
+  margin: 14px 0; }
+.icon-preview-controls label { display: flex; align-items: center; gap: 7px; font-size: 12px;
+  color: var(--muted); }
+.icon-preview-controls select { min-width: 79px; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 7px; padding: 5px; }
+.icon-preview-controls input[type="color"] { width: 36px; height: 30px; padding: 2px;
+  border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+  background: var(--surface); }
+.icon-preview-controls input[type="checkbox"] { accent-color: var(--blue); }
+.icon-spin-toggle { min-height: 30px; }
+.icon-reset { color: var(--ink); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; padding: 6px 11px; }
+.icon-reset:hover { border-color: var(--blue); background: var(--soft-blue); }
+.icon-explorer-preview iframe { min-height: 275px; }
+
 .icon-copy { padding: 9px 13px; border: 1px solid var(--blue); border-radius: 8px;
   background: var(--blue); color: #fff; cursor: pointer; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

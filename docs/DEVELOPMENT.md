@@ -71,16 +71,19 @@ future nightly build, so examine CI before depending on unverified behavior.
 
 ## TwoTone icon color regressions
 
-GPUI `svg()` and Kit `Icon` paint alpha masks, so TwoTone must use GPUI
-`img()` to retain both filled layers. Keep the original SVG assets intact.
+GPUI `svg()` and Kit `Icon` paint alpha masks, so static TwoTone uses GPUI
+`img()` to retain both filled layers. For `.spin(true)` the asset loader
+provides primary/secondary alpha masks, painted using synchronized GPUI SVG
+transforms that honor the system's reduced-motion setting. Keep the original SVG assets intact.
 Palette selection and validation live in `crates/antd/src/icon_palette.rs`.
 The generator matches the base `asset_path`, even though the GPUI image cache
 key may include a validated `?primary=...&secondary=...` palette suffix.
 Preserve this generator marker in `scripts/sync_antd_icons.py`.
 
-Rust unit tests validate all 150 TwoTone assets in light, dark, and custom
-palettes; browser smoke checks screenshot **pixels**, not only canvas startup,
-for representative icon shapes and themes. Full pixel-by-pixel baseline
+Rust unit tests validate all 150 TwoTone assets with light, dark, custom
+palettes and split alpha masks; browser smoke checks **pixels**, including
+animated TwoTone at 2x device pixel ratio. It also validates that docs
+inspector controls update Rust/WASM routing and generated Rust samples. Full pixel-by-pixel baseline
 comparison of 848 icons remains future parity work.
 
 ## Debugging common problems

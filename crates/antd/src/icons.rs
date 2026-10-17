@@ -7,11 +7,15 @@
 use std::{borrow::Cow, time::Duration};
 use gpui_kit::{
     Animation, AnimationExt as _, App, AssetSource, Hsla, IntoElement, RenderOnce, Result,
-    SharedString, Styled as _, Transformation, Window, img, percentage, px,
+    SharedString, ParentElement as _, Styled as _, Transformation, Window,
+    div, img, svg, percentage, px,
     prelude::FluentBuilder as _,
 };
 use crate::tokens::AntTheme;
-use crate::icon_palette::{palette_asset_key, parse_palette_asset_key, recolor_svg};
+use crate::icon_palette::{
+    TwoToneLayer, layer_asset_key, palette_asset_key, parse_layer_asset_key,
+    parse_palette_asset_key, recolor_svg, svg_layer_mask,
+};
 use gpui_kit::component::{Icon as KitIcon, Size, Sizable as _};
 
 /// Every official Ant Design SVG icon, generated from a pinned upstream revision.
@@ -5168,22 +5172,51 @@ impl AntIcon {
         self
     }
     pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
-    /// Animate monochrome icons (such as `LoadingOutlined`).
-    /// TwoTone icons currently render as static, full-color images.
+    /// Rotate an icon, including a TwoTone icon's two color layers in sync.
+    /// Respects GPUI's reduced-motion setting automatically.
     pub fn spin(mut self, spin: bool) -> Self { self.spin = spin; self }
     pub fn name(&self) -> AntIconName { self.name }
 }
 impl RenderOnce for AntIcon {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         if self.name.style() == "twotone" {
-            // KitIcon/svg() paints only the SVG alpha mask with one tint; this
-            // destroys the pale fill and makes checks look like solid blocks.
-            // img() preserves the official foreground and background colors.
-            let key = palette_asset_key(
-                self.name.path(),
-                self.color.unwrap_or(self.theme.primary),
-                self.two_tone_secondary.unwrap_or(self.theme.info_bg),
-            );
+            let primary = self.color.unwrap_or(self.theme.primary);
+            let secondary = self.two_tone_secondary.unwrap_or(self.theme.info_bg);
+            if self.spin {
+                // GPUI img() is full-color but cannot be rotated. Split the
+                // official artwork into two alpha masks for native GPUI svg()
+                // transforms, phase-locked to the same global animation clock.
+                // A single image is still used when the icon is static.
+                let animation = || Animation::new(Duration::from_millis(900)).repeat_synced();
+                let path = self.name.path();
+                let primary_mask = svg()
+                    .path(layer_asset_key(path, TwoToneLayer::Primary))
+                    .size(px(self.size))
+                    .text_color(primary)
+                    .with_animation(
+                        ("ant-icon-twotone-spin", path, "primary"),
+                        animation(),
+                        |icon, delta| icon.with_transformation(
+                            Transformation::rotate(percentage(delta))),
+                    );
+                let secondary_mask = svg()
+                    .path(layer_asset_key(path, TwoToneLayer::Secondary))
+                    .absolute().top(px(0.)).left(px(0.))
+                    .size(px(self.size))
+                    .text_color(secondary)
+                    .with_animation(
+                        ("ant-icon-twotone-spin", path, "secondary"),
+                        animation(),
+                        |icon, delta| icon.with_transformation(
+                            Transformation::rotate(percentage(delta))),
+                    );
+                return div().relative().size(px(self.size)).flex_shrink_0()
+                    .child(secondary_mask).child(primary_mask)
+                    .into_any_element();
+            }
+            // svg()/KitIcon use single-color alpha masks and would discard
+            // the pale secondary fill; retain img() for full-color raster.
+            let key = palette_asset_key(self.name.path(), primary, secondary);
             return img(key)
                 .size(px(self.size))
                 .flex_shrink_0()
@@ -5234,8 +5267,15 @@ fn two_tone_image_svg(bytes: &'static [u8]) -> Cow<'static, [u8]> {
 pub struct AntIconAssets;
 impl AssetSource for AntIconAssets {
     fn load(&self, path: &str) -> Result<Option<Cow<'static, [u8]>>> {
-        let Some((asset_path, palette)) = parse_palette_asset_key(path) else {
-            return Ok(None);
+        let layer = parse_layer_asset_key(path);
+        let (asset_path, palette) = match layer {
+            Some((asset_path, _)) => (asset_path, None),
+            None => {
+                let Some(parsed) = parse_palette_asset_key(path) else {
+                    return Ok(None);
+                };
+                parsed
+            }
         };
         let svg: Option<&'static [u8]> = match asset_path {
             "antd-icons/outlined/account-book.svg" => Some(include_bytes!("../assets/antd-icons/outlined/account-book.svg").as_slice()),
@@ -6091,10 +6131,14 @@ impl AssetSource for AntIconAssets {
         if asset_path.starts_with("antd-icons/twotone/") {
             Ok(svg.map(|bytes| {
                 let resized = two_tone_image_svg(bytes);
-                match palette {
-                    Some((primary, secondary)) =>
-                        Cow::Owned(recolor_svg(&resized, primary, secondary)),
-                    None => resized,
+                if let Some((_, layer)) = layer {
+                    Cow::Owned(svg_layer_mask(&resized, layer))
+                } else {
+                    match palette {
+                        Some((primary, secondary)) =>
+                            Cow::Owned(recolor_svg(&resized, primary, secondary)),
+                        None => resized,
+                    }
                 }
             }))
         } else {

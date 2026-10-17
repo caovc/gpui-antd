@@ -219,6 +219,45 @@ try {
     return {total,outside};
   }, {before:beforePng.toString('base64'),after:afterPng.toString('base64'),viewportWidth});
 
+  // Exercise a real GPUI two-color spinning SVG at 2x device scale.
+  // Neither colored DOM controls nor a nonempty canvas count as proof.
+  const spinning = await browser.newPage({
+    viewport: {width:900, height:550}, deviceScaleFactor:2,
+  });
+  try {
+    const component='Icon:CheckCircleTwoTone|size=96|spin=1|primary=52c41a|secondary=f6ffed';
+    await spinning.goto(base+'demo.html?component='+encodeURIComponent(component),
+      {waitUntil:'domcontentloaded'});
+    await spinning.waitForFunction(() => {
+      const canvas=document.querySelector('canvas');
+      return canvas && canvas.width>=900 && canvas.height>=550 &&
+        !document.querySelector('#status');
+    },null,{timeout:60000});
+    await spinning.waitForTimeout(450);
+    const pixels=await twoTonePixelCounts(spinning);
+    if(pixels.green<35 || pixels.greenFill<35) {
+      throw new Error('2x GPUI TwoTone animation lost color layers: '+JSON.stringify(pixels));
+    }
+    const before=await spinning.screenshot({
+      path:join(screenshots,'icon-twotone-animated-before-2x.png'),
+    });
+    await spinning.waitForTimeout(300);
+    const after=await spinning.screenshot({
+      path:join(screenshots,'icon-twotone-animated-after-2x.png'),
+    });
+    const diff=await changedPixels(spinning,before,after,1800);
+    if(diff.total<85) {
+      throw new Error('GPUI TwoTone spin did not animate: '+JSON.stringify(diff));
+    }
+    console.log('PASS: TwoTone primary/secondary SVG layers rotate at 2x DPI ('+
+      diff.total+' changed pixels)');
+  } catch (error) {
+    failures++;
+    console.error('FAIL: TwoTone 2x animation',String(error));
+  } finally {
+    await spinning.close();
+  }
+
   for (const spec of interactions) {
     const page=await browser.newPage({viewport:{width:900,height:550}});
     const errors=[];
@@ -446,7 +485,28 @@ try {
     if (!src.includes('Icon%3ACheckCircleTwoTone')) {
       throw new Error('Icon explorer did not switch the Rust GPUI iframe: ' + src);
     }
-    console.log('PASS: full official icon catalog search controls live GPUI icon preview');
+    await docs.locator('#icon-primary').fill('#52c41a');
+    await docs.locator('#icon-secondary').fill('#f6ffed');
+    await docs.locator('#icon-size').selectOption('96');
+    await docs.locator('#icon-spin').check();
+    const chosen = await docs.locator('#icon-live-preview').getAttribute('src');
+    const decoded = decodeURIComponent(chosen);
+    if (!decoded.includes('primary=52c41a') ||
+        !decoded.includes('secondary=f6ffed') ||
+        !decoded.includes('spin=1') || !decoded.includes('size=96')) {
+      throw new Error('Inspector controls did not update GPUI URL: '+decoded);
+    }
+    const sample=await docs.locator('#icon-selected-code').textContent();
+    if (!sample.includes('.two_tone_colors(') || !sample.includes('.spin(true)')) {
+      throw new Error('Copied Rust code disagrees with inspector settings: '+sample);
+    }
+    await docs.locator('#icon-reset').click();
+    const resetUrl=decodeURIComponent(await docs.locator('#icon-live-preview').getAttribute('src'));
+    if (resetUrl.includes('primary=') || resetUrl.includes('spin=1') ||
+        !resetUrl.includes('size=64')) {
+      throw new Error('Inspector reset did not restore theme defaults: '+resetUrl);
+    }
+    console.log('PASS: full official icon catalog search and live GPUI color/size/spin inspector');
   } catch(error) {
     failures++;
     console.error('FAIL: official icon search and GPUI preview', String(error));
