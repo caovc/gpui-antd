@@ -424,3 +424,28 @@ GPU APIs; the documentation website does not fake them with HTML controls.
 
 See [component matrix](docs/COMPONENT_MATRIX.md) for the remaining catalog and
 known Ant Design 6 API / accessibility / visual parity gaps.
+
+
+## Wave 4: Tree cascade, Table filters and Timeline
+
+The library now exposes **50 alpha component pages**. AntTree derives
+three checkbox states from controlled checked keys and cascades checks through
+enabled descendants; applications handle
+on_checked_keys_change(|keys, window, cx| ...), while
+check_strictly(true) preserves independent selection.
+
+AntTable supports column filters(["Active", "Pending"]), controlled
+active_filters(...) and on_filter_change(...) with a native GPUI
+Dropdown. Filtering runs before sorting/pagination; select-page affects only
+enabled visible records while preserving selections on hidden pages.
+
+AntTimeline adds left/right/alternate positions, reverse ordering,
+pending milestone, status colors and real GPUI child elements.
+Table, Tree and Timeline consume component-specific AntTheme overrides.
+The Theme Token Studio now registers all **50** component namespaces
+(not all fields are wired; unsupported fields are labelled Planned).
+
+This does **not** implement virtualization, fully accessible Tree check-state
+semantics, advanced multi-select filter menus or exact React/Ant Design
+pixel parity. See [component matrix](docs/COMPONENT_MATRIX.md) and
+[Theme Token contract](docs/THEME_TOKENS.md).
