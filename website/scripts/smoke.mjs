@@ -206,6 +206,18 @@ try {
     await studio.waitForFunction(()=>
       document.querySelector('#theme-preview-status')?.textContent.includes('ready'),
       null,{timeout:60000});
+    // Resizing the preview MUST retain the running Rust/WASM instance and
+    // change the real canvas viewport, not replace it with HTML media mockups.
+    const before=await studio.locator('#theme-preview-frame').getAttribute('src');
+    await studio.locator('#theme-viewport').selectOption('mobile');
+    const after=await studio.locator('#theme-preview-frame').getAttribute('src');
+    if(before!==after)throw Error('Viewport switch unexpectedly reloaded WASM');
+    const mobileWidth=await studio.locator('#theme-preview-frame')
+      .evaluate(frame=>Math.round(frame.getBoundingClientRect().width));
+    if(Math.abs(mobileWidth-390)>2)
+      throw Error('Mobile GPUI viewport wrong width: '+mobileWidth);
+    await studio.screenshot({path:join(screenshots,'token-studio-mobile.png')});
+    await studio.locator('#theme-viewport').selectOption('desktop');
     await studio.screenshot({path:join(screenshots,'token-studio-resolved.png')});
     console.log('PASS: Theme Studio route, token controls and Rust/GPUI Map/Alias live preview');
   } catch (error) {
