@@ -45,7 +45,7 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls | Range keyboard thumbs, marks, tooltips, custom handle formatting |
 | Segmented | Controlled selection, disabled options, official icon slots, Arrow/Home/End roving focus, block and size | Animated selection indicator and more exact Ant CSS geometry |
 | TimePicker | Persistent native segmented time editor, minute/second, AM/PM, keyboard edit, status/disabled | Clock popup, presets, clear/null semantics, range selection, localization |
-| AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Actual collision-aware popover, outside click close, full ARIA combobox, virtualization |
+| AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Anchored collision-aware popover (current panel is inline), outside click close, full ARIA combobox, virtualization |
 
 ## Next batches (dependency order)
 
