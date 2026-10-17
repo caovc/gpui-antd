@@ -1,5 +1,7 @@
 //! One set of real Rust/GPUI previews for desktop and browser WebAssembly.
 extern crate gpui_kit as gpui;
+mod theme_lab;
+use theme_lab::ThemeLabSpec;
 
 use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}};
 
@@ -127,6 +129,7 @@ impl IconPreview {
 pub struct Gallery {
     component: String,
     dark: bool,
+    theme_override: Option<AntTheme>,
     button_clicks: usize,
     checked: bool,
     radio_selected: Option<usize>,
@@ -209,8 +212,9 @@ impl Gallery {
             .masked(true).placeholder("6 or more characters"));
         let form_confirm = cx.new(|cx| InputState::new(window, cx)
             .masked(true).placeholder("Repeat password"));
+        let theme_override=ThemeLabSpec::parse(&component,dark).map(|spec|spec.theme);
         Self {
-            component, dark, button_clicks: 0, checked: true, radio_selected: Some(0),
+            component, dark, theme_override, button_clicks: 0, checked: true, radio_selected: Some(0),
             radio_button_selected: Some(1), switch_on: true,
             input, input_filled, input_borderless, input_decorated, input_large,
             input_error, input_password, input_disabled,
@@ -229,8 +233,63 @@ impl Gallery {
         }
     }
     fn theme(&self) -> AntTheme {
-        if self.dark {AntTheme::dark()} else {AntTheme::light()}
+        self.theme_override.unwrap_or_else(|| {
+            if self.dark {AntTheme::dark()} else {AntTheme::light()}
+        })
     }
+    fn theme_lab_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let menu_change=cx.listener(|this,key:&SharedString,_,cx|{
+            this.menu_selected=key.to_string();
+            cx.notify();
+        });
+        let tap=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
+            this.button_clicks+=1;
+            cx.notify();
+        });
+        div().w_full().min_w_0().flex().flex_col().gap(px(t.padding))
+            .child(AntTitle::new("Native Theme Lab").level(3).theme(t))
+            .child(div().text_size(px(12.)).text_color(t.text_secondary)
+                .child(format!("GPUI-derived tokens · controlHeight {}px · radius {}px · fontSize {}px",
+                    t.control_height,t.border_radius,t.font_size)))
+            .child(AntCard::new().theme(t).title("Buttons · component override")
+                .child(div().flex().flex_wrap().items_center().gap(px(12.))
+                    .child(AntButton::new("lab-primary","Primary").primary()
+                        .theme(t).on_click(tap))
+                    .child(AntButton::new("lab-default","Default").theme(t))
+                    .child(AntButton::new("lab-danger","Danger").primary().danger(true).theme(t))
+                    .child(AntButton::new("lab-disabled","Disabled").disabled(true).theme(t))
+                    .child(AntButton::new("lab-small","Small").primary()
+                        .size(ControlSize::Small).theme(t))
+                    .child(AntButton::new("lab-large","Large").primary()
+                        .size(ControlSize::Large).theme(t))))
+            .child(div().flex().flex_wrap().gap(px(14.))
+                .child(div().flex().flex_col().gap(px(10.))
+                    .child(label("Input · background and radius overrides",t))
+                    .child(AntInput::new("lab-input",&self.input).theme(t))
+                    .child(label("Feedback · semantic Seed colors",t))
+                    .child(AntAlert::new("Saved successfully").tone(Tone::Green).theme(t))
+                    .child(AntAlert::new("Please review warning").tone(Tone::Gold).theme(t))
+                    .child(AntTag::new("Information").tone(Tone::Blue).theme(t)))
+                .child(div().w(px(215.)).flex().flex_col()
+                    .child(label("Menu · selected row override",t))
+                    .child(AntMenu::new("lab-menu").theme(t).dark(self.dark)
+                        .selected_key(self.menu_selected.clone())
+                        .on_select(move |key,window,cx| menu_change(&key,window,cx))
+                        .item(AntMenuItem::new("dashboard","Dashboard")
+                            .icon(AntIconName::DashboardOutlined))
+                        .item(AntMenuItem::new("analytics","Analytics")
+                            .icon(AntIconName::BarChartOutlined))
+                        .item(AntMenuItem::new("settings","Settings")
+                            .icon(AntIconName::SettingOutlined)))))
+            .child(AntCard::new().theme(t).title("Card token override: padding and radius")
+                .child(AntText::new("The body padding and header color come from Card tokens.")
+                    .theme(t)))
+            .child(div().text_size(px(12.)).text_color(t.text_secondary)
+                .child(format!("Primary clicked {} times · menu route {}",
+                    self.button_clicks,self.menu_selected)))
+            .into_any_element()
+    }
+
     fn button_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
         let on_click = cx.listener(|this, _: &gpui_kit::ClickEvent, _, cx| {
             this.button_clicks += 1;
@@ -1337,6 +1396,7 @@ impl Render for Gallery {
         let t=self.theme();
         let demo=match self.component.as_str() {
             "Button"=>self.button_demo(t,cx),
+            name if name.starts_with("ThemeLab") => self.theme_lab_demo(t,cx),
             "Input"=>self.input_demo(t),
             "Select"=>self.select_demo(t),
             "DatePicker"=>self.date_picker_demo(t),
