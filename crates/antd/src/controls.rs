@@ -11,6 +11,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::base::StyledExt as _;
 use gpui_kit::component::{Sizable as _, Size, spinner::Spinner};
 use crate::tokens::{AntTheme, color};
+use crate::design_tokens::AntComponent;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum ControlSize {
@@ -80,7 +81,10 @@ impl AntButton {
 impl RenderOnce for AntButton {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let t = self.theme;
-        let accent = if self.danger { t.error } else { t.primary };
+        let component=t.component(AntComponent::Button);
+        let accent = if self.danger { t.error } else {
+            component.color_primary.unwrap_or(t.primary)
+        };
         let disabled = self.disabled || self.loading;
         let is_primary = self.variant == ButtonVariant::Primary;
         let borderless = matches!(self.variant, ButtonVariant::Text | ButtonVariant::Link);
@@ -127,22 +131,31 @@ impl RenderOnce for AntButton {
         let hover_border = if borderless { transparent } else { accent };
         let active_bg = if is_primary && !self.ghost { t.primary_active } else { hover_bg };
 
+        let height=component.control_height.unwrap_or(match self.size {
+            ControlSize::Small=>t.control_height_sm,
+            ControlSize::Middle=>t.control_height,
+            ControlSize::Large=>t.control_height_lg,
+        });
+        let padding=component.padding.unwrap_or(
+            self.size.horizontal_padding()*t.padding/16.);
         BaseButton::new(self.id)
-            .h(px(self.size.height()))
-            .px(px(self.size.horizontal_padding()))
+            .h(px(height))
+            .px(px(padding))
             .gap(px(8.))
-            .rounded(px(t.border_radius))
+            .rounded(px(component.border_radius.unwrap_or(t.border_radius)))
             .border_1()
             .when(self.variant == ButtonVariant::Dashed, |this| this.border_dashed())
-            .border_color(border)
-            .bg(bg)
-            .text_color(fg)
-            .text_size(px(if self.size == ControlSize::Large { 16. } else { 14. }))
+            .border_color(component.color_border.unwrap_or(border))
+            .bg(component.color_bg.unwrap_or(bg))
+            .text_color(component.color_text.unwrap_or(fg))
+            .text_size(px(component.font_size.unwrap_or(
+                if self.size == ControlSize::Large {t.font_size+2.} else {t.font_size})))
             .font_medium()
             .when(self.block, |this| this.w_full())
             .when(!disabled, |this| {
                 this.cursor_pointer()
-                    .hover(|this| this.bg(hover_bg).text_color(hover_fg).border_color(hover_border))
+                    .hover(|this| this.bg(component.color_bg_hover.unwrap_or(hover_bg))
+                        .text_color(hover_fg).border_color(hover_border))
                     .active(|this| this.bg(active_bg))
             })
             .disabled(disabled)

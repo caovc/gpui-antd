@@ -19,6 +19,7 @@ use gpui_kit::base::{Button as BaseButton, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
 
 use crate::{AntIcon, AntIconName, AntTheme, color};
+use crate::design_tokens::AntComponent;
 
 type MenuSelect = Rc<dyn Fn(SharedString, &mut Window, &mut App)>;
 type MenuOpenChange = Rc<dyn Fn(SharedString, bool, &mut Window, &mut App)>;
@@ -226,7 +227,8 @@ impl RenderOnce for AntMenu {
         let selected=self.selected;
         let on_select=self.on_select;
         let on_open_change=self.on_open_change;
-        let item_height=self.item_height;
+        let overrides=theme.component(AntComponent::Menu);
+        let item_height=overrides.control_height.unwrap_or(self.item_height);
         let prefix=format!("{:?}",self.id);
         let mut rows=Vec::new();
         flatten_visible(self.items,&self.open_keys,selected.as_deref(),
@@ -305,7 +307,8 @@ impl RenderOnce for AntMenu {
         div().id(self.id).role(Role::Menu)
             .w_full().flex().flex_col().gap(px(3.))
             .px(px(7.)).py(px(6.))
-            .bg(if dark {theme.layout_dark} else {theme.surface})
+            .bg(overrides.color_bg.unwrap_or(
+                if dark {theme.layout_dark} else {theme.surface}))
             .on_key_down(handle_keyboard)
             .children(rows.into_iter().enumerate().map(move |(index,row)| {
                 let is_submenu=row.item.is_submenu();
@@ -316,13 +319,18 @@ impl RenderOnce for AntMenu {
                 let key=row.item.key.clone();
                 let open_key=key.clone();
                 let bg=if highlighted {
-                    if dark {theme.primary} else {theme.info_bg}
-                } else if dark {theme.layout_dark} else {theme.surface};
+                    overrides.color_bg_selected.unwrap_or(
+                        if dark {theme.primary} else {theme.info_bg})
+                } else {
+                    overrides.color_bg.unwrap_or(
+                        if dark {theme.layout_dark} else {theme.surface})
+                };
                 let fg=if row.item.disabled {theme.disabled_text}
                     else if highlighted {if dark {color(0xffffff)} else {theme.primary}}
                     else if row.item.danger {theme.error}
                     else if dark {theme.layout_dark_text} else {theme.text};
-                let hover_bg=if dark {theme.layout_sider_hover} else {theme.info_bg};
+                let hover_bg=overrides.color_bg_hover.unwrap_or(
+                    if dark {theme.layout_sider_hover} else {theme.info_bg});
                 let focus_id=format!("ant-menu-{prefix}-{}",row.item.key);
                 let expand_callback=on_open_change.clone();
                 let select_callback=on_select.clone();
@@ -336,8 +344,9 @@ impl RenderOnce for AntMenu {
                     .w_full().h(px(item_height))
                     .px(px(if collapsed {6.} else {12.+row.depth as f32*16.}))
                     .flex().items_center().justify_start()
-                    .gap(px(11.)).rounded(px(theme.border_radius))
-                    .bg(bg).text_color(fg).text_size(px(14.))
+                    .gap(px(11.)).rounded(px(overrides.border_radius.unwrap_or(theme.border_radius)))
+                    .bg(bg).text_color(overrides.color_text.unwrap_or(fg))
+                    .text_size(px(overrides.font_size.unwrap_or(theme.font_size)))
                     .when(!row.item.disabled, |this| this.cursor_pointer()
                         .hover(|this|this.bg(hover_bg)))
                     .when_some(row.item.icon, |this, icon| {

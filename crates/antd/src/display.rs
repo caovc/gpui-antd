@@ -2,6 +2,7 @@
 
 use gpui_kit::{AnyElement, IntoElement, ParentElement, RenderOnce, SharedString, Styled as _, App, Window, div, px, relative};
 use crate::tokens::{AntTheme, color};
+use crate::design_tokens::AntComponent;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::base::StyledExt as _;
 
@@ -87,16 +88,25 @@ impl Default for AntCard {fn default()->Self{Self::new()}}
 impl RenderOnce for AntCard {
     fn render(self,_:&mut Window,_:&mut App)->impl IntoElement {
         let t=self.theme;
-        div().flex().flex_col().rounded(px(8.))
-            .border_1().border_color(if self.bordered{t.border}else{t.surface})
-            .bg(t.surface)
+        let comp=t.component(AntComponent::Card);
+        let bg=comp.color_bg.unwrap_or(t.surface);
+        let border=comp.color_border.unwrap_or(t.border);
+        let fg=comp.color_text.unwrap_or(t.text);
+        let padding=comp.padding.unwrap_or(24.);
+        div().flex().flex_col()
+            .rounded(px(comp.border_radius.unwrap_or(t.border_radius_lg)))
+            .border_1().border_color(if self.bordered{border}else{bg})
+            .bg(bg)
             .when_some(self.title, |this,title| {
                 this.child(div().h(px(56.)).flex().items_center()
-                    .px(px(24.)).font_semibold().text_size(px(16.))
-                    .text_color(t.text).border_b_1().border_color(t.border)
+                    .px(px(padding)).font_semibold()
+                    .text_size(px(comp.font_size.unwrap_or(t.font_size+2.)))
+                    .bg(comp.color_header_bg.unwrap_or(bg))
+                    .text_color(fg).border_b_1().border_color(border)
                     .child(title))
             })
-            .child(div().p(px(24.)).text_size(px(14.)).text_color(t.text).children(self.children))
+            .child(div().p(px(padding)).text_size(px(t.font_size))
+                .text_color(fg).children(self.children))
     }
 }
 

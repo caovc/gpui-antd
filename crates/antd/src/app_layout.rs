@@ -18,6 +18,7 @@ use gpui_kit::prelude::FluentBuilder as _;
 use crate::{
     AntIcon, AntIconName, AntTheme, GridBreakpoint,
 };
+use crate::design_tokens::AntComponent;
 
 type CollapseChange = Rc<dyn Fn(bool, &mut Window, &mut App)>;
 
@@ -169,8 +170,11 @@ impl RenderOnce for AntSider {
     fn render(self, window: &mut Window, _: &mut App) -> impl IntoElement {
         let collapsed=self.is_collapsed_at(window.viewport_size().width);
         let width=self.width_at(window.viewport_size().width);
-        let fg=if self.dark {self.theme.layout_dark_text} else {self.theme.text};
-        let bg=if self.dark {self.theme.layout_dark} else {self.theme.surface};
+        let comp=self.theme.component(AntComponent::Layout);
+        let fg=comp.color_text.unwrap_or(
+            if self.dark {self.theme.layout_dark_text} else {self.theme.text});
+        let bg=comp.color_bg.unwrap_or(
+            if self.dark {self.theme.layout_dark} else {self.theme.surface});
         let button_fg=fg;
         div().flex().flex_col().flex_none().min_h(px(0.))
             .w(px(width)).bg(bg).text_color(fg)
@@ -183,7 +187,7 @@ impl RenderOnce for AntSider {
                         .accessibility_label(if collapsed {"Expand sidebar"} else {"Collapse sidebar"})
                         .w_full().h(px(40.)).flex().items_center().justify_center()
                         .bg(bg).text_color(button_fg)
-                        .hover(|this| this.bg(self.theme.layout_sider_hover))
+                        .hover(|this| this.bg(comp.color_bg_hover.unwrap_or(self.theme.layout_sider_hover)))
                         .child(AntIcon::new(if collapsed {
                             AntIconName::MenuUnfoldOutlined
                         } else {

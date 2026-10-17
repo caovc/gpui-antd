@@ -1,6 +1,7 @@
 //! Ant Design-style text input built around GPUI Kit's production text engine.
 //! Cursor, selection, undo, clipboard and IME remain owned by InputState.
 
+use crate::design_tokens::AntComponent;
 use gpui_kit::{
     AnyElement, App, Entity, Hsla, IntoElement, RenderOnce, SharedString,
     Styled as _, Window, px,
@@ -104,6 +105,7 @@ impl RenderOnce for AntInput {
             ControlSize::Large => Size::Large,
         };
         let (background, border) = self.palette();
+        let comp=self.theme.component(AntComponent::Input);
         Input::new(&self.state)
             .with_size(size)
             .disabled(self.disabled)
@@ -115,9 +117,9 @@ impl RenderOnce for AntInput {
             .when_some(self.prefix, |this, prefix| this.prefix(prefix))
             .when_some(self.suffix, |this, suffix| this.suffix(suffix))
             .when_some(self.accessibility_label, |this, label| this.aria_label(label))
-            .rounded(px(self.theme.border_radius))
-            .border_color(border)
-            .bg(background)
+            .rounded(px(comp.border_radius.unwrap_or(self.theme.border_radius)))
+            .border_color(comp.color_border.unwrap_or(border))
+            .bg(comp.color_bg.unwrap_or(background))
     }
 }
 
