@@ -176,9 +176,12 @@ impl AntPopover {
 impl RenderOnce for AntPopover {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let theme=self.theme;
+        // Each trigger must retain a distinct GPUI identity for focus,
+        // hover and keyed popup state in a Gallery with multiple popovers.
+        let trigger_id=SharedString::from(format!("ant-popover-trigger:{:?}",self.id));
         KitPopover::new(self.id)
             .trigger(
-                KitButton::new("ant-popover-trigger")
+                KitButton::new(trigger_id)
                     .label(self.trigger_label)
                     .outline().with_size(Size::Medium)
                     .disabled(self.disabled)
@@ -341,9 +344,10 @@ impl RenderOnce for AntPopconfirm {
         let width=self.width;
         let confirm=self.on_confirm;
         let cancel=self.on_cancel;
+        let trigger_id=SharedString::from(format!("ant-popconfirm-trigger:{:?}",self.id));
         KitPopover::new(self.id)
             .trigger(
-                KitButton::new("ant-popconfirm-trigger")
+                KitButton::new(trigger_id)
                     .label(self.trigger_label).outline().with_size(Size::Medium)
                     .disabled(self.disabled)
             )
