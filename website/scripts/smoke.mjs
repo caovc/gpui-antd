@@ -154,6 +154,9 @@ try {
     { name: 'Popover', x: 78, y: 78, minChanged: 3300, minOutside: 1200 },
     { name: 'Modal', x: 82, y: 78, minChanged: 8000, minOutside: 4000 },
     { name: 'Popconfirm', x: 82, y: 78, minChanged: 4300, minOutside: 1400 },
+    // The initial selected menu item is Dashboard. This clicks Analytics,
+    // changing the selected row in all three native Menu variants.
+    { name: 'Menu', x: 110, y: 135, minChanged: 3500, minOutside: 2500 },
     { name: 'Layout', x: 98, y: 500, minChanged: 12000, minOutside: 8000 },
   ];
 
@@ -222,7 +225,24 @@ try {
       console.log('PASS: '+spec.name+' real GPUI click changed '+diff.total+
         ' pixels ('+diff.outside+' outside trigger)');
 
-      if (spec.name !== 'Layout') {
+      if (spec.name === 'Menu') {
+        // The fourth light-menu item is disabled. Clicking it must not
+        // change the selected Rust route key or repaint the selected row.
+        await page.mouse.click(110,211);
+        await page.mouse.move(880,530);
+        await page.waitForTimeout(550);
+        const disabled=await page.screenshot({
+          path:join(screenshots,'menu-disabled-click.png')
+        });
+        const afterDisabled=await changedPixels(page,opened,disabled);
+        if (afterDisabled.total > 1200) {
+          throw new Error('Disabled Menu item changed selected state or appearance: '+
+            JSON.stringify(afterDisabled));
+        }
+        console.log('PASS: disabled native GPUI Menu item does not change selection');
+      }
+
+      if (['Dropdown','Popover','Modal','Popconfirm'].includes(spec.name)) {
         // Native Escape dismissal is a required interaction, not just a
         // startup/canvas check. Compare against the pre-popup frame;
         // the trigger can retain its focus ring, but the popup must vanish.
