@@ -14,6 +14,7 @@ use gpui_kit::base::{Button as BaseButton,StyledExt as _};
 use gpui_kit::component::scroll::ScrollableElement as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use crate::{AntIcon,AntIconName,AntTheme};
+use crate::design_tokens::AntComponent;
 
 type KeyChange=Rc<dyn Fn(SharedString,&mut Window,&mut App)>;
 type ExpandChange=Rc<dyn Fn(SharedString,bool,&mut Window,&mut App)>;
@@ -295,6 +296,15 @@ impl AntTree{
 impl RenderOnce for AntTree{
     fn render(self,window:&mut Window,cx:&mut App)->impl IntoElement{
         let theme=self.theme;
+        let overrides=theme.component(AntComponent::Tree);
+        let bg=overrides.color_bg.unwrap_or(theme.surface);
+        let selected_bg=overrides.color_bg_selected.unwrap_or(theme.info_bg);
+        let hover_bg=overrides.color_bg_hover.unwrap_or(theme.info_bg);
+        let fg_base=overrides.color_text.unwrap_or(theme.text);
+        let primary=overrides.color_primary.unwrap_or(theme.primary);
+        let radius=overrides.border_radius.unwrap_or(theme.border_radius);
+        let height=overrides.control_height.unwrap_or(32.).max(24.);
+        let font_size=overrides.font_size.unwrap_or(theme.font_size);
         let check_states=tree_check_states(&self.nodes,&self.checked_keys,self.check_strictly);
         let tree_roots=Rc::new(self.nodes.clone());
         let strict=self.check_strictly;
@@ -377,7 +387,7 @@ impl RenderOnce for AntTree{
                 let title=node.title.clone();
                 let requested_expansion=!node.expanded;
                 let fg=if row_disabled{theme.disabled_text}
-                    else if is_selected{theme.primary}else{theme.text};
+                    else if is_selected{primary}else{fg_base};
                 let arrow=BaseButton::new(format!("ant-tree-expand:{prefix}:{key}"))
                     .tab_stop(false).disabled(row_disabled||!node.folder)
                     .accessibility_label(format!("{} {}",if node.expanded{"Collapse"}else{"Expand"},title))
@@ -396,12 +406,12 @@ impl RenderOnce for AntTree{
                     .track_focus(&focus_handles[index])
                     .tab_stop(tab_stop==Some(index))
                     .when(block,|this|this.flex_1())
-                    .h(px(32.)).px(px(8.)).flex().items_center().gap(px(8.))
-                    .rounded(px(theme.border_radius))
-                    .bg(if is_selected{theme.info_bg}else{theme.surface})
-                    .text_color(fg).text_size(px(14.))
+                    .h(px(height)).px(px(8.)).flex().items_center().gap(px(8.))
+                    .rounded(px(radius))
+                    .bg(if is_selected{selected_bg}else{bg})
+                    .text_color(fg).text_size(px(font_size))
                     .when(!row_disabled,|this|this.cursor_pointer()
-                        .hover(|this|this.bg(theme.info_bg)))
+                        .hover(|this|this.bg(hover_bg)))
                     .when(show_icon,|this|this.child(
                         AntIcon::new(node.icon.unwrap_or(if node.folder{
                             if node.expanded{AntIconName::FolderOpenOutlined}
@@ -434,7 +444,7 @@ impl RenderOnce for AntTree{
                                 TreeCheckState::Unchecked=>AntIconName::BorderOutlined,
                             })
                                 .theme(theme).color(if check_state!=TreeCheckState::Unchecked{
-                                    theme.primary
+                                    primary
                                 }else{theme.text_secondary}).size(17.))
                             .when(check_listener.is_some()||checked_set_listener.is_some(),|this|{
                                 this.on_click(move|_,window,cx|{
