@@ -2,10 +2,10 @@
  * Token Studio: DOM editing UI around the REAL Rust GPUI/WASM ThemeLab.
  * Never substitute DOM components for the GPU preview.
  *
- * All 31 component namespaces can be serialized. Exact native consumption
+ * All 51 component namespaces can be serialized. Exact native consumption
  * is listed per field: unsupported fields are not disguised as live changes.
  */
-const COMPONENTS='Button Input Select DatePicker Form Checkbox Radio Switch Tag Badge Alert Card Progress Divider Tabs Tooltip Icons Typography Space Flex Grid Layout Menu Dropdown Popover Modal Popconfirm Avatar Statistic Empty Breadcrumb'.split(' ');
+const COMPONENTS='Button Input Select DatePicker Form Checkbox Radio Switch Tag Badge Alert Card Progress Divider Tabs Tooltip Icons Typography Space Flex Grid Layout Menu Dropdown Popover Modal Popconfirm Avatar Statistic Empty Breadcrumb Pagination Steps Rate Collapse Descriptions Result Skeleton Spin InputNumber Slider Segmented TimePicker AutoComplete Drawer Message Notification Tree Table Timeline List'.split(' ');
 const COVERAGE={
   Button:['colorPrimary','colorBg','colorText','colorBorder','colorBgHover','borderRadius','controlHeight','fontSize','padding'],
   Card:['colorBg','colorText','colorBorder','colorHeaderBg','borderRadius','fontSize','padding'],
@@ -21,6 +21,9 @@ const COVERAGE={
   Divider:['colorBorder','controlHeight'],
   Typography:['colorPrimary','colorBg','colorText','colorBorder','borderRadius','fontSize'],
   Tooltip:['colorBg','colorText','colorBorder','borderRadius'],
+  Tree:['colorPrimary','colorBg','colorText','colorBgHover','colorBgSelected','borderRadius','controlHeight','fontSize'],
+  Table:['colorBg','colorText','colorBorder','colorHeaderBg','colorBgSelected','borderRadius','fontSize'],
+  Timeline:['colorPrimary','colorText','colorBorder','fontSize'],
 };
 const SEEDS=[
   ['colorPrimary','Primary color','#1677ff','#1668dc','color'],
@@ -241,7 +244,7 @@ export function themeDesignerHtml(){
     '<p class="theme-caption">Alias overrides apply after Map derivation and before component-specific values.</p>'+
     '<div id="theme-alias-fields" class="token-form-grid"></div></details>'+
     '<details open><summary>Component Token · independent overrides</summary>'+
-    '<p class="theme-caption">All 31 namespaces can be exported. Only fields marked Live are connected to the Rust renderer; unimplemented fields cannot be edited here.</p>'+
+    '<p class="theme-caption">All 51 namespaces can be exported. Only fields marked Live are connected to the Rust renderer; unimplemented fields cannot be edited here.</p>'+
     '<label>Component<select id="theme-component">'+COMPONENTS.map(x=>
       '<option value="'+x+'">'+x+'</option>').join('')+'</select></label>'+
     '<p id="theme-coverage" class="theme-coverage"></p>'+
