@@ -64,6 +64,8 @@ const ALIAS_FIELDS=[
   ['colorError','Error color','color'],
 ];
 const LAYER_FIELDS={map:MAP_FIELDS,alias:ALIAS_FIELDS};
+const PREVIEW_WIDTHS=Object.freeze({desktop:'100%',tablet:'768px',mobile:'390px'});
+const previewViewportWidth=mode=>PREVIEW_WIDTHS[mode]||PREVIEW_WIDTHS.desktop;
 const PRESETS={'Ant Blue':'#1677ff','Emerald':'#12a676','Indigo':'#635bdf','Sunset':'#fa7048'};
 const escapeHtml=x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;')
   .replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -220,6 +222,10 @@ export function themeDesignerHtml(){
     '<option value="dark-compact">Dark + Compact</option></select></label>'+
     '<label>Preview<select id="theme-scene"><option value="components">Components</option>'+
     '<option value="tokens">Resolved Tokens</option></select></label>'+
+    '<label>Viewport<select id="theme-viewport" aria-label="GPUI preview viewport">'+
+    '<option value="desktop">Desktop · fluid</option>'+
+    '<option value="tablet">Tablet · 768px</option>'+
+    '<option value="mobile">Mobile · 390px</option></select></label>'+
     '<label>Brand preset<select id="theme-preset"><option value="">Custom</option>'+
     Object.keys(PRESETS).map(k=>'<option value="'+k+'">'+k+'</option>').join('')+
     '</select></label>'+
@@ -258,7 +264,8 @@ export function themeDesignerHtml(){
     '<section class="theme-live-panel">'+
     '<div class="theme-preview-title"><div><span class="section-eyebrow">LIVE GPU / RUST</span>'+
     '<h2>Theme preview</h2></div><span id="theme-preview-status">Loading GPUI...</span></div>'+
-    '<iframe id="theme-preview-frame" title="Live Rust GPUI WASM token preview" loading="eager"></iframe>'+
+    '<div id="theme-preview-stage" class="theme-preview-stage" data-viewport="desktop">'+
+    '<iframe id="theme-preview-frame" title="Live Rust GPUI WASM token preview" loading="eager"></iframe></div>'+
     '<p class="theme-caption">The editor controls are DOM; all UI inside this iframe is the native Rust component library running as GPUI/WASM. Edits recreate the GPU preview.</p>'+
     '</section></div>'+
     '<p class="theme-studio-note">This is a native approximation of Ant Design’s token derivation and compact/dark modes, not its React CSS-in-JS engine. '+
@@ -275,6 +282,19 @@ export function initThemeDesigner(base){
   catch{state=emptyTheme();}
   let timer;
   let scene='components';
+  // Viewport preference belongs to the editor, not the exported theme.
+  // Resizing the iframe changes the actual GPUI/WASM window's viewport.
+  let viewport='desktop';
+  try {
+    const stored=localStorage.getItem('gpui-antd-preview-viewport');
+    if(Object.hasOwn(PREVIEW_WIDTHS,stored))viewport=stored;
+  }catch{}
+  function applyViewport(){
+    $('#theme-viewport').value=viewport;
+    $('#theme-preview-stage').dataset.viewport=viewport;
+    frame.style.width=previewViewportWidth(viewport);
+  }
+  applyViewport();
   function fillAll(){
     $('#theme-mode').value=state.algorithm;
     $('#theme-motion').checked=state.motion;
@@ -353,6 +373,11 @@ export function initThemeDesigner(base){
   $('#theme-scene').addEventListener('change',()=>{
     scene=$('#theme-scene').value;
     drawPreview();
+  });
+  $('#theme-viewport').addEventListener('change',()=>{
+    viewport=$('#theme-viewport').value;
+    applyViewport(); // Preserve running Rust GPUI instance; do not reload WASM.
+    try{localStorage.setItem('gpui-antd-preview-viewport',viewport);}catch{}
   });
   $('#theme-motion').addEventListener('change',()=>{
     state.motion=$('#theme-motion').checked;schedule();
@@ -460,4 +485,5 @@ export function initThemeDesigner(base){
 // Pure functions are exported for node:test without mounting a DOM or a fake GPUI preview.
 export const tokenStudioLogic={
   emptyTheme,validated,previewParam,rustCode,validateValue,renderLayerFields,
+  previewViewportWidth,
 };
