@@ -398,11 +398,11 @@ try {
   // meaningful ink changes from the native Sheet/toast/tree/table state.
   // The docs shell has no HTML stand-in for these components.
   const wave3Interactions = [
-    {name:'Drawer', x:114, y:78, minChanged:5000},
-    {name:'Message', x:72, y:78, minChanged:1000},
-    {name:'Notification', x:87, y:78, minChanged:1200},
-    {name:'Tree', x:46, y:83, minChanged:550},
-    {name:'Table', x:406, y:78, minChanged:650},
+    {name:'Drawer', x:114, y:78, minChanged:2500, minOutside:1800},
+    {name:'Message', x:72, y:78, minChanged:650, minOutside:500},
+    {name:'Notification', x:87, y:78, minChanged:700, minOutside:550},
+    {name:'Tree', x:46, y:83, minChanged:1000, minOutside:650},
+    {name:'Table', x:406, y:78, minChanged:1000, minOutside:700},
   ];
   for (const spec of wave3Interactions) {
     const page=await browser.newPage({viewport:{width:900,height:550}});
@@ -430,9 +430,9 @@ try {
         path:join(screenshots,spec.name.toLowerCase()+'-wave3-after.png')
       });
       const diff=await changedPixels(page,before,after);
-      if(diff.total<spec.minChanged){
+      if(diff.total<spec.minChanged || diff.outside<spec.minOutside){
         throw new Error(spec.name+' native control did not repaint enough after click: '+
-          JSON.stringify(diff)+' expected '+spec.minChanged);
+          JSON.stringify(diff)+' expected total '+spec.minChanged+' and outside '+spec.minOutside);
       }
       if(errors.length)throw new Error('Browser errors: '+errors.join('; '));
       console.log('PASS: wave3 '+spec.name+' real GPUI click '+diff.total+' pixels');
