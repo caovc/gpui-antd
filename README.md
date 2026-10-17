@@ -24,7 +24,8 @@
 
 ## First milestone component set
 
-Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, and Grid.
+Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, Grid, Avatar, Statistic,
+Empty and Breadcrumb.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -120,7 +121,9 @@ marked text, single-line truncation, clipboard copy, and accessible links.
 
 `AntSpace` and `AntFlex` provide fixed/custom gaps, orientation, wrapping,
 alignment and distribution. `AntRow`/`AntCol` implement the familiar
-24-column grid with span, offset and gutter. Responsive named breakpoints,
+24-column grid with span, offset and gutter. Avatar, Statistic, Empty and
+Breadcrumb provide additional native data-display, feedback and navigation
+primitives. Responsive named breakpoints,
 selectable rich text and multi-line ellipsis need later work.
 
 ## Browser gallery (real GPUI → WASM)

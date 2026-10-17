@@ -230,3 +230,9 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 .example-card iframe.wasm-iframe[src*="component=Space"] { height: 480px; }
 .example-card iframe.wasm-iframe[src*="component=Flex"] { height: 490px; }
 .example-card iframe.wasm-iframe[src*="component=Grid"] { height: 440px; }
+
+/* Foundation previews are genuine GPUI/WASM canvases. */
+.example-card iframe.wasm-iframe[src*="component=Avatar"] { height: 410px; }
+.example-card iframe.wasm-iframe[src*="component=Statistic"] { height: 370px; }
+.example-card iframe.wasm-iframe[src*="component=Empty"] { height: 450px; }
+.example-card iframe.wasm-iframe[src*="component=Breadcrumb"] { height: 380px; }
