@@ -6,7 +6,7 @@ use gpui_kit::{
 };
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
-use crate::{AntButton, AntIcon, AntIconName, AntTheme, ControlSize, color};
+use crate::{AntButton, AntIcon, AntIconName, AntTheme, ControlSize};
 
 type PageChange = Rc<dyn Fn(usize, usize, &mut Window, &mut App)>;
 type StepChange = Rc<dyn Fn(usize, &mut Window, &mut App)>;
@@ -192,7 +192,7 @@ impl RenderOnce for AntSteps {
                 div().size(px(28.)).flex().items_center().justify_center()
                     .rounded_full().border_1().border_color(color)
                     .bg(if status==StepStatus::Process{t.primary}else{t.surface})
-                    .text_color(if status==StepStatus::Process{color(0xffffff)}else{color})
+                    .text_color(if status==StepStatus::Process{crate::color(0xffffff)}else{color})
                     .text_size(px(13.)).child((index+1).to_string()).into_any_element()
             };
             let caption=div().flex().flex_col().gap(px(3.))
