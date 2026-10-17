@@ -5194,7 +5194,7 @@ impl RenderOnce for AntIcon {
                     .size(px(self.size))
                     .text_color(primary)
                     .with_animation(
-                        ("ant-icon-twotone-spin", path, "primary"),
+                        format!("ant-icon-twotone-spin-{path}-primary"),
                         animation(),
                         |icon, delta| icon.with_transformation(
                             Transformation::rotate(percentage(delta))),
@@ -5205,7 +5205,7 @@ impl RenderOnce for AntIcon {
                     .size(px(self.size))
                     .text_color(secondary)
                     .with_animation(
-                        ("ant-icon-twotone-spin", path, "secondary"),
+                        format!("ant-icon-twotone-spin-{path}-secondary"),
                         animation(),
                         |icon, delta| icon.with_transformation(
                             Transformation::rotate(percentage(delta))),
