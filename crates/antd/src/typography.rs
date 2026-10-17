@@ -3,6 +3,7 @@
 //! These are GPUI elements, not HTML text. Copy and link activation delegate
 //! keyboard/focus semantics to GPUI Base.
 
+use std::rc::Rc;
 use gpui_kit::{
     App, ClipboardItem, ElementId, FontWeight, Hsla, InteractiveElement as _, IntoElement,
     ParentElement as _, RenderOnce, SharedString, Styled as _, Window, div, px, relative,
@@ -136,7 +137,9 @@ impl RenderOnce for AntText {
     }
 }
 
-/// Typography.Paragraph: readable line height and optional single-line ellipsis.
+/// Typography.Paragraph: readable line height, line-clamping and controlled expansion.
+type ExpandHandler = Rc<dyn Fn(bool, &mut Window, &mut App)>;
+
 #[derive(IntoElement)]
 pub struct AntParagraph {
     text: SharedString,
@@ -144,28 +147,66 @@ pub struct AntParagraph {
     tone: TextTone,
     ellipsis: bool,
     width: Option<f32>,
+    max_lines: Option<usize>,
+    expanded: bool,
+    expand_id: Option<ElementId>,
+    on_expand: Option<ExpandHandler>,
 }
 impl AntParagraph {
     pub fn new(text: impl Into<SharedString>) -> Self {
         Self { text: text.into(), theme: AntTheme::default(),
-            tone: TextTone::Default, ellipsis: false, width: None }
+            tone: TextTone::Default, ellipsis: false, width: None,
+            max_lines: None, expanded: false, expand_id: None, on_expand: None }
     }
     pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
     pub fn tone(mut self, tone: TextTone) -> Self { self.tone = tone; self }
-    /// Single line with clipping and a trailing ellipsis.
+    /// Truncate the visible paragraph to one line.
     pub fn ellipsis(mut self, ellipsis: bool) -> Self { self.ellipsis = ellipsis; self }
-    pub fn width(mut self, px: f32) -> Self { self.width = Some(px.max(0.)); self }
+    /// GPUI's native text system truncates at the given number of visual lines.
+    pub fn max_lines(mut self, lines: usize) -> Self {
+        self.max_lines = Some(lines.max(1)); self
+    }
+    pub fn width(mut self, width: f32) -> Self { self.width = Some(width.max(0.)); self }
+    /// The parent is the source of truth for expansion state.
+    pub fn expanded(mut self, expanded: bool) -> Self { self.expanded = expanded; self }
+    /// Attach a keyboard-accessible Expand / Collapse button.
+    /// The callback receives the requested expanded state; store it in the
+    /// owning GPUI Entity and call cx.notify() to update the paragraph.
+    pub fn on_expand(mut self, id: impl Into<ElementId>,
+        handler: impl Fn(bool, &mut Window, &mut App) + 'static) -> Self
+    {
+        self.expand_id = Some(id.into());
+        self.on_expand = Some(Rc::new(handler));
+        self
+    }
 }
 impl RenderOnce for AntParagraph {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        div()
+        let theme=self.theme;
+        let expanded=self.expanded;
+        let line_limit=if expanded { None } else { self.max_lines };
+        let text=div()
             .w_full()
             .text_size(px(14.))
             .line_height(relative(1.5715))
-            .text_color(self.tone.color(self.theme))
+            .text_color(self.tone.color(theme))
             .when_some(self.width, |this, w| this.w(px(w)))
-            .when(self.ellipsis, |this| this.min_w_0().truncate())
-            .child(self.text)
+            .when(self.ellipsis && line_limit.is_none() && !expanded,
+                |this| this.min_w_0().truncate())
+            .when_some(line_limit, |this, count| this.min_w_0().line_clamp(count))
+            .child(self.text);
+        div().w_full().flex().flex_col().items_start().gap(px(6.))
+            .child(text)
+            .when_some(self.expand_id.zip(self.on_expand), |this, (id, handler)| {
+                this.child(
+                    BaseButton::new(id)
+                        .cursor_pointer()
+                        .text_size(px(12.))
+                        .text_color(theme.primary)
+                        .child(if expanded { "Collapse" } else { "Expand" })
+                        .on_click(move |_, window, cx| handler(!expanded, window, cx)),
+                )
+            })
     }
 }
 
@@ -237,6 +278,17 @@ mod tests {
         }
         assert_eq!(AntTitle::new("Large").level(0).font_size(), 38.);
         assert_eq!(AntTitle::new("Small").level(9).font_size(), 16.);
+    }
+    #[test]
+    fn paragraph_limits_and_controlled_expansion() {
+        let paragraph=AntParagraph::new("Long text").max_lines(0)
+            .expanded(true).width(320.);
+        assert_eq!(paragraph.max_lines, Some(1));
+        assert!(paragraph.expanded);
+        assert_eq!(paragraph.width, Some(320.));
+        let paragraph=AntParagraph::new("Other text").max_lines(3);
+        assert_eq!(paragraph.max_lines, Some(3));
+        assert!(!paragraph.expanded);
     }
     #[test]
     fn status_tones_map_to_theme_colors() {

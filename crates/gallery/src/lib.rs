@@ -99,6 +99,7 @@ pub struct Gallery {
     form_errors: BTreeMap<String, String>,
     form_attempted: bool,
     form_success: bool,
+    paragraph_expanded: bool,
 }
 
 impl Gallery {
@@ -150,6 +151,7 @@ impl Gallery {
             date_single, date_range, date_time, date_disabled,
             form_name, form_email, form_password, form_confirm,
             form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
+            paragraph_expanded: false,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -592,7 +594,11 @@ impl Gallery {
             .into_any_element()
     }
 
-    fn typography_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+    fn typography_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_expand = cx.listener(|this, expanded: &bool, _, cx| {
+            this.paragraph_expanded = *expanded;
+            cx.notify();
+        });
         AntTypography::new().gap(15.)
             .child(AntTitle::new("Ant Design Typography").level(1).theme(t))
             .child(AntTitle::new("Heading level 2").level(2).theme(t))
@@ -622,6 +628,14 @@ impl Gallery {
             .child(AntParagraph::new(
                 "A long single-line paragraph that is truncated to show how Ant Design ellipsis behaves when a container has a limited width."
             ).theme(t).ellipsis(true).width(360.))
+            .child(label("Three-line truncation, with controlled expand / collapse", t))
+            .child(AntParagraph::new(
+                "The Ant Design Typography paragraph may contain more text than the card can show at once.                 Line clamping is performed by the GPUI text engine and works with the real                 browser WebAssembly backend too. Expand to reveal the full paragraph, then                 collapse back to three visual lines. This is not an HTML text stand-in."
+            ).theme(t).width(440.).max_lines(3)
+                .expanded(self.paragraph_expanded)
+                .on_expand("typography-paragraph-toggle", move |state, window, cx| {
+                    on_expand(&state, window, cx);
+                }))
             .into_any_element()
     }
 
@@ -748,7 +762,7 @@ impl Render for Gallery {
             "Icons"=>self.icons_demo(t),
             name if name.starts_with("Icon:") =>
                 self.icon_single_demo(t, name.trim_start_matches("Icon:")),
-            "Typography"=>self.typography_demo(t),
+            "Typography"=>self.typography_demo(t,cx),
             "Space"=>self.space_demo(t),
             "Flex"=>self.flex_demo(t),
             "Grid"=>self.grid_demo(t),

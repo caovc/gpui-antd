@@ -119,13 +119,13 @@ official icon license and pinned source revision are documented in
 
 `AntTitle`, `AntText`, `AntParagraph`, `AntLink`, and `AntTypography`
 provide the Ant Design type scale, status colors, strong/emphasized/code/
-marked text, single-line truncation, clipboard copy, and accessible links.
+marked text, single- and multi-line truncation with controlled expand/collapse, clipboard copy, and accessible links.
 
 `AntSpace` and `AntFlex` provide fixed/custom gaps, orientation, wrapping,
 alignment and distribution. `AntRow`/`AntCol` implement the familiar
 24-column grid with span, offset and gutter. Avatar, Statistic, Empty and
 Breadcrumb provide additional native data-display, feedback and navigation
-primitives. Responsive xs/sm/md/lg/xl/xxl breakpoints now follow Ant Design's viewport widths (0/576/768/992/1200/1600px). Responsive offsets, selectable rich text and multi-line ellipsis remain future work.
+primitives. Responsive xs/sm/md/lg/xl/xxl breakpoints now follow Ant Design's viewport widths (0/576/768/992/1200/1600px). Responsive offsets, fully editable rich text remains future work.
 
 ## Browser gallery (real GPUI → WASM)
 
