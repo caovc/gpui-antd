@@ -358,7 +358,10 @@ try {
       return canvas&&canvas.width>0&&canvas.height>0&&!document.querySelector('#status');
     },null,{timeout:60000});
     await keyboardTabs.waitForTimeout(600);
-    await keyboardTabs.mouse.click(92,101);
+    // Click well inside the *first* (Overview) tab. The previous x=92
+    // sat near the Overview/Settings boundary and could already select the
+    // last enabled tab, making the subsequent End assertion a no-op.
+    await keyboardTabs.mouse.click(42,101);
     await keyboardTabs.mouse.move(880,530);
     await keyboardTabs.waitForTimeout(450);
     const original=await keyboardTabs.screenshot({
