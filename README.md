@@ -24,7 +24,7 @@
 
 ## First milestone component set
 
-Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress and Divider.
+Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, and Grid.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -91,6 +91,38 @@ The new RadioGroup supports a controlled selected index, roving Tab stops,
 arrows, Home/End navigation and disabled-item skipping. Both layouts and the
 radio-button style have examples in the interactive docs.
 
+## Ant Design Icons
+
+The alpha library now includes **78 genuine Ant Design SVG icons**: 58
+Outlined, 12 Filled and 8 TwoTone variants. They are embedded from the
+official MIT-licensed ant-design-icons repository and render through GPUI's
+SVG painter on macOS, Windows, Linux and browser WASM (not an icon font).
+
+```rust
+use gpui_antd::{AntIcon, AntIconName};
+let search_icon = AntIcon::new(AntIconName::SearchOutlined).size(24.);
+let success_icon = AntIcon::new(AntIconName::CheckCircleFilled);
+let loading_icon = AntIcon::loading();
+```
+
+Register `gpui_antd::AntIconAssets` as the application's GPUI `AssetSource`.
+If GPUI Kit icons are also used, **compose** `AntIconAssets` and
+`gpui_kit::assets::Assets` (the Gallery has a cross-platform example in
+`crates/gallery/src/lib.rs`). The latter alone cannot load Ant icons. The
+official icon license and pinned source revision are documented in
+`THIRD_PARTY_NOTICES.md` and `crates/antd/assets/LICENSE-ANT-DESIGN-ICONS`.
+
+## Typography and layout
+
+`AntTitle`, `AntText`, `AntParagraph`, `AntLink`, and `AntTypography`
+provide the Ant Design type scale, status colors, strong/emphasized/code/
+marked text, single-line truncation, clipboard copy, and accessible links.
+
+`AntSpace` and `AntFlex` provide fixed/custom gaps, orientation, wrapping,
+alignment and distribution. `AntRow`/`AntCol` implement the familiar
+24-column grid with span, offset and gutter. Responsive named breakpoints,
+selectable rich text and multi-line ellipsis need later work.
+
 ## Browser gallery (real GPUI → WASM)
 
 The browser showcases GPUI's real `wasm32-unknown-unknown` backend.
@@ -115,8 +147,8 @@ not supply a system font. See [notices](THIRD_PARTY_NOTICES.md).
 
 ## Browser smoke verification
 
-The Pages CI opens the compiled Rust/WASM demos for Button, Radio, Input and
-Select in headless Chromium (SwiftShader software rendering). It verifies
+The Pages CI opens the compiled Rust/WASM demos for core controls, Icons,
+Typography and layout primitives in headless Chromium (SwiftShader software rendering). It verifies
 that GPUI creates a visible canvas and clears its startup screen; screenshots
 are retained as a CI artifact. This is a startup smoke test, not yet visual
 pixel-parity certification against React Ant Design.
@@ -134,8 +166,9 @@ Pages setting blocks it, the owner should set
 
 ## Contributing and roadmap
 
-Next up: accurate hover/focus/disabled style states, accessibility snapshots,
-Input variants, Select, Dropdown, Tooltip, Modal, Form and Table. A broader
+Next up: responsive Grid breakpoints, the full Ant Design icon catalog,
+visual/screenshot regression, accessibility snapshots, Dropdown, Tooltip,
+Modal, multi-select and high-performance Table. A broader
 Ant Design API catalog will be added one tested group at a time.
 
 Upstream frameworks: [GPUI Kit](https://gpui-kit.com/),

@@ -223,3 +223,10 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 
 /* Four native form fields plus inline errors need a taller preview. */
 .example-card iframe.wasm-iframe[src*="component=Form"] { height: 650px; }
+
+/* Rich Rust/WASM showcases get enough canvas height for wrapping and galleries. */
+.example-card iframe.wasm-iframe[src*="component=Icons"] { height: 680px; }
+.example-card iframe.wasm-iframe[src*="component=Typography"] { height: 680px; }
+.example-card iframe.wasm-iframe[src*="component=Space"] { height: 480px; }
+.example-card iframe.wasm-iframe[src*="component=Flex"] { height: 490px; }
+.example-card iframe.wasm-iframe[src*="component=Grid"] { height: 440px; }
