@@ -59,7 +59,7 @@ Global themes are **copyable Rust values**, passed via each component's
 
 ## Component Token coverage
 
-`AntComponent::ALL` registers 31 independent namespaces. `AntComponentToken`
+`AntComponent::ALL` registers 50 independent namespaces. `AntComponentToken`
 has a shared typed shape, but not every field is consumed by every component.
 
 | Component | Live fields in native renderer |
@@ -78,6 +78,9 @@ has a shared typed shape, but not every field is consumed by every component.
 | Divider | colorBorder, controlHeight |
 | Typography | colorPrimary, colorBg, colorText, colorBorder, borderRadius, fontSize |
 | Tooltip | colorBg, colorText, colorBorder, borderRadius |
+| Tree | colorPrimary, colorBg, colorText, colorBgHover, colorBgSelected, borderRadius, controlHeight, fontSize |
+| Table | colorBg, colorText, colorBorder, colorHeaderBg, colorBgSelected, borderRadius, fontSize |
+| Timeline | colorPrimary, colorText, colorBorder, fontSize |
 
 This matrix states actual **property consumption**, not visual Ant Design
 pixel parity. Other namespaces are serialized for forward compatibility but
@@ -93,7 +96,7 @@ the change has passed CI and been deployed. The page offers:
 1. Global Seed Token editor with independently configurable Info and Link
    colors; presets and four light/dark/compact algorithms.
 2. Component Token overrides restricted to fields with real Rust consumers.
-3. **Components** view for Button, Card, Input, Menu and the newly wired
+3. **Components** view for Button, Card, Input, Menu, Tree, Table, Timeline and the newly wired
    data-display/feedback tokens; **Resolved Tokens** view for a Rust/GPUI
    rendering of Map and Alias values.
 4. JSON import/export using `gpui-antd-theme-v1`, validated before use,
