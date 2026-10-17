@@ -3,7 +3,8 @@
 //! URL config is a transport envelope for a Rust/WASM preview. It is NOT
 //! equivalent to React ConfigProvider and it is not persisted by GPUI.
 use gpui_antd::{
-    AntSeedTokens, AntTheme, AntThemeAlgorithm, AntComponent, AntComponentToken, AntComponentTokens, color,
+    AntSeedTokens, AntTheme, AntThemeAlgorithm, AntComponent, AntComponentToken, AntComponentTokens, AntMapTokenOverrides,
+    AntAliasTokenOverrides, color,
 };
 
 pub struct ThemeLabSpec {
@@ -32,6 +33,8 @@ impl ThemeLabSpec {
         let mut menu=AntComponentToken::default();
         let mut layout=AntComponentToken::default();
         let mut component_tokens=AntComponentTokens::default();
+        let mut map_overrides=AntMapTokenOverrides::default();
+        let mut alias_overrides=AntAliasTokenOverrides::default();
         for raw in input.trim_start_matches('|').split('|').take(512) {
             let Some((key,value))=raw.split_once('=') else {continue};
             if value.len()>64 {continue;}
@@ -78,6 +81,57 @@ impl ThemeLabSpec {
                     // stores all 31; runtime consumers are rolled out
                     // incrementally and documented on the parity page.
                     if let Some((name,field))=key.split_once('.') {
+                        if name=="Map" {
+                            match field {
+                                "colorPrimaryHover"=>if let Some(v)=hex24(value){
+                                    map_overrides.color_primary_hover=Some(color(v))
+                                },
+                                "colorPrimaryActive"=>if let Some(v)=hex24(value){
+                                    map_overrides.color_primary_active=Some(color(v))
+                                },
+                                "colorPrimaryBg"=>if let Some(v)=hex24(value){
+                                    map_overrides.color_primary_bg=Some(color(v))
+                                },
+                                "colorPrimaryBorder"=>if let Some(v)=hex24(value){
+                                    map_overrides.color_primary_border=Some(color(v))
+                                },
+                                "colorBgElevated"=>if let Some(v)=hex24(value){
+                                    map_overrides.color_bg_elevated=Some(color(v))
+                                },
+                                "colorBgLayout"=>if let Some(v)=hex24(value){
+                                    map_overrides.color_bg_layout=Some(color(v))
+                                },
+                                "controlHeightSM"=>if let Some(v)=scalar(value,18.,64.){
+                                    map_overrides.control_height_sm=Some(v)
+                                },
+                                "controlHeightLG"=>if let Some(v)=scalar(value,20.,72.){
+                                    map_overrides.control_height_lg=Some(v)
+                                },
+                                _=>(),
+                            }
+                            continue;
+                        }
+                        if name=="Alias" {
+                            match field {
+                                "colorLink"=>if let Some(v)=hex24(value){
+                                    alias_overrides.color_link=Some(color(v))
+                                },
+                                "colorTextDisabled"=>if let Some(v)=hex24(value){
+                                    alias_overrides.color_text_disabled=Some(color(v))
+                                },
+                                "colorSuccess"=>if let Some(v)=hex24(value){
+                                    alias_overrides.color_success=Some(color(v))
+                                },
+                                "colorWarning"=>if let Some(v)=hex24(value){
+                                    alias_overrides.color_warning=Some(color(v))
+                                },
+                                "colorError"=>if let Some(v)=hex24(value){
+                                    alias_overrides.color_error=Some(color(v))
+                                },
+                                _=>(),
+                            }
+                            continue;
+                        }
                         if let Some(component)=AntComponent::from_name(name) {
                             let mut tokens=component_tokens.get(component);
                             match field {
@@ -129,6 +183,8 @@ impl ThemeLabSpec {
             (true,true)=>AntThemeAlgorithm::DarkCompact,
         };
         let mut theme=AntTheme::from_seed(seed,algorithm)
+            .with_map_overrides(map_overrides)
+            .with_alias_overrides(alias_overrides)
             .with_component(AntComponent::Button,button)
             .with_component(AntComponent::Card,card)
             .with_component(AntComponent::Input,input_style)
@@ -193,6 +249,24 @@ mod tests {
         assert_eq!(theme.color_info,color(0x114488));
         assert_eq!(theme.color_link,color(0xbeef12));
         assert_eq!(theme.component(AntComponent::Tooltip).border_radius,Some(13.));
+    }
+    #[test]
+    fn map_and_alias_overrides_apply_after_seed_and_before_components() {
+        let theme=ThemeLabSpec::parse(
+            "ThemeLab|colorPrimary=1677ff|colorLink=112233|Map.colorPrimaryBg=f0faee|Map.controlHeightSM=23|Alias.colorLink=aabbcc|Alias.colorTextDisabled=777777|Button.colorPrimary=0055aa",
+            false).unwrap().theme;
+        assert_eq!(theme.primary,color(0x1677ff));
+        assert_eq!(theme.map_tokens().color_primary_bg,color(0xf0faee));
+        assert_eq!(theme.map_tokens().control_height_sm,23.);
+        assert_eq!(theme.alias_tokens().color_link,color(0xaabbcc));
+        assert_eq!(theme.alias_tokens().color_text_disabled,color(0x777777));
+        assert_eq!(theme.component(AntComponent::Button).color_primary,Some(color(0x0055aa)));
+        assert_eq!(theme.component(AntComponent::Card).color_primary,None);
+        let invalid=ThemeLabSpec::parse(
+            "ThemeLab|Map.colorPrimaryBg=zzzzzz|Map.controlHeightSM=nan|Alias.colorLink=bad",
+            false).unwrap().theme;
+        assert_eq!(invalid.alias_tokens().color_link,color(0x1677ff));
+        assert_eq!(invalid.control_height_sm,24.);
     }
     #[test]
     fn parse_rejects_injection_and_nonfinite_inputs() {

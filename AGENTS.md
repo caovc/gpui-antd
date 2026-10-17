@@ -64,6 +64,20 @@
    until that run actually reports success. Confirm source commit SHA and
    successful `deploy` job before declaring the updated site live.
 
+## Token Studio development contract
+
+- Theme derivation is Rust-only: `crates/antd/src/design_tokens.rs` implements
+  Seed -> Map -> Alias -> Component. Explicit `with_map_overrides` and
+  `with_alias_overrides` are limited to supported native token fields.
+- `crates/gallery/src/theme_lab.rs` accepts bounded `Map.<name>` /
+  `Alias.<name>` route parameters. When adding a token, update the Rust
+  builder, parser, JS editor/serializer/Rust generator, tests and
+  `docs/THEME_TOKENS.md` in the same change.
+- `website/src/theme-designer.js` is an editor only. Its component previews
+  must remain **actual Rust GPUI/WASM canvases**, not HTML replicas.
+- Keep JSON import compatible with `gpui-antd-theme-v1`, validating every
+  imported numeric and color before preview.
+
 ## Files to change for a new public component
 
 1. Add or extend `crates/antd/src/<component>.rs`, with a

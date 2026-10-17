@@ -47,6 +47,7 @@ pub use date_picker::AntDatePicker;
 pub use form::{AntForm, AntFormItem, FormRule, FormSchema, FormValidation};
 pub use tokens::{AntTheme, Appearance, color};
 pub use design_tokens::{AntSeedTokens, AntMapTokens, AntAliasTokens,
+    AntMapTokenOverrides, AntAliasTokenOverrides,
     AntThemeAlgorithm, AntComponent, AntComponentToken, AntComponentTokens,
     AntTokenLayer, AntTokenValue, AntResolvedToken};
 pub use typography::{AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone};
