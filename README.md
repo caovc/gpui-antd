@@ -35,7 +35,7 @@ before implementing components or changing the WASM gallery. See
 ## First milestone component set
 
 Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, Grid, Avatar, Statistic,
-Empty, Breadcrumb, Tabs, Tooltip and application Layout.
+Empty, Breadcrumb, Tabs, Tooltip, application Layout, Dropdown, Popover, Modal and Popconfirm.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -169,6 +169,25 @@ of tall clipped grids; the documentation catalogue wraps full icon names
 rather than truncating them to ellipses. Load more results to browse all 848
 icons or search for a specific name. The standalone preview renders the
 chosen icon with real Rust/GPUI.
+
+
+## Dropdown, Popover, Modal and Popconfirm (alpha)
+
+Native Kit overlay infrastructure is wrapped in \`crates/antd/src/overlays.rs\`:
+- \`AntDropdown\` uses GPUI Kit PopupMenu with stable item keys, checked /
+  disabled / separator states, keyboard menu navigation and callbacks.
+- \`AntPopover\` owns an anchored GPU-native content surface with a trigger,
+  optional arrow and controlled or uncontrolled open state.
+- \`AntModal\` wraps GPUI Kit Dialog/Root for modal focus, backdrop, Escape,
+  stacking and OK/Cancel callbacks returning \`bool\` to allow veto.
+- \`AntPopconfirm\` is an **anchored Popover**, not a generic modal alert;
+  it uses native Rust buttons and dismisses via GPUI Base PopoverState.
+
+These are first-stage APIs. Dropdown/Popover triggers currently use Kit
+buttons, Modal supports plain-text content (richer form panels are pending),
+and automatic Ant Design placement/animation parity is not complete. Browser
+smoke verifies the canvas starts; full pointer/keyboard interaction tests
+and screenshot comparisons must still be added.
 
 
 ## Browser gallery (real GPUI → WASM)

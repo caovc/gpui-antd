@@ -11,6 +11,7 @@ use gpui_antd::{
     AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem,
     AntTabs, AntTab, TabsVariant, AntTooltip,
     AntLayout, AntSider, AntHeader, AntContent, AntFooter, GridBreakpoint,
+    AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -69,7 +70,8 @@ impl GalleryAssets {
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Tabs", "Tooltip", "Icons", "Layout", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
+    "Alert", "Card", "Progress", "Divider", "Tabs", "Tooltip", "Icons", "Layout",
+    "Dropdown", "Popover", "Modal", "Popconfirm", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
 ];
 
 pub struct Gallery {
@@ -106,6 +108,10 @@ pub struct Gallery {
     tabs_index: usize,
     tabs_card_index: usize,
     layout_collapsed: bool,
+    dropdown_selected: String,
+    popover_open: bool,
+    modal_result: String,
+    popconfirm_result: String,
 }
 
 impl Gallery {
@@ -159,6 +165,9 @@ impl Gallery {
             form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
             paragraph_expanded: false,
             tabs_index: 0, tabs_card_index: 1, layout_collapsed: false,
+            dropdown_selected: "None".into(), popover_open: false,
+            modal_result: "No action".into(),
+            popconfirm_result: "Awaiting confirmation".into(),
         }
     }
     fn theme(&self) -> AntTheme {
@@ -703,6 +712,135 @@ impl Gallery {
             .into_any_element()
     }
 
+
+    fn dropdown_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_select=cx.listener(|this, key: &SharedString, _, cx| {
+            this.dropdown_selected=key.to_string();
+            cx.notify();
+        });
+        div().w_full().flex().flex_col().gap(px(20.))
+            .child(label("Native keyboard-accessible GPUI PopupMenu",t))
+            .child(row()
+                .child(AntDropdown::new("antd-dropdown-actions","Actions")
+                    .theme(t).min_width(180.)
+                    .item(AntDropdownItem::new("new","Create new"))
+                    .item(AntDropdownItem::new("open","Open item"))
+                    .item(AntDropdownItem::separator())
+                    .item(AntDropdownItem::new("favorite","Favorite").checked(true))
+                    .item(AntDropdownItem::new("disabled","Unavailable").disabled(true))
+                    .on_select(move |key, window, cx| on_select(&key,window,cx)))
+                .child(AntDropdown::new("antd-dropdown-more","More options")
+                    .theme(t)
+                    .item(AntDropdownItem::new("export","Export"))
+                    .item(AntDropdownItem::new("share","Share")))
+                .child(AntDropdown::new("antd-dropdown-disabled","Disabled")
+                    .theme(t).disabled(true)
+                    .item(AntDropdownItem::new("hidden","Hidden"))))
+            .child(div().text_color(t.text_secondary).text_size(px(13.))
+                .child(format!("Last selected action: {}",self.dropdown_selected)))
+            .child(AntAlert::new("Try clicking Actions or using Enter, Arrow Up/Down and Escape inside its menu.")
+                .tone(Tone::Blue).theme(t))
+            .into_any_element()
+    }
+
+    fn popover_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_change=cx.listener(|this, open: &bool, _, cx| {
+            this.popover_open=*open;
+            cx.notify();
+        });
+        div().w_full().flex().flex_col().gap(px(20.))
+            .child(label("Native anchored Popover with arbitrary Rust GPUI content",t))
+            .child(row()
+                .child(AntPopover::new("antd-popover-basic","Open popover")
+                    .title("Quick actions").theme(t).width(290.).arrow(true)
+                    .child(AntText::new("Choose what to do next.").theme(t))
+                    .child(AntSpace::new().size(SpaceSize::Small)
+                        .child(AntTag::new("Native GPUI").theme(t).tone(Tone::Green))
+                        .child(AntIcon::new(AntIconName::CheckCircleFilled)
+                            .theme(t).color(t.success))))
+                .child(AntPopover::new("antd-popover-controlled","Controlled popover")
+                    .title("Controlled state").theme(t).width(230.)
+                    .open(self.popover_open)
+                    .on_open_change(move |next,window,cx| on_change(&next,window,cx))
+                    .child(AntText::new("The owning Rust Entity stores the open value.")
+                        .theme(t)))
+                .child(AntPopover::new("antd-popover-disabled","Disabled popover")
+                    .theme(t).disabled(true).child("This cannot be opened")))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Controlled open state: {}",self.popover_open)))
+            .child(AntAlert::new("Click outside or press Escape to dismiss. The popup is positioned and focused by GPUI Kit.")
+                .tone(Tone::Blue).theme(t))
+            .into_any_element()
+    }
+
+    fn modal_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let view=cx.entity().downgrade();
+        let cancel_view=view.clone();
+        div().w_full().flex().flex_col().gap(px(20.))
+            .child(label("Native modal Dialog · focus trap, Escape, background overlay",t))
+            .child(row()
+                .child(AntModal::new("antd-modal-trigger","Open Modal","Edit workspace settings")
+                    .theme(t).width(520.)
+                    .description("Review the changes before saving.")
+                    .body("A real GPUI dialog managed by the Kit Root. Press Escape or Cancel to dismiss.")
+                    .on_ok(move |_,cx| {
+                        let _=view.update(cx,|this,cx|{
+                            this.modal_result="Confirmed".into();
+                            cx.notify();
+                        });
+                        true
+                    })
+                    .on_cancel(move |_,cx| {
+                        let _=cancel_view.update(cx,|this,cx|{
+                            this.modal_result="Canceled".into();
+                            cx.notify();
+                        });
+                        true
+                    }))
+                .child(AntModal::new("antd-modal-fixed-trigger","Non-dismissible mask",
+                    "Persistent modal").theme(t)
+                    .width(420.).mask_closable(false).keyboard(false)
+                    .description("Backdrop and Escape are disabled.")
+                    .body("Use the Cancel or OK button to close this modal.")))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Latest dialog result: {}",self.modal_result)))
+            .child(AntAlert::new("Dialogs are layered above the GPUI gallery and use the framework's modal focus management.")
+                .tone(Tone::Blue).theme(t))
+            .into_any_element()
+    }
+
+    fn popconfirm_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let yes=cx.entity().downgrade();
+        let no=cx.entity().downgrade();
+        div().w_full().flex().flex_col().gap(px(20.))
+            .child(label("Anchored confirmation popover (not a modal alert)",t))
+            .child(row()
+                .child(AntPopconfirm::new("antd-delete-confirm","Delete item",
+                    "Delete this record?").theme(t)
+                    .description("This operation cannot be undone.")
+                    .on_confirm(move |_,cx| {
+                        let _=yes.update(cx,|this,cx|{
+                            this.popconfirm_result="Deleted".into();
+                            cx.notify();
+                        });
+                        true
+                    })
+                    .on_cancel(move |_,cx| {
+                        let _=no.update(cx,|this,cx|{
+                            this.popconfirm_result="Canceled".into();
+                            cx.notify();
+                        });
+                        true
+                    }))
+                .child(AntPopconfirm::new("antd-disabled-confirm","Disabled",
+                    "Cannot activate").theme(t).disabled(true)))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Result: {}",self.popconfirm_result)))
+            .child(AntAlert::new("Confirm and Cancel are native GPUI buttons; outside press and Escape dismiss the anchored popup.")
+                .tone(Tone::Gold).theme(t))
+            .into_any_element()
+    }
+
     fn layout_demo(&self, t: AntTheme, window: &Window, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
         let compact=self.layout_collapsed || window.viewport_size().width < px(768.);
         let on_collapse=cx.listener(|this, next: &bool, _, cx| {
@@ -956,6 +1094,10 @@ impl Render for Gallery {
             "Flex"=>self.flex_demo(t),
             "Grid"=>self.grid_demo(t),
             "Layout"=>self.layout_demo(t,window,cx),
+            "Dropdown"=>self.dropdown_demo(t,cx),
+            "Popover"=>self.popover_demo(t,cx),
+            "Modal"=>self.modal_demo(t,cx),
+            "Popconfirm"=>self.popconfirm_demo(t,cx),
             "Avatar"=>self.avatar_demo(t),
             "Statistic"=>self.statistic_demo(t),
             "Empty"=>self.empty_demo(t),
