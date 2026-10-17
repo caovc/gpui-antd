@@ -71,7 +71,7 @@ def generate(upstream: Path) -> None:
     if len(entries) < 800:
         raise ValueError("Incomplete upstream catalog: fewer than 800 icons")
     source = RUST.read_text(encoding="utf-8")
-    begin = source.index("/// Ant Design outline")
+    begin = source.index("/// Every official Ant Design SVG icon")
     end = source.index("/// Render an actual official Ant Design SVG")
     registry = [
         "/// Every official Ant Design SVG icon, generated from a pinned upstream revision.",

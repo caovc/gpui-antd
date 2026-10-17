@@ -44,6 +44,32 @@ async function serverReady() {
   throw new Error('Vite preview never became ready: ' + serverLog);
 }
 
+// The existence of a GPUI canvas cannot catch opaque, single-color TwoTone
+// icons: GPUI's svg() renders alpha masks. Screenshot pixels must prove that
+// the official saturated blue and pale-blue interior both survived painting.
+async function twoTonePixelCounts(page) {
+  const screenshot = await page.screenshot();
+  return page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = 'data:image/png;base64,' + base64;
+    await image.decode();
+    const surface = document.createElement('canvas');
+    surface.width = image.naturalWidth;
+    surface.height = image.naturalHeight;
+    const context = surface.getContext('2d', { willReadFrequently: true });
+    context.drawImage(image, 0, 0);
+    const data = context.getImageData(0, 0, surface.width, surface.height).data;
+    let blue = 0;
+    let pale = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      if (r < 90 && g > 75 && g < 180 && b > 195 && b - g > 50) blue++;
+      if (r >= 207 && r < 247 && g >= 225 && g <= 254 && b >= 245 && b - r >= 10) pale++;
+    }
+    return { blue, pale };
+  }, screenshot.toString('base64'));
+}
+
 let browser;
 let failures = 0;
 try {
@@ -60,7 +86,8 @@ try {
     ],
   });
 
-  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Layout', 'Dropdown', 'Popover', 'Modal', 'Popconfirm', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Tabs', 'Tooltip', 'Icon:SearchOutlined'];
+  const twoToneCases = ['CarryOutTwoTone', 'CheckCircleTwoTone', 'CiTwoTone'];
+  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Layout', 'Dropdown', 'Popover', 'Modal', 'Popconfirm', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Tabs', 'Tooltip', 'Icon:SearchOutlined', ...twoToneCases.map(name => 'Icon:' + name)];
   for (const name of components) {
     const page = await browser.newPage({ viewport: { width: 900, height: 550 } });
     const errors = [];
@@ -90,6 +117,18 @@ try {
       await page.waitForTimeout(500);
       const canvas = await page.locator('canvas').first();
       if (!await canvas.isVisible()) throw new Error('Canvas was not visible');
+      if (twoToneCases.some(icon => name === 'Icon:' + icon)) {
+        let colors = { blue: 0, pale: 0 };
+        for (let attempt = 0; attempt < 8; attempt++) {
+          colors = await twoTonePixelCounts(page);
+          if (colors.blue >= 15 && colors.pale >= 15) break;
+          await page.waitForTimeout(300); // Full-color img() loading is asynchronous.
+        }
+        if (colors.blue < 15 || colors.pale < 15) {
+          throw new Error('TwoTone SVG lost blue/pale fills in GPUI screenshot: ' +
+            JSON.stringify(colors));
+        }
+      }
       if (errors.length) throw new Error('JavaScript console errors: ' + errors.join('; '));
       console.log('PASS: ' + name + ' rendered through GPUI/WASM');
     } catch (error) {

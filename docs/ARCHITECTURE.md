@@ -140,7 +140,13 @@ upstream SVGs
 
 848 assets: 447 Outlined, 251 Filled, 150 TwoTone. The SVG bytes are loaded
 from the Rust asset source on both native and WASM, without making every icon
-a network request. `GalleryAssets` in `crates/gallery/src/lib.rs` composes
+a network request. Outlined/Filled SVGs render through Kit Icon's single-color
+alpha mask, while TwoTone SVGs render through GPUI `img()` as full-color images.
+GPUI `svg()` discards interior fill colors, which made the TwoTone light layer
+look like a solid black shape. The asset loader injects a 128px intrinsic size
+for TwoTone rasterization (the 1024-unit viewBox and original path/fill art
+remain unchanged) to avoid huge cached textures. `.color()` and `.spin()`
+currently apply only to monochrome icons; TwoTone keeps its baked palette. `GalleryAssets` in `crates/gallery/src/lib.rs` composes
 `AntIconAssets` with GPUI Kit's own `Assets` source. On browser WASM, Kit's
 source may fetch its original icons asynchronously. The docs icon explorer is
 only a **DOM index**; selecting a name loads a *single actual* Rust/GPUI canvas

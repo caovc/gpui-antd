@@ -7,7 +7,7 @@
 use std::{borrow::Cow, time::Duration};
 use gpui_kit::{
     Animation, AnimationExt as _, App, AssetSource, Hsla, IntoElement, RenderOnce, Result,
-    SharedString, Styled as _, Transformation, Window, percentage, px,
+    SharedString, Styled as _, Transformation, Window, img, percentage, px,
     prelude::FluentBuilder as _,
 };
 use crate::tokens::AntTheme;
@@ -5136,7 +5136,8 @@ impl AntIconName {
 /// Render an actual official Ant Design SVG using GPUI's SVG painter.
 ///
 /// Prefer `AntIcon::new(AntIconName::SearchOutlined)` in buttons and text.
-/// Outline icons inherit the requested color through `currentColor` SVG fill.
+/// Outlined/Filled icons use a theme-tinted SVG mask. TwoTone icons are painted
+/// with GPUI's full-color image element so both official fill colors survive.
 #[derive(IntoElement)]
 pub struct AntIcon {
     name: AntIconName,
@@ -5152,13 +5153,25 @@ impl AntIcon {
     }
     pub fn loading() -> Self { Self::new(AntIconName::LoadingOutlined).spin(true) }
     pub fn size(mut self, size: f32) -> Self { self.size = size.max(0.); self }
+    /// Tint Outlined/Filled icons; TwoTone icons preserve their official SVG palette.
     pub fn color(mut self, color: Hsla) -> Self { self.color = Some(color); self }
     pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
+    /// Animate monochrome icons (such as `LoadingOutlined`).
+    /// TwoTone icons currently render as static, full-color images.
     pub fn spin(mut self, spin: bool) -> Self { self.spin = spin; self }
     pub fn name(&self) -> AntIconName { self.name }
 }
 impl RenderOnce for AntIcon {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
+        if self.name.style() == "twotone" {
+            // KitIcon/svg() paints only the SVG alpha mask with one tint; this
+            // destroys the pale fill and makes checks look like solid blocks.
+            // img() preserves the official foreground and background colors.
+            return img(self.name.path())
+                .size(px(self.size))
+                .flex_shrink_0()
+                .into_any_element();
+        }
         let icon = KitIcon::default()
             .path(self.name.path())
             .with_size(Size::Size(px(self.size)))
@@ -5173,6 +5186,28 @@ impl RenderOnce for AntIcon {
             icon.into_any_element()
         }
     }
+}
+
+// GPUI's img() rasterizes SVGs at twice their intrinsic dimensions. The
+// official 1024x1024 viewBox must remain unchanged, but loading that same size
+// for each 16-64px icon would allocate large textures (especially in WASM).
+// Supply a smaller intrinsic image size without modifying any artwork paths.
+const TWO_TONE_IMAGE_DIMENSIONS: &[u8] = b" width=\"128\" height=\"128\"";
+
+fn two_tone_image_svg(bytes: &'static [u8]) -> Cow<'static, [u8]> {
+    let start = bytes.windows(4).position(|part| part == b"<svg").expect("SVG root");
+    let end = start + bytes[start..].iter().position(|byte| *byte == b'>').expect("SVG root end");
+    let root = &bytes[start..end];
+    if root.windows(7).any(|part| part == b" width=")
+        || root.windows(8).any(|part| part == b" height=")
+    {
+        return Cow::Borrowed(bytes);
+    }
+    let mut resized = Vec::with_capacity(bytes.len() + TWO_TONE_IMAGE_DIMENSIONS.len());
+    resized.extend_from_slice(&bytes[..start + 4]);
+    resized.extend_from_slice(TWO_TONE_IMAGE_DIMENSIONS);
+    resized.extend_from_slice(&bytes[start + 4..]);
+    Cow::Owned(resized)
 }
 
 /// Embedded source for every official Ant Design SVG. No network or
@@ -6033,7 +6068,11 @@ impl AssetSource for AntIconAssets {
             "antd-icons/twotone/warning.svg" => Some(include_bytes!("../assets/antd-icons/twotone/warning.svg").as_slice()),
             _ => None,
         };
-        Ok(svg.map(Cow::Borrowed))
+        if path.starts_with("antd-icons/twotone/") {
+            Ok(svg.map(two_tone_image_svg))
+        } else {
+            Ok(svg.map(Cow::Borrowed))
+        }
     }
 
     fn list(&self, prefix: &str) -> Result<Vec<SharedString>> {
@@ -6069,5 +6108,33 @@ mod tests {
         assert!(AntIconName::CheckCircleFilled.path().contains("/filled/"));
         assert!(AntIconName::CheckCircleTwoTone.path().contains("/twotone/"));
         assert_eq!(AntIcon::loading().name(), AntIconName::LoadingOutlined);
+    }
+
+    #[test]
+    fn two_tone_icons_retain_distinct_blue_and_light_fills() {
+        let source = AntIconAssets;
+        for name in [
+            AntIconName::CarryOutTwoTone,
+            AntIconName::CheckCircleTwoTone,
+            AntIconName::CheckSquareTwoTone,
+            AntIconName::CiCircleTwoTone,
+            AntIconName::CiTwoTone,
+        ] {
+            assert_eq!(name.style(), "twotone");
+            let bytes = source.load(name.path()).unwrap().expect(name.path());
+            let svg = std::str::from_utf8(&bytes).unwrap();
+            assert!(svg.contains(r#"<svg width="128" height="128""#), "{}", name.path());
+            assert!(svg.contains(r#"viewBox="0 0 1024 1024""#), "{}", name.path());
+            assert!(svg.contains(r##"fill="#1677ff""##), "{}", name.path());
+            assert!(svg.contains(r##"fill="#e6f4ff""##), "{}", name.path());
+        }
+        assert_eq!(
+            AntIconName::ALL.iter().filter(|name| name.style() == "twotone").count(),
+            150
+        );
+        assert!(matches!(
+            source.load(AntIconName::CheckCircleFilled.path()).unwrap(),
+            Some(Cow::Borrowed(_))
+        ));
     }
 }
