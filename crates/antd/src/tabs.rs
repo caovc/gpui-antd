@@ -248,7 +248,7 @@ impl RenderOnce for AntTabs {
             // Focus the bar rather than the surrounding panel; child editors
             // and form controls must keep their own arrow-key behavior.
             .child(
-                div().id(nav_id).role(Role::Group)
+                div().id(nav_id.clone()).role(Role::TabList)
                     .aria_label("Tabs: use Left/Right, Home or End to select")
                     .track_focus(&focus.tab_stop(self.keyboard))
                     .when(self.keyboard, |this| this.on_key_down(on_keyboard))
@@ -256,7 +256,9 @@ impl RenderOnce for AntTabs {
             )
             .when_some(panel, |this, panel| {
                 this.child(
-                    div().w_full().min_w_0().p(px(self.panel_padding))
+                    div().id(format!("{nav_id}:panel")).role(Role::TabPanel)
+                        .aria_label("Selected tab content")
+                        .w_full().min_w_0().p(px(self.panel_padding))
                         .text_color(self.theme.text)
                         .child(panel)
                 )
