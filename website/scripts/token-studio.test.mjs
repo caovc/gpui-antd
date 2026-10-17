@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { themeDesignerHtml, tokenStudioLogic } from '../src/theme-designer.js';
 
-const {emptyTheme,validated,previewParam,rustCode,validateValue}=tokenStudioLogic;
+const {emptyTheme,validated,previewParam,rustCode,validateValue,previewViewportWidth}=tokenStudioLogic;
 
 test('studio exposes the real GPU preview and two independent scenes',()=>{
   const html=themeDesignerHtml();
@@ -12,6 +12,20 @@ test('studio exposes the real GPU preview and two independent scenes',()=>{
   assert.match(html,/LIVE GPU/);
   assert.match(html,/data-seed="colorPrimary"/);
   assert.ok(!html.includes('<button class="ant-btn"'));
+});
+
+test('responsive preview viewport changes the real GPU iframe width without theme changes',()=>{
+  const html=themeDesignerHtml();
+  assert.match(html,/id="theme-viewport"/);
+  assert.match(html,/id="theme-preview-stage"/);
+  assert.match(html,/value="mobile"/);
+  assert.match(html,/value="tablet"/);
+  assert.equal(previewViewportWidth('desktop'),'100%');
+  assert.equal(previewViewportWidth('tablet'),'768px');
+  assert.equal(previewViewportWidth('mobile'),'390px');
+  assert.equal(previewViewportWidth('bogus'),'100%');
+  const config=emptyTheme();
+  assert.equal(previewParam(config,'tokens'),previewParam(config,'tokens'));
 });
 
 test('independent colorInfo/colorLink seeds roundtrip into WASM and Rust',()=>{
