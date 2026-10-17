@@ -105,6 +105,17 @@ The first WASM build downloads a ~49 KB IBM Plex Sans subset font from the
 pinned upstream GPUI Kit gallery revision. It is needed because GPUI Web does
 not supply a system font. See [notices](THIRD_PARTY_NOTICES.md).
 
+## Browser smoke verification
+
+The Pages CI opens the compiled Rust/WASM demos for Button, Radio, Input and
+Select in headless Chromium (SwiftShader software rendering). It verifies
+that GPUI creates a visible canvas and clears its startup screen; screenshots
+are retained as a CI artifact. This is a startup smoke test, not yet visual
+pixel-parity certification against React Ant Design.
+
+Locally: `cd website && npm install && npx playwright install chromium && npm run smoke`
+after running `npm run build` with the WASM module in place.
+
 ## GitHub Pages
 
 Commits on `main` run the **WASM Docs** workflow: compile the Rust gallery,
