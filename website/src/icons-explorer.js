@@ -26,6 +26,7 @@ export function iconExplorerHtml() {
     '</div>' +
     '<p id="icon-count" class="icon-count" role="status" aria-live="polite">Loading official icon catalog…</p>' +
     '<div id="icon-result-grid" class="icon-result-grid" aria-label="Icon name search results"></div>' +
+    '<button id="icon-load-more" type="button" class="icon-explorer-load" hidden>Show more icons</button>' +
     '<div class="icon-explorer-preview">' +
     '<div><span class="section-eyebrow">RUST / GPUI / WASM</span>' +
     '<h3 id="icon-selected-title">SearchOutlined</h3>' +
@@ -59,6 +60,8 @@ export async function initIconExplorer(base, dark) {
   const code = root.querySelector('#icon-selected-code code');
   const preview = root.querySelector('#icon-live-preview');
   const copy = root.querySelector('#icon-copy');
+  const loadMore = root.querySelector('#icon-load-more');
+  let visibleLimit = 80;
 
   const frameSrc = iconName =>
     base + 'demo.html?component=' + encodeURIComponent('Icon:' + iconName) +
@@ -96,16 +99,19 @@ export async function initIconExplorer(base, dark) {
       (wantedStyle === 'all' || icon.style === wantedStyle) &&
       (!q || icon.name.toLowerCase().includes(q))
     );
+    const shown = Math.min(filtered.length, visibleLimit);
     count.textContent = filtered.length + ' matching icons · ' +
-      catalog.count + ' official SVGs included · showing up to 80 results';
+      catalog.count + ' official SVGs included · showing ' + shown;
     grid.innerHTML = filtered.length
-      ? filtered.slice(0,80).map(icon =>
+      ? filtered.slice(0,visibleLimit).map(icon =>
           '<button type="button" class="icon-name-hit" data-icon-name="' +
           escapeHtml(icon.name) + '" aria-pressed="false">' +
           '<span>' + escapeHtml(icon.name) + '</span>' +
           '<small>' + escapeHtml(icon.style) + '</small></button>'
         ).join('')
       : '<p class="icon-empty-results">No matching icons. Try a shorter name.</p>';
+    loadMore.hidden = filtered.length <= visibleLimit;
+    loadMore.textContent = 'Show more icons (' + shown + ' of ' + filtered.length + ')';
     const active = selected.textContent;
     grid.querySelectorAll('button[data-icon-name]').forEach(button => {
       if (button.dataset.iconName === active) {
@@ -115,8 +121,9 @@ export async function initIconExplorer(base, dark) {
     });
   }
 
-  query.addEventListener('input', updateResults);
-  style.addEventListener('change', updateResults);
+  query.addEventListener('input', () => { visibleLimit = 80; updateResults(); });
+  style.addEventListener('change', () => { visibleLimit = 80; updateResults(); });
+  loadMore.addEventListener('click', () => { visibleLimit += 80; updateResults(); });
   grid.addEventListener('click', event => {
     const button = event.target.closest('button[data-icon-name]');
     if (button) selectIcon(button.dataset.iconName);

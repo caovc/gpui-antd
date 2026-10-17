@@ -60,7 +60,7 @@ try {
     ],
   });
 
-  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Tabs', 'Tooltip', 'Icon:SearchOutlined'];
+  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Layout', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Tabs', 'Tooltip', 'Icon:SearchOutlined'];
   for (const name of components) {
     const page = await browser.newPage({ viewport: { width: 900, height: 550 } });
     const errors = [];
@@ -103,6 +103,34 @@ try {
         .catch(() => {});
       await page.close();
     }
+  }
+  // Regression: long official icon names are visible, and all 848 names
+  // remain browsable instead of the first 80 results being silently clipped.
+  const iconDocs = await browser.newPage({ viewport: {width: 980, height: 700} });
+  try {
+    await iconDocs.goto(base + '#/components/Icons', {waitUntil:'domcontentloaded'});
+    await iconDocs.locator('#icon-query').fill('CheckCircle');
+    const name = iconDocs.locator('button[data-icon-name="CheckCircleTwoTone"] span');
+    await name.waitFor({timeout:15000});
+    const style = await name.evaluate(el => ({
+      whiteSpace:getComputedStyle(el).whiteSpace,
+      overflowWrap:getComputedStyle(el).overflowWrap,
+      textOverflow:getComputedStyle(el).textOverflow,
+    }));
+    if (style.whiteSpace==='nowrap' || style.overflowWrap!=='anywhere' || style.textOverflow==='ellipsis') {
+      throw new Error('Icon name CSS clipping persists: '+JSON.stringify(style));
+    }
+    await iconDocs.locator('#icon-query').fill('');
+    await iconDocs.locator('#icon-load-more').click();
+    if (await iconDocs.locator('button[data-icon-name]').count() < 160) {
+      throw new Error('Catalog pagination hides icons after the first 80');
+    }
+    console.log('PASS: full icon names wrap and icon catalog paginates correctly');
+  } catch(error) {
+    failures++;
+    console.error('FAIL: icon name visibility/pagination',String(error));
+  } finally {
+    await iconDocs.close();
   }
   // The search catalog must select a real GPUI/WASM standalone preview.
   const docs = await browser.newPage({ viewport: {width: 1100, height: 750} });

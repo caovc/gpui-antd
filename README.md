@@ -35,7 +35,7 @@ before implementing components or changing the WASM gallery. See
 ## First milestone component set
 
 Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, Grid, Avatar, Statistic,
-Empty, Breadcrumb, Tabs and Tooltip.
+Empty, Breadcrumb, Tabs, Tooltip and application Layout.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -148,6 +148,28 @@ alignment and distribution. `AntRow`/`AntCol` implement the familiar
 24-column grid with span, offset and gutter. Avatar, Statistic, Empty and
 Breadcrumb provide additional native data-display, feedback and navigation
 primitives. Responsive xs/sm/md/lg/xl/xxl breakpoints now follow Ant Design's viewport widths (0/576/768/992/1200/1600px). Responsive offsets, fully editable rich text remains future work.
+
+## Application Layout
+
+The native application shell is available as \`AntLayout\`, \`AntHeader\`,
+\`AntSider\`, \`AntContent\`, and \`AntFooter\`. Nested Layout elements form
+horizontal or vertical GPUI flex trees. The sidebar supports controlled
+collapse, light/dark surfaces, configured widths and automatic collapse
+below an optional viewport breakpoint. The Gallery shows an interactive
+dashboard with a collapsible sidebar using real GPUI/WASM.
+
+\`AntSider::breakpoint\` is currently a viewport-based auto-collapse rule:
+it does not update application state or create a mobile drawer by itself.
+Sider menu items and route navigation belong to the consuming app.
+
+## Icons preview visibility
+
+The three official-icon Gallery samples are horizontal scroll strips instead
+of tall clipped grids; the documentation catalogue wraps full icon names
+rather than truncating them to ellipses. Load more results to browse all 848
+icons or search for a specific name. The standalone preview renders the
+chosen icon with real Rust/GPUI.
+
 
 ## Browser gallery (real GPUI → WASM)
 

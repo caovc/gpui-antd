@@ -255,7 +255,7 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
   flex-direction: column; align-items: flex-start; text-align: left; gap: 5px;
   cursor: pointer; transition: border-color .16s, background .16s;
 }
-.icon-name-hit span { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
+.icon-name-hit span { max-width: 100%; white-space: normal; overflow-wrap: anywhere; line-height: 1.4; font-size: 12px; }
 .icon-name-hit small { font-size: 10px; color: var(--muted); }
 .icon-name-hit:hover, .icon-name-hit.selected { border-color: var(--blue); background: var(--soft-blue); }
 .icon-name-hit:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
@@ -280,3 +280,14 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 /* Native GPUI/WASM Tabs panels and hover tooltip story. */
 .example-card iframe.wasm-iframe[src*="component=Tabs"] { height: 660px; }
 .example-card iframe.wasm-iframe[src*="component=Tooltip"] { height: 470px; }
+
+/* The Rust Icons gallery uses a horizontal GPUI scroll track per SVG family.
+   Native card labels and the DOM search list show complete icon names. */
+.example-card iframe.wasm-iframe[src*="component=Icons"] { height: 690px; }
+.example-card iframe.wasm-iframe[src*="component=Layout"] { height: 665px; }
+.icon-name-hit { min-height: 62px; }
+.icon-explorer-load { display: block; margin: 16px auto 0; padding: 9px 18px;
+  color: var(--blue); border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); cursor: pointer; }
+.icon-explorer-load:hover { background: var(--soft-blue); border-color: var(--blue); }
+.icon-explorer-load:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
