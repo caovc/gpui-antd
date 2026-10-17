@@ -140,9 +140,28 @@ pub enum AntComponent {
     Statistic,
     Empty,
     Breadcrumb,
+    Pagination,
+    Steps,
+    Rate,
+    Collapse,
+    Descriptions,
+    Result,
+    Skeleton,
+    Spin,
+    InputNumber,
+    Slider,
+    Segmented,
+    TimePicker,
+    AutoComplete,
+    Drawer,
+    Message,
+    Notification,
+    Tree,
+    Table,
+    Timeline,
 }
 impl AntComponent {
-    pub const ALL:[Self;31]=[Self::Button, Self::Input, Self::Select, Self::DatePicker, Self::Form, Self::Checkbox, Self::Radio, Self::Switch, Self::Tag, Self::Badge, Self::Alert, Self::Card, Self::Progress, Self::Divider, Self::Tabs, Self::Tooltip, Self::Icons, Self::Typography, Self::Space, Self::Flex, Self::Grid, Self::Layout, Self::Menu, Self::Dropdown, Self::Popover, Self::Modal, Self::Popconfirm, Self::Avatar, Self::Statistic, Self::Empty, Self::Breadcrumb];
+    pub const ALL:[Self;50]=[Self::Button, Self::Input, Self::Select, Self::DatePicker, Self::Form, Self::Checkbox, Self::Radio, Self::Switch, Self::Tag, Self::Badge, Self::Alert, Self::Card, Self::Progress, Self::Divider, Self::Tabs, Self::Tooltip, Self::Icons, Self::Typography, Self::Space, Self::Flex, Self::Grid, Self::Layout, Self::Menu, Self::Dropdown, Self::Popover, Self::Modal, Self::Popconfirm, Self::Avatar, Self::Statistic, Self::Empty, Self::Breadcrumb, Self::Pagination, Self::Steps, Self::Rate, Self::Collapse, Self::Descriptions, Self::Result, Self::Skeleton, Self::Spin, Self::InputNumber, Self::Slider, Self::Segmented, Self::TimePicker, Self::AutoComplete, Self::Drawer, Self::Message, Self::Notification, Self::Tree, Self::Table, Self::Timeline];
     pub const fn name(self)->&'static str {
         match self {
             Self::Button => "Button",
@@ -176,6 +195,25 @@ impl AntComponent {
             Self::Statistic => "Statistic",
             Self::Empty => "Empty",
             Self::Breadcrumb => "Breadcrumb",
+            Self::Pagination => "Pagination",
+            Self::Steps => "Steps",
+            Self::Rate => "Rate",
+            Self::Collapse => "Collapse",
+            Self::Descriptions => "Descriptions",
+            Self::Result => "Result",
+            Self::Skeleton => "Skeleton",
+            Self::Spin => "Spin",
+            Self::InputNumber => "InputNumber",
+            Self::Slider => "Slider",
+            Self::Segmented => "Segmented",
+            Self::TimePicker => "TimePicker",
+            Self::AutoComplete => "AutoComplete",
+            Self::Drawer => "Drawer",
+            Self::Message => "Message",
+            Self::Notification => "Notification",
+            Self::Tree => "Tree",
+            Self::Table => "Table",
+            Self::Timeline => "Timeline",
         }
     }
     pub fn from_name(name:&str)->Option<Self> {
@@ -211,6 +249,25 @@ impl AntComponent {
             "Statistic" => Some(Self::Statistic),
             "Empty" => Some(Self::Empty),
             "Breadcrumb" => Some(Self::Breadcrumb),
+            "Pagination" => Some(Self::Pagination),
+            "Steps" => Some(Self::Steps),
+            "Rate" => Some(Self::Rate),
+            "Collapse" => Some(Self::Collapse),
+            "Descriptions" => Some(Self::Descriptions),
+            "Result" => Some(Self::Result),
+            "Skeleton" => Some(Self::Skeleton),
+            "Spin" => Some(Self::Spin),
+            "InputNumber" => Some(Self::InputNumber),
+            "Slider" => Some(Self::Slider),
+            "Segmented" => Some(Self::Segmented),
+            "TimePicker" => Some(Self::TimePicker),
+            "AutoComplete" => Some(Self::AutoComplete),
+            "Drawer" => Some(Self::Drawer),
+            "Message" => Some(Self::Message),
+            "Notification" => Some(Self::Notification),
+            "Tree" => Some(Self::Tree),
+            "Table" => Some(Self::Table),
+            "Timeline" => Some(Self::Timeline),
             _=>None,
         }
     }
@@ -220,11 +277,11 @@ impl AntComponent {
 /// separate slot; changing Card.padding does not affect Button.padding.
 #[derive(Clone,Copy,Debug)]
 pub struct AntComponentTokens {
-    entries:[AntComponentToken;31],
+    entries:[AntComponentToken;50],
 }
 impl Default for AntComponentTokens {
     fn default()->Self{
-        Self {entries:[AntComponentToken::default();31]}
+        Self {entries:[AntComponentToken::default();50]}
     }
 }
 impl AntComponentTokens {
@@ -468,7 +525,7 @@ mod tests {
     fn names_include_each_documented_component_without_collisions() {
         let keys:std::collections::HashSet<&str>=AntComponent::ALL.iter()
             .map(|kind|kind.name()).collect();
-        assert_eq!(keys.len(),31);
+        assert_eq!(keys.len(),50);
         for kind in AntComponent::ALL {
             assert_eq!(AntComponent::from_name(kind.name()),Some(kind));
         }
