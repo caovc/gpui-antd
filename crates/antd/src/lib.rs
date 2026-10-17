@@ -14,6 +14,7 @@ pub mod input;
 pub mod radio;
 pub mod select;
 pub mod date_picker;
+pub mod form;
 pub mod tokens;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
@@ -22,4 +23,5 @@ pub use input::{AntInput, InputStatus, InputVariant};
 pub use radio::{AntRadio, AntRadioGroup};
 pub use select::AntSelect;
 pub use date_picker::AntDatePicker;
+pub use form::{AntForm, AntFormItem, FormRule, FormSchema, FormValidation};
 pub use tokens::{AntTheme, Appearance, color};
