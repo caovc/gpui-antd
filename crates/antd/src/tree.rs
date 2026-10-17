@@ -236,6 +236,7 @@ impl RenderOnce for AntTree{
                 let select_listener=on_select.clone();
                 let check_listener=on_check.clone();
                 let title=node.title.clone();
+                let requested_expansion=!node.expanded;
                 let fg=if row_disabled{theme.disabled_text}
                     else if is_selected{theme.primary}else{theme.text};
                 let arrow=BaseButton::new(format!("ant-tree-expand:{prefix}:{key}"))
@@ -246,7 +247,7 @@ impl RenderOnce for AntTree{
                         else{AntIconName::RightOutlined}).theme(theme).color(fg).size(12.))
                     .when_some(expand_listener,|this,listener|{
                         this.on_click(move|_,window,cx|{
-                            listener(toggle_key.clone(),!node.expanded,window,cx);
+                            listener(toggle_key.clone(),requested_expansion,window,cx);
                         })
                     });
                 let label=BaseButton::new(format!("ant-tree:{prefix}:{key}"))
