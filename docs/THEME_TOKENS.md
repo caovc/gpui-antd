@@ -11,7 +11,8 @@ not a port of Ant Design's JavaScript color derivation and not a ConfigProvider.
 ```rust
 use gpui_antd::{
     AntTheme, AntThemeAlgorithm, AntSeedTokens, AntComponent,
-    AntComponentToken, AntTokenLayer, AntTokenValue, color,
+    AntComponentToken, AntMapTokenOverrides, AntAliasTokenOverrides,
+    AntTokenLayer, AntTokenValue, color,
 };
 
 let mut seed = AntSeedTokens::default();
@@ -22,6 +23,10 @@ seed.border_radius = 8.;
 seed.font_size = 15.;
 
 let theme = AntTheme::from_seed(seed, AntThemeAlgorithm::Compact)
+    .with_map_overrides(AntMapTokenOverrides::default()
+        .color_primary_bg(color(0xe9e7ff)).control_height_sm(22.))
+    .with_alias_overrides(AntAliasTokenOverrides::default()
+        .color_link(color(0x5852ba)).color_text_disabled(color(0x888888)))
     .with_component(
         AntComponent::Card,
         AntComponentToken::default().padding(32.).border_radius(12.),
@@ -35,7 +40,9 @@ let theme = AntTheme::from_seed(seed, AntThemeAlgorithm::Compact)
 let map = theme.map_tokens();
 let alias = theme.alias_tokens();
 assert_eq!(map.control_height, 28.);
+assert_eq!(map.control_height_sm, 22.);
 assert_eq!(alias.font_size, 15.);
+assert_eq!(alias.color_link, color(0x5852ba));
 for resolved in theme.resolved_tokens() {
     match resolved.value {
         AntTokenValue::Color(color) => { /* paint a GPUI swatch */ }
@@ -56,6 +63,29 @@ Global themes are **copyable Rust values**, passed via each component's
 `.theme(theme)`. The owning Entity changes its theme and calls
 `cx.notify()`. The library deliberately does not imply that nested
 `ConfigProvider` inheritance or live CSS variables already exist.
+
+## Derived Map and Alias override layers
+
+`AntTheme::from_seed` resolves a Seed into native GPUI Map and Alias tokens.
+Optional `with_map_overrides(AntMapTokenOverrides)` and
+`with_alias_overrides(AntAliasTokenOverrides)` builders apply after derivation,
+and component namespaces remain the most specific level.
+
+| Layer | Supported editable tokens |
+| --- | --- |
+| Map | colorPrimaryHover, colorPrimaryActive, colorPrimaryBg, colorPrimaryBorder, colorBgElevated, colorBgLayout, controlHeightSM, controlHeightLG |
+| Alias | colorLink, colorTextDisabled, colorSuccess, colorWarning, colorError |
+
+Fields not overridden retain the original derived value. Changes affect
+real Rust theme fields, not a second JavaScript renderer. The APIs cover
+a **limited subset** of Ant Design's Map/Alias fields; sibling gradients
+are not automatically rederived after a direct Map override.
+
+The Token Studio supports these two optional layers in both the Components
+and Resolved Tokens WASM scenes. Backward-compatible
+`gpui-antd-theme-v1` JSON now optionally contains `map` and `alias`
+objects, and Rust generation emits the matching builder chains. Colors
+and numeric values are bounded and validated on both sides of the bridge.
 
 ## Component Token coverage
 
@@ -109,10 +139,10 @@ WebAssembly**. No React/CSS replica is substituted for the component preview.
 
 ```text
 Token Studio editor (DOM input controls only)
-    -> validated seed/component JSON
+    -> validated seed/map/alias/component JSON
     -> same-origin URL params on GPUI demo.html
     -> ThemeLabSpec parser (Rust, bounded/clamped)
-    -> AntTheme::from_seed() + component-scoped overrides
+    -> AntTheme::from_seed() + Map/Alias/Component overrides
     -> real Gallery::theme_lab_demo / theme_tokens_demo
     -> GPUI WebAssembly canvas and readiness postMessage
 ```
