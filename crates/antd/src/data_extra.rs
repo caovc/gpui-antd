@@ -3,7 +3,7 @@
 
 use std::{collections::BTreeSet, rc::Rc};
 use gpui_kit::{
-    AnyElement, App, ElementId, IntoElement, ParentElement as _, RenderOnce,
+    AnyElement, App, ElementId, IntoElement, InteractiveElement as _, ParentElement as _, RenderOnce,
     SharedString, Styled as _, Window, div, px, relative,
 };
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
