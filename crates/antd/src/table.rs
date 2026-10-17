@@ -9,6 +9,7 @@ use gpui_kit::{
     App, ElementId, IntoElement, ParentElement as _, RenderOnce, SharedString,
     Styled as _, Window, div, px,
 };
+use gpui_kit::base::StyledExt as _;
 use gpui_kit::component::table::{
     Table as KitTable, TableHeader, TableBody, TableRow as KitRow,
     TableHead, TableCell,
