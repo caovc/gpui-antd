@@ -7,7 +7,7 @@ use gpui_antd::{
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
-    Styled as _, Window, WindowOptions, div, px,
+    StatefulInteractiveElement as _, Styled as _, Window, WindowOptions, div, px,
 };
 use gpui_kit::component::input::InputState;
 use gpui_kit::assets::Assets;
