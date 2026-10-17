@@ -789,6 +789,29 @@ impl Gallery {
             .into_any_element()
     }
 
+    // Internal visual-audit route: 24 real Rust/GPUI icons per deterministic
+    // page, in a fixed 6x4 grid. The browser checks each glyph's painted pixels
+    // and stores every page as a reviewable screenshot artifact.
+    fn icon_audit_demo(&self, t: AntTheme, page: &str) -> gpui_kit::AnyElement {
+        const PAGE_SIZE: usize = 24;
+        let page = page.parse::<usize>().unwrap_or(0)
+            .min((AntIconName::ALL.len() - 1) / PAGE_SIZE);
+        let icons = AntIconName::ALL.iter().skip(page * PAGE_SIZE)
+            .take(PAGE_SIZE).copied().collect::<Vec<_>>();
+        div().w_full().flex().flex_col()
+            .children(icons.chunks(6).map(|row| {
+                div().flex().gap(px(0.))
+                    .children(row.iter().map(|name| {
+                        div().w(px(136.)).h(px(112.)).flex_none()
+                            .flex().flex_col().items_center().pt(px(12.))
+                            .child(AntIcon::new(*name).size(60.).theme(t))
+                            .child(div().text_size(px(9.)).text_color(t.text_secondary)
+                                .mt(px(8.)).child(name.ant_name()))
+                    }))
+            }))
+            .into_any_element()
+    }
+
     // Dedicated real-GPUI preview used for full-color custom-palette pixel tests.
     fn icon_palette_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         div().w_full().flex().flex_col().items_center()
@@ -1417,6 +1440,8 @@ impl Render for Gallery {
             "IconPalette"=>self.icon_palette_demo(t),
             name if name.starts_with("Icon:") =>
                 self.icon_single_demo(t, name.trim_start_matches("Icon:")),
+            name if name.starts_with("IconAudit:") =>
+                self.icon_audit_demo(t, name.trim_start_matches("IconAudit:")),
             "Typography"=>self.typography_demo(t,cx),
             "Space"=>self.space_demo(t),
             "Flex"=>self.flex_demo(t),

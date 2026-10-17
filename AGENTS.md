@@ -119,6 +119,7 @@ installation example is `.github/workflows/native.yml`. See
   `Wasm assets loading, will be available soon...` while loading its
   **own** SVGs; browser smoke ignores *only this exact known transient
   message*. Do not suppress other errors.
+- The internal `IconAudit:<page>` Rust Gallery route and `website/scripts/audit-icons.mjs` must stay geometry-aligned. Pages CI checks sample pages; `npm run audit:icons` checks all 848 GPUI glyphs for pixel presence. This is not official Ant Design screenshot parity.
 - File names for screenshot/artifact upload must be portable (no colon,
   slash, etc.); `smoke.mjs` sanitizes component names.
 - Use GPUI Kit's actual overlay and popup infrastructure rather than

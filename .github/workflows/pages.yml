@@ -66,6 +66,20 @@ jobs:
           npx playwright install --with-deps chromium
           npm run smoke
 
+      - name: Audit real GPUI icon glyphs at catalog boundaries
+        timeout-minutes: 10
+        working-directory: website
+        run: npm run audit:icons -- --sample
+
+      - name: Archive icon audit mosaics and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpui-antd-icon-audit
+          path: ${{ runner.temp }}/gpui-antd-icon-audit
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Archive smoke-test screenshots
         if: always()
         uses: actions/upload-artifact@v4

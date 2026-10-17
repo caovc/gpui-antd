@@ -191,6 +191,24 @@ effective collapsed state; applications should update `responsive_open`
 in narrow mode and `collapsed` on desktop.
 Sider menu items and route navigation belong to the consuming app.
 
+## Automated icon paint audit
+
+The icon explorer supports size, color and spin options while the SVG
+is painted by the Rust GPUI/WASM gallery, not HTML/React. A deterministic
+visual-audit command additionally renders the entire pinned 848-icon catalog
+in 36 native-GPUI gallery grids:
+
+```bash
+cd website
+npm run audit:icons          # all 848 official icons, screenshot mosaics
+npm run audit:icons -- --sample  # four boundary pages, used by Pages CI
+```
+
+The audit checks pixel presence in each glyph's GPU canvas region and
+stores PNG pages plus a JSON report under `$RUNNER_TEMP/gpui-antd-icon-audit`
+(default `/tmp/gpui-antd-icon-audit`). This is a smoke-level visual
+regression, not a reference screenshot parity certification.
+
 ## Icons preview visibility
 
 The three official-icon Gallery samples are horizontal scroll strips instead

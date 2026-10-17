@@ -86,6 +86,24 @@ animated TwoTone at 2x device pixel ratio. It also validates that docs
 inspector controls update Rust/WASM routing and generated Rust samples. Full pixel-by-pixel baseline
 comparison of 848 icons remains future parity work.
 
+## Full official icon visual-audit tool
+
+`npm run smoke` verifies selected gallery interactions plus animated TwoTone
+pixels at 2x device pixel ratio. `npm run audit:icons -- --sample` also checks
+four deterministic real-GPUI 24-icon grids at catalog boundaries, storing
+PNG mosaics and `report.json` in `${RUNNER_TEMP:-/tmp}/gpui-antd-icon-audit`.
+The Pages job runs this sampled audit on each build.
+
+Run `npm run audit:icons` **without** `--sample` from `website/` after
+building WASM and Vite to render all 848 official icons in 36 Rust/GPUI grids.
+Each icon is checked for dark (Outlined/Filled) or primary-blue (TwoTone)
+painted pixels within its known glyph region. This detects empty or
+incorrectly monochrome images, and archives every page for visual review;
+it does **not** establish pixel-perfect parity with official Ant Design
+screenshots. The route `IconAudit:<page>` is an internal Gallery diagnostic,
+not an exported component. Keep the fixed 136x112px audit tile geometry
+synchronized with `website/scripts/audit-icons.mjs`.
+
 ## Debugging common problems
 
 **Rust trait method unavailable:** Import `gpui_kit::Styled as _` for
