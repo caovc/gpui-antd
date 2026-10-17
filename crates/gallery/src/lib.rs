@@ -30,6 +30,9 @@ pub struct Gallery {
     switch_on: bool,
     input: Entity<InputState>,
     input_filled: Entity<InputState>,
+    input_borderless: Entity<InputState>,
+    input_decorated: Entity<InputState>,
+    input_large: Entity<InputState>,
     input_error: Entity<InputState>,
     input_password: Entity<InputState>,
     input_disabled: Entity<InputState>,
@@ -41,6 +44,12 @@ impl Gallery {
             .placeholder("Type your message..."));
         let input_filled = cx.new(|cx| InputState::new(window, cx)
             .placeholder("Filled input"));
+        let input_borderless = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("Borderless input"));
+        let input_decorated = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("Username"));
+        let input_large = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("Large input"));
         let input_error = cx.new(|cx| InputState::new(window, cx)
             .placeholder("Invalid email address"));
         let input_password = cx.new(|cx| InputState::new(window, cx)
@@ -50,7 +59,8 @@ impl Gallery {
         Self {
             component, dark, button_clicks: 0, checked: true, radio_selected: Some(0),
             radio_button_selected: Some(1), switch_on: true,
-            input, input_filled, input_error, input_password, input_disabled,
+            input, input_filled, input_borderless, input_decorated, input_large,
+            input_error, input_password, input_disabled,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -175,7 +185,7 @@ impl Gallery {
                     .theme(t).clearable(true).aria_label("Outlined text input")))
                 .child(div().w(px(255.)).child(AntInput::new(&self.input_filled)
                     .theme(t).variant(InputVariant::Filled).aria_label("Filled text input")))
-                .child(div().w(px(255.)).child(AntInput::new(&self.input)
+                .child(div().w(px(255.)).child(AntInput::new(&self.input_borderless)
                     .theme(t).variant(InputVariant::Borderless).aria_label("Borderless text input"))))
             .child(label("Validation status", t))
             .child(div().w(px(330.)).child(AntInput::new(&self.input_error)
@@ -184,12 +194,12 @@ impl Gallery {
             .child(row()
                 .child(div().w(px(260.)).child(AntInput::new(&self.input_password)
                     .theme(t).password_toggle(true).aria_label("Password input")))
-                .child(div().w(px(260.)).child(AntInput::new(&self.input)
+                .child(div().w(px(260.)).child(AntInput::new(&self.input_decorated)
                     .theme(t).prefix(div().text_color(t.primary).child("@"))
                     .suffix(div().text_color(t.text_secondary).child(".com")))))
             .child(label("Size and disabled state", t))
             .child(row()
-                .child(div().w(px(230.)).child(AntInput::new(&self.input_filled)
+                .child(div().w(px(230.)).child(AntInput::new(&self.input_large)
                     .theme(t).size(ControlSize::Large).aria_label("Large text input")))
                 .child(div().w(px(230.)).child(AntInput::new(&self.input_disabled)
                     .theme(t).disabled(true).aria_label("Disabled text input"))))
