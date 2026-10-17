@@ -2,20 +2,21 @@
 //!
 //! Rust Entity state owns selection and expanded submenu keys. GPUI Base
 //! supplies real keyboard/pointer activation and accessibility semantics.
-//! This implementation supports inline nested submenus and roving keyboard
-//! focus, not a separate HTML navigation tree or a fake popup.
+//! Nested inline submenus and collapsed icon-only submenu flyouts share
+//! controlled open keys and selection. Flyouts use GPUI Base Popover's native
+//! focus, keyboard dismissal and deferred overlay placement.
 //!
-//! Still pending: horizontal Menu, icon-only submenu popup, viewport clipping,
-//! typeahead and full screen-reader regression tests.
+//! Still pending: horizontal mode, hover-trigger timing, typeahead and
+//! complete per-platform screen-reader regression tests.
 
 use std::{collections::BTreeSet, rc::Rc};
 
 use gpui_kit::{
-    App, ElementId, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
+    Anchor, App, ElementId, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
     ParentElement as _, RenderOnce, Role, SharedString,
     StatefulInteractiveElement as _, Styled as _, Window, div, px,
 };
-use gpui_kit::base::{Button as BaseButton, StyledExt as _};
+use gpui_kit::base::{Button as BaseButton, Popover as BasePopover, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
 
 use crate::{AntIcon, AntIconName, AntTheme, color};
@@ -108,6 +109,7 @@ struct VisibleMenuRow {
     parent:Option<String>,
     expanded:bool,
     selected_descendant:bool,
+    flyout_children:Vec<AntMenuItem>,
 }
 
 fn flatten_visible(
@@ -124,6 +126,7 @@ fn flatten_visible(
         let children=std::mem::take(&mut item.children);
         rows.push(VisibleMenuRow {
             item,depth,parent:parent.clone(),expanded,selected_descendant:descendant,
+            flyout_children:if collapsed && submenu && !disabled {children.clone()} else {Vec::new()},
         });
         if submenu && expanded && !collapsed && !disabled {
             flatten_visible(children,open_keys,selected,collapsed,
@@ -143,8 +146,9 @@ fn flatten_visible(
 /// - Left/Escape close a focused submenu and return focus to its parent.
 /// - Enter and Space use GPUI Base Button native activation.
 ///
-/// Collapsed mode currently hides submenu children instead of opening popup
-/// flyouts. That mode, horizontal navigation and typeahead remain roadmap.
+/// Collapsed mode opens an anchored native GPUI submenu flyout, preserving
+/// the application-owned `open_keys` and `selected_key` contracts.
+/// Horizontal navigation, hover delays and typeahead remain roadmap.
 #[derive(IntoElement)]
 pub struct AntMenu {
     id: ElementId,
@@ -230,6 +234,7 @@ impl RenderOnce for AntMenu {
         let overrides=theme.component(AntComponent::Menu);
         let item_height=overrides.control_height.unwrap_or(self.item_height);
         let prefix=format!("{:?}",self.id);
+        let flyout_open_keys=self.open_keys.clone();
         let mut rows=Vec::new();
         flatten_visible(self.items,&self.open_keys,selected.as_deref(),
             collapsed,0,None,&mut rows);
@@ -274,7 +279,7 @@ impl RenderOnce for AntMenu {
                 return;
             }
             let focused_key=keys[origin].clone();
-            if key=="right" && submenu[origin] && !collapsed {
+            if key=="right" && submenu[origin] {
                 if !expanded[origin] {
                     if let Some(listener)=&open_change_keyboard {
                         listener(focused_key.into(),true,window,cx);
@@ -286,7 +291,7 @@ impl RenderOnce for AntMenu {
                     window.focus(&focus_handles[index],cx);
                 }
                 window.prevent_default();cx.stop_propagation();
-            } else if (key=="left" || key=="escape") && !collapsed {
+            } else if key=="left" || key=="escape" {
                 if let Some(parent)=parents[origin].as_ref() {
                     if let Some(listener)=&open_change_keyboard {
                         listener(parent.clone().into(),false,window,cx);
@@ -334,7 +339,18 @@ impl RenderOnce for AntMenu {
                 let focus_id=format!("ant-menu-{prefix}-{}",row.item.key);
                 let expand_callback=on_open_change.clone();
                 let select_callback=on_select.clone();
-                BaseButton::new(focus_id)
+                let flyout_callback=on_open_change.clone();
+                let flyout_select=on_select.clone();
+                let flyout_open=flyout_open_keys.clone();
+                let flyout_selected=selected.clone();
+                let row_expanded=row.expanded;
+                let is_disabled=row.item.disabled;
+                let flyout_label=row.item.label.clone();
+                let flyout_key=row.item.key.clone();
+                let flyout_id=format!("ant-menu-flyout-{prefix}-{}",row.item.key);
+                let flyout_menu_id=format!("ant-menu-flyout-list-{prefix}-{}",row.item.key);
+                let flyout_children=row.flyout_children;
+                let button=BaseButton::new(focus_id)
                     .role(Role::MenuItem)
                     .accessibility_label(label.clone())
                     .selected(highlighted)
@@ -360,7 +376,7 @@ impl RenderOnce for AntMenu {
                             AntIconName::RightOutlined
                         }).theme(theme).size(12.).color(fg))
                     })
-                    .when(is_submenu,|this|{
+                    .when(is_submenu && !collapsed,|this|{
                         this.when_some(expand_callback,|this,callback|{
                             let new_open=!row.expanded;
                             this.on_click(move |_,window,cx|{
@@ -374,7 +390,62 @@ impl RenderOnce for AntMenu {
                                 callback(key.clone(),window,cx);
                             })
                         })
-                    })
+                    });
+                if collapsed && is_submenu && !is_disabled {
+                    // Native deferred GPUI overlay owns Escape/outside focus
+                    // restoration and safe positioning; not an absolute div.
+                    // Keep the original BaseButton with its MenuItem role and
+                    // per-row focus handle as Popover's accessible trigger.
+                    let key_for_open=flyout_key.clone();
+                    let key_for_close=flyout_key.clone();
+                    let popup_change=flyout_callback.clone();
+                    BasePopover::new(flyout_id)
+                        .anchor(Anchor::RightCenter)
+                        .offset(px(6.))
+                        .open(row_expanded)
+                        .overlay_closable(true)
+                        .on_open_change(move |open,window,cx| {
+                            if let Some(listener)=&flyout_callback {
+                                listener(key_for_open.clone(),*open,window,cx);
+                            }
+                        })
+                        .trigger_with(move |_,_,_| button.into_any_element())
+                        .content(move |_,_,_| {
+                            let nested_change=popup_change.clone();
+                            let leaf_change=popup_change.clone();
+                            let leaf_key=key_for_close.clone();
+                            let select=flyout_select.clone();
+                            div().min_w(px(200.)).max_w(px(310.))
+                                .bg(theme.surface)
+                                .border_1().border_color(theme.border)
+                                .rounded(px(theme.border_radius))
+                                .shadow_lg()
+                                .child(div().px(px(12.)).py(px(9.)).font_semibold()
+                                    .text_color(theme.text).child(flyout_label))
+                                .child(AntMenu::new(flyout_menu_id)
+                                    .theme(theme).dark(false).item_height(item_height)
+                                    .open_keys(flyout_open.iter())
+                                    .children(flyout_children)
+                                    .selected_key(flyout_selected.unwrap_or_else(||"".into()))
+                                    .on_open_change(move |key,open,window,cx| {
+                                        if let Some(listener)=&nested_change {
+                                            listener(key,open,window,cx);
+                                        }
+                                    })
+                                    .on_select(move |key,window,cx| {
+                                        if let Some(listener)=&select {
+                                            listener(key,window,cx);
+                                        }
+                                        if let Some(listener)=&leaf_change {
+                                            listener(leaf_key.clone(),false,window,cx);
+                                        }
+                                    }))
+                        })
+                        .w_full()
+                        .into_any_element()
+                } else {
+                    button.into_any_element()
+                }
             }))
     }
 }
@@ -419,6 +490,11 @@ mod tests {
         flatten_visible(items,&BTreeSet::from(["reports".into()]),
             None,true,0,None,&mut rows);
         assert_eq!(rows.len(),2);
+        assert_eq!(rows[1].item.key(),"reports");
+        assert_eq!(rows[1].flyout_children.len(),2);
+        assert_eq!(rows[1].flyout_children[1].children.len(),1);
+        assert!(rows[0].flyout_children.is_empty());
+        assert!(rows[1].expanded);
     }
     #[test]
     fn item_selection_respects_disabled_ancestors_and_submenu_headers() {
