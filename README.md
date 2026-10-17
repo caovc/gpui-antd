@@ -135,10 +135,14 @@ radio-button style have examples in the interactive docs.
 
 `AntTabs` wraps the GPUI Kit native TabBar with controlled selection,
 line/card/pill/segmented styling, selected Rust content panels, disabled tabs,
-tab icons, scrolling and existing Kit animation. The tab bar has one native
-keyboard Tab stop: Left/Right/Home/End change the controlled selection,
-wrapping and skipping disabled tabs. Full **individual-tab roving focus**,
-tab/tabpanel ARIA linkage and accessibility verification remain parity work.
+tab icons, scrolling and existing Kit animation. Each enabled tab has
+an independent, stable GPUI focus handle; only the selected tab is in
+the keyboard Tab order. Left/Right/Home/End rove focus and request controlled
+selection (wrapping and skipping disabled tabs), while Enter/Space activate
+the focused tab. Kit supplies native Tab/TabList roles and selected/disabled
+semantics; the selected content has a labeled TabPanel role.
+Explicit per-tab aria-controls/aria-labelledby ID relationships and tested
+screen-reader announcements remain separate accessibility work.
 
 `AntTooltip` composes a theme-aware tooltip with GPUI Kit's native
 registered provider rather than absolute-positioned HTML. Hover and disabled

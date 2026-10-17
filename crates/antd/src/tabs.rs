@@ -2,14 +2,14 @@
 //!
 //! Tab selection is owned by the application. GPUI Kit provides pointer
 //! activation, native animation, overflow scrolling and tab accessibility.
-//! The pinned Kit TabBar has no individual-tab keyboard focus. This wrapper
-//! adds a **single focusable tab-bar navigation target** that implements
-//! Left/Right/Home/End selection while preserving Kit's animated indicator.
-//! Per-tab roving-focus accessibility semantics remain a separate milestone.
+//! The pinned Kit TabBar paints the animated indicator and exposes each
+//! tab's ARIA selected/disabled state. We attach a stable focus handle to
+//! every native KitTab for roving focus and automatic keyboard activation,
+//! without replacing the styled tab bar with a DOM or fake visual proxy.
 
 use std::rc::Rc;
 use gpui_kit::{
-    AnyElement, App, ElementId, InteractiveElement as _, IntoElement, KeyDownEvent,
+    AnyElement, App, ElementId, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
     ParentElement as _, RenderOnce, Role, SharedString, StatefulInteractiveElement as _,
     Styled as _, Window, div, px,
 };
@@ -77,10 +77,10 @@ impl AntTab {
 /// Disabled or unknown indices never invoke `on_change`. The parent must
 /// apply the requested index and call `cx.notify()`.
 ///
-/// The bar has a single keyboard Tab stop. Once focused, Left/Right and
-/// Home/End move the controlled selection, wrapping and skipping disabled
-/// tabs. This adds useful keyboard navigation to the pinned Kit TabBar,
-/// but is not yet true per-tab roving focus with individual Tab stop targets.
+/// The selected tab owns the single Tab stop, with an independent focus
+/// handle per enabled tab. Left/Right and Home/End move focus and request
+/// automatic activation, wrapping while skipping disabled tabs. Enter/Space
+/// activate the focused tab; focus inside the selected panel remains separate.
 #[derive(IntoElement)]
 pub struct AntTabs {
     id: ElementId,
@@ -118,8 +118,8 @@ impl AntTabs {
     pub fn panel_padding(mut self, padding: f32) -> Self {
         self.panel_padding=padding.max(0.);self
     }
-    /// Enable a single keyboard Tab stop on the tab bar, supporting
-    /// Left/Right/Home/End. Enabled by default.
+    /// Enable roving per-tab focus and Left/Right/Home/End/Enter/Space.
+    /// Enabled by default; `.keyboard(false)` keeps pointer activation.
     pub fn keyboard(mut self, enabled: bool) -> Self {
         self.keyboard=enabled;self
     }
@@ -174,28 +174,16 @@ impl RenderOnce for AntTabs {
         let selected=self.active_index;
         let allowed=self.tabs.iter().map(|t|!t.disabled).collect::<Vec<_>>();
         let nav_id=format!("ant-tabs-navigation:{:?}",self.id);
-        let focus=window.use_keyed_state(nav_id.clone(),cx,|_,cx|cx.focus_handle())
-            .read(cx).clone();
-        let keyboard_focus=focus.clone();
-        let keyboard_allowed=allowed.clone();
-        let keyboard_handler=self.on_change.clone();
-        let on_keyboard=move |event:&KeyDownEvent, window:&mut Window, cx:&mut App| {
-            // Never hijack shortcuts or nested Kit overflow-menu navigation.
-            if !keyboard_focus.is_focused(window) ||
-                event.keystroke.modifiers.modified() ||
-                event.keystroke.is_ime_in_progress() {
-                return;
-            }
-            if let Some(next)=next_enabled_tab(&keyboard_allowed,selected,
-                event.keystroke.key.as_str())
-            {
-                if next!=selected {
-                    if let Some(callback)=&keyboard_handler {callback(next,window,cx);}
-                }
-                window.prevent_default();
-                cx.stop_propagation();
-            }
-        };
+        // Keyed per-index identity is stable under ordinary controlled
+        // selection changes. A changed tab order also changes active_index,
+        // which is the public controlled identity in this API.
+        let tab_focus:Vec<FocusHandle>=self.tabs.iter().enumerate().map(|(index,_)| {
+            window.use_keyed_state(format!("{nav_id}:tab:{index}"),cx,|_,cx|cx.focus_handle())
+                .read(cx).clone()
+        }).collect();
+        let tab_stop=allowed.get(selected).filter(|enabled|**enabled)
+            .map(|_|selected)
+            .or_else(||allowed.iter().position(|enabled|*enabled));
         let size=match self.size {
             ControlSize::Small=>Size::Small,
             ControlSize::Middle=>Size::Medium,
@@ -207,57 +195,91 @@ impl RenderOnce for AntTabs {
             TabsVariant::Pills=>KitTabVariant::Pill,
             TabsVariant::Segmented=>KitTabVariant::Segmented,
         };
-        let bar=self.tabs.iter().fold(
+        let all_handles=tab_focus.clone();
+        let keyboard_handler=self.on_change.clone();
+        let enabled_keys=allowed.clone();
+        let keyboard=self.keyboard;
+        let bar=self.tabs.iter().enumerate().fold(
             KitTabBar::new(self.id)
                 .with_variant(kit_variant)
                 .with_size(size)
                 .selected_index(selected)
                 .w_full()
                 .text_color(self.theme.text),
-            |bar, tab| {
+            |bar, (index, tab)| {
+                let focus=all_handles[index].clone();
+                let focused=focus.clone();
+                let handles=all_handles.clone();
+                let enabled=enabled_keys.clone();
+                let on_change=keyboard_handler.clone();
                 let item=KitTab::new()
                     .label(tab.label.clone())
+                    .aria_label(tab.label.clone())
                     .disabled(tab.disabled)
+                    .track_focus(&focus.tab_stop(keyboard && tab_stop==Some(index)))
+                    .when(keyboard&&!tab.disabled, |item| {
+                        item.on_key_down(move |event:&KeyDownEvent,window:&mut Window,cx:&mut App| {
+                            // Do not steal shortcuts or IME composition from
+                            // the surrounding page or selected tab panel.
+                            if !focused.is_focused(window) ||
+                                event.keystroke.modifiers.modified() ||
+                                event.keystroke.is_ime_in_progress() {
+                                return;
+                            }
+                            let key=event.keystroke.key.as_str();
+                            if let Some(next)=next_enabled_tab(&enabled,index,key) {
+                                if next!=index {
+                                    window.focus(&handles[next],cx);
+                                    if next!=selected {
+                                        if let Some(callback)=&on_change {
+                                            callback(next,window,cx);
+                                        }
+                                    }
+                                }
+                                window.prevent_default();cx.stop_propagation();
+                            } else if matches!(key,"enter"|"space") {
+                                if index!=selected {
+                                    if let Some(callback)=&on_change {
+                                        callback(index,window,cx);
+                                    }
+                                }
+                                window.prevent_default();cx.stop_propagation();
+                            }
+                        })
+                    })
                     .when_some(tab.icon, |item, icon| {
                         item.icon(KitIcon::default().path(icon.path()))
                     });
                 bar.child(item)
             },
         );
-        // A pointer click on a Kit tab should also activate the wrapper's
-        // keyboard focus handle. Base Tab itself is deliberately not
-        // focusable in GPUI Kit 0.7.3, so without this, arrow navigation
-        // only works after an explicit Tab press.
-        let pointer_focus=focus.clone();
+        let pointer_handles=tab_focus;
         let pointer_handler=self.on_change;
-        let pointer_keyboard=self.keyboard;
-        let bar=bar.on_click(move |index, window, cx| {
+        let bar=bar.on_click(move |index,window,cx| {
             if allowed.get(*index).copied()==Some(true) {
-                if pointer_keyboard {
-                    window.focus(&pointer_focus,cx);
+                if keyboard {
+                    window.focus(&pointer_handles[*index],cx);
                 }
                 if let Some(callback)=&pointer_handler {
-                    callback(*index, window, cx);
+                    callback(*index,window,cx);
                 }
             }
         });
+        let active_label=self.tabs.get(selected)
+            .filter(|tab|!tab.disabled)
+            .map(|tab|tab.label.clone());
         let panel=self.tabs.into_iter().nth(selected)
             .filter(|tab|!tab.disabled)
             .and_then(|tab|tab.content);
         div().w_full().flex().flex_col().gap(px(0.))
-            // Focus the bar rather than the surrounding panel; child editors
-            // and form controls must keep their own arrow-key behavior.
-            .child(
-                div().id(nav_id.clone()).role(Role::TabList)
-                    .aria_label("Tabs: use Left/Right, Home or End to select")
-                    .track_focus(&focus.tab_stop(self.keyboard))
-                    .when(self.keyboard, |this| this.on_key_down(on_keyboard))
-                    .child(bar)
-            )
+            // Kit's inner Tabs already has Role::TabList. Do NOT create a
+            // nested second TabList: each KitTab supplies Role::Tab and
+            // aria-selected/disabled through GPUI Base.
+            .child(div().child(bar))
             .when_some(panel, |this, panel| {
                 this.child(
-                    div().id(format!("{nav_id}:panel")).role(Role::TabPanel)
-                        .aria_label("Selected tab content")
+                    div().id(format!("{nav_id}:panel:{selected}")).role(Role::TabPanel)
+                        .aria_label(active_label.unwrap_or_else(||"Tab content".into()))
                         .w_full().min_w_0().p(px(self.panel_padding))
                         .text_color(self.theme.text)
                         .child(panel)
@@ -295,6 +317,18 @@ mod tests {
         assert_eq!(next_enabled_tab(&[false,true,false],0,"end"),Some(1));
         assert_eq!(next_enabled_tab(&[true,false,true],99,"right"),Some(0));
         assert_eq!(next_enabled_tab(&[true,false,true],2,"pageup"),None);
+    }
+    #[test]
+    fn roving_focus_uses_focused_tab_not_stale_controlled_selection() {
+        // Focus can move ahead of an asynchronously applied controlled value.
+        // Arrow keys must follow the focused tab, not the old active index.
+        let enabled=[true,false,true,true];
+        assert_eq!(next_enabled_tab(&enabled,2,"right"),Some(3));
+        assert_eq!(next_enabled_tab(&enabled,3,"left"),Some(2));
+        assert_eq!(next_enabled_tab(&enabled,3,"right"),Some(0));
+        assert_eq!(next_enabled_tab(&enabled,0,"home"),Some(0));
+        assert_eq!(next_enabled_tab(&enabled,2,"end"),Some(3));
+        assert_eq!(next_enabled_tab(&enabled,2,"space"),None);
     }
     #[test]
     fn keyboard_navigation_can_be_disabled_by_consumer() {
