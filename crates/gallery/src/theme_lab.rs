@@ -32,7 +32,7 @@ impl ThemeLabSpec {
         let mut menu=AntComponentToken::default();
         let mut layout=AntComponentToken::default();
         let mut component_tokens=AntComponentTokens::default();
-        for raw in input.trim_start_matches('|').split('|').take(512) {
+        for raw in input.trim_start_matches('|').split('|').take(768) {
             let Some((key,value))=raw.split_once('=') else {continue};
             if value.len()>64 {continue;}
             match key {
@@ -75,7 +75,7 @@ impl ThemeLabSpec {
                 },
                 _=>{
                     // One namespace per documented component. The registry
-                    // stores all 31; runtime consumers are rolled out
+                    // stores all 50; runtime consumers are rolled out
                     // incrementally and documented on the parity page.
                     if let Some((name,field))=key.split_once('.') {
                         if let Some(component)=AntComponent::from_name(name) {
