@@ -586,14 +586,26 @@ impl Gallery {
                     // icon can be previewed in its own Rust GPUI view.
                     .take(24)
                     .map(move |name| {
-                        div().w(px(156.)).h(px(104.)).flex_none()
-                            .flex().flex_col().items_center().justify_center().gap(px(11.))
+                        // Long PascalCase enum names have no natural word-break
+                        // opportunities in GPUI text. Show the official name
+                        // as two complete lines (base + style), not ellipsis.
+                        let full=name.ant_name();
+                        let style_name=match name.style() {
+                            "outlined"=>"Outlined",
+                            "filled"=>"Filled",
+                            _=>"TwoTone",
+                        };
+                        let base_name=full.strip_suffix(style_name).unwrap_or(full);
+                        div().w(px(156.)).h(px(112.)).flex_none()
+                            .flex().flex_col().items_center().justify_center().gap(px(8.))
                             .p(px(10.))
                             .rounded(px(8.)).border_1().border_color(t.border)
                             .child(AntIcon::new(*name).size(32.).theme(t))
-                            .child(div().w_full().text_size(px(11.))
-                                .text_color(t.text_secondary)
-                                .text_center().child(name.ant_name()))
+                            .child(div().w_full().flex().flex_col().items_center().gap(px(2.))
+                                .child(div().text_size(px(11.))
+                                    .text_color(t.text).text_center().child(base_name))
+                                .child(div().text_size(px(10.))
+                                    .text_color(t.text_secondary).text_center().child(style_name)))
                     }))
         };
         div().w_full().min_w_0().flex().flex_col().gap(px(16.))
