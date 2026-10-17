@@ -17,13 +17,16 @@ use gpui_antd::{
     AntMenu, AntMenuItem,
     AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
     AntDescriptions, AntDescriptionItem, AntResult, ResultStatus, AntSkeleton, AntSpin,
+    AntInputNumber, AntSlider, AntSegmented, AntSegmentedOption, AntTimePicker, AntAutoComplete,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     StatefulInteractiveElement as _, Styled as _, Window, WindowOptions, div, px,
-    AssetSource, SharedString,
+    AssetSource, SharedString, Subscription,
 };
-use gpui_kit::component::input::InputState;
+use gpui_kit::component::input::{InputState, InputEvent};
+use gpui_kit::component::slider::{SliderState, SliderEvent};
+use gpui_kit::component::time_field::{TimeFieldState, HourCycle, TimeFieldEvent};
 use gpui_kit::component::select::{SelectState, SearchableVec};
 use gpui_kit::component::date_picker::DatePickerState;
 use gpui_kit::component::time_field::TimePrecision;
@@ -76,7 +79,7 @@ impl GalleryAssets {
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
-    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
+    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
 ];
 
 /// Options in the browser icon inspector are only display parameters.
@@ -176,6 +179,23 @@ pub struct Gallery {
     steps_current: usize,
     rating: usize,
     collapse_keys: BTreeSet<String>,
+    number_basic:Entity<InputState>,
+    number_decimal:Entity<InputState>,
+    number_disabled:Entity<InputState>,
+    slider_single:Entity<SliderState>,
+    slider_range:Entity<SliderState>,
+    slider_vertical:Entity<SliderState>,
+    slider_value:f32,
+    time_basic:Entity<TimeFieldState>,
+    time_seconds:Entity<TimeFieldState>,
+    time_12:Entity<TimeFieldState>,
+    time_disabled:Entity<TimeFieldState>,
+    segmented_index:usize,
+    autocomplete_input:Entity<InputState>,
+    autocomplete_open:bool,
+    autocomplete_active:usize,
+    autocomplete_last:String,
+    _input_subscriptions:Vec<Subscription>,
 }
 
 impl Gallery {
@@ -218,6 +238,47 @@ impl Gallery {
             .masked(true).placeholder("6 or more characters"));
         let form_confirm = cx.new(|cx| InputState::new(window, cx)
             .masked(true).placeholder("Repeat password"));
+        let number_basic=cx.new(|cx|InputState::new(window,cx)
+            .placeholder("Quantity").default_value("25").min(0.).max(100.).step(5.));
+        let number_decimal=cx.new(|cx|InputState::new(window,cx)
+            .placeholder("Amount").default_value("12.5").min(0.).max(200.).step(0.25));
+        let number_disabled=cx.new(|cx|InputState::new(window,cx)
+            .default_value("42").step(1.));
+        let slider_single=cx.new(|_|SliderState::new().min(0.).max(100.)
+            .step(5.).default_value(35.));
+        let slider_range=cx.new(|_|SliderState::new().min(0.).max(100.)
+            .step(1.).default_value(20. .. 80.));
+        let slider_vertical=cx.new(|_|SliderState::new().min(0.).max(100.)
+            .step(10.).default_value(60.));
+        let time_basic=cx.new(|cx|TimeFieldState::new(window,cx));
+        let time_seconds=cx.new(|cx|TimeFieldState::new(window,cx)
+            .precision(TimePrecision::Second));
+        let time_12=cx.new(|cx|TimeFieldState::new(window,cx)
+            .hour_cycle(HourCycle::H12));
+        let time_disabled=cx.new(|cx|TimeFieldState::new(window,cx));
+        let autocomplete_input=cx.new(|cx|InputState::new(window,cx)
+            .placeholder("Try typing Ru").default_value("Ru"));
+        let mut _input_subscriptions=Vec::new();
+        _input_subscriptions.push(cx.subscribe(&slider_single,
+            |this,_,event:&SliderEvent,cx|{
+                if let SliderEvent::Change(value)=event {
+                    this.slider_value=value.start();
+                    cx.notify();
+                }
+            }));
+        _input_subscriptions.push(cx.subscribe(&autocomplete_input,
+            |this,_,event:&InputEvent,cx|{
+                match event{
+                    InputEvent::Change|InputEvent::Focus=>{
+                        this.autocomplete_open=true;
+                        this.autocomplete_active=0;
+                        cx.notify();
+                    },
+                    _=>{},
+                }
+            }));
+        _input_subscriptions.push(cx.subscribe(&time_basic,
+            |_,_,_:&TimeFieldEvent,cx|{cx.notify();}));
         let theme_override=ThemeLabSpec::parse(&component,dark).map(|spec|spec.theme);
         Self {
             component, dark, theme_override, button_clicks: 0, checked: true, radio_selected: Some(0),
@@ -238,6 +299,11 @@ impl Gallery {
             popconfirm_result: "Awaiting confirmation".into(),
             pagination_page:4, steps_current:1, rating:3,
             collapse_keys:BTreeSet::from(["first".to_owned()]),
+            number_basic,number_decimal,number_disabled,
+            slider_single,slider_range,slider_vertical,slider_value:35.,
+            time_basic,time_seconds,time_12,time_disabled,
+            segmented_index:1,autocomplete_input,autocomplete_open:true,
+            autocomplete_active:0,autocomplete_last:"None".into(),_input_subscriptions,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -794,6 +860,121 @@ impl Gallery {
             .child(label("Inactive spinner preserves supplied content",t))
             .child(AntSpin::new().theme(t).spinning(false)
                 .child(AntText::new("Data is ready.").theme(t)))
+            .into_any_element()
+    }
+
+
+    fn input_number_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(18.))
+            .child(label("Native step buttons, Up/Down, min/max: 0–100 in steps of 5",t))
+            .child(div().w(px(260.)).child(AntInputNumber::new(&self.number_basic)
+                .theme(t).placeholder("Quantity").prefix(AntIcon::new(AntIconName::NumberOutlined))))
+            .child(label("Decimal values and filled visual variant",t))
+            .child(div().w(px(260.)).child(AntInputNumber::new(&self.number_decimal)
+                .theme(t).variant(InputVariant::Filled).prefix(AntText::new("$").theme(t))))
+            .child(label("Disabled numeric input",t))
+            .child(div().w(px(260.)).child(AntInputNumber::new(&self.number_disabled)
+                .theme(t).disabled(true)))
+            .into_any_element()
+    }
+
+    fn slider_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(20.))
+            .child(label("Pointer/touch drag · Tab then arrows, Home/End, PageUp/PageDown",t))
+            .child(div().w(px(520.)).child(AntSlider::new(&self.slider_single)
+                .theme(t).show_value(true)))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Controlled value from native SliderEvent: {}",self.slider_value)))
+            .child(label("Range slider with independently draggable handles",t))
+            .child(div().w(px(520.)).child(AntSlider::new(&self.slider_range)
+                .theme(t).show_value(true)))
+            .child(label("Vertical and disabled",t))
+            .child(div().flex().gap(px(35.))
+                .child(AntSlider::new(&self.slider_vertical)
+                    .theme(t).vertical(true).height(145.).show_value(true))
+                .child(div().w(px(280.)).child(AntSlider::new(&self.slider_single)
+                    .theme(t).disabled(true))))
+            .into_any_element()
+    }
+
+    fn segmented_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let changed=cx.listener(|this,next:&usize,_,cx|{
+            this.segmented_index=*next;cx.notify();
+        });
+        div().flex().flex_col().gap(px(18.))
+            .child(label("Controlled view switch · Left/Right/Home/End keyboard navigation",t))
+            .child(AntSegmented::new("segmented-views").theme(t)
+                .selected_index(self.segmented_index)
+                .on_change(move|next,window,cx|changed(&next,window,cx))
+                .child(AntSegmentedOption::new("List").icon(AntIconName::BarsOutlined))
+                .child(AntSegmentedOption::new("Grid").icon(AntIconName::AppstoreOutlined))
+                .child(AntSegmentedOption::new("Kanban").icon(AntIconName::ProjectOutlined))
+                .child(AntSegmentedOption::new("Locked").disabled(true)))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Selected view index: {}",self.segmented_index)))
+            .child(label("Block layout and disabled state",t))
+            .child(div().w(px(440.)).child(AntSegmented::new("segmented-block")
+                .theme(t).block(true).selected_index(1)
+                .child(AntSegmentedOption::new("Monthly"))
+                .child(AntSegmentedOption::new("Quarterly"))
+                .child(AntSegmentedOption::new("Yearly"))))
+            .child(AntSegmented::new("segmented-disabled").theme(t).disabled(true)
+                .child(AntSegmentedOption::new("Enabled"))
+                .child(AntSegmentedOption::new("Disabled")))
+            .into_any_element()
+    }
+
+    fn time_picker_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(18.))
+            .child(label("GPUI native segment editor: Up/Down change a segment; Tab advances",t))
+            .child(row()
+                .child(AntTimePicker::new(&self.time_basic).theme(t))
+                .child(AntTimePicker::new(&self.time_seconds).theme(t)
+                    .size(ControlSize::Large)))
+            .child(label("12-hour cycle including AM/PM keyboard segment",t))
+            .child(AntTimePicker::new(&self.time_12).theme(t))
+            .child(label("Disabled and validation statuses",t))
+            .child(row()
+                .child(AntTimePicker::new(&self.time_basic).theme(t)
+                    .status(InputStatus::Warning))
+                .child(AntTimePicker::new(&self.time_disabled).theme(t).disabled(true)))
+            .into_any_element()
+    }
+
+    fn autocomplete_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let on_selected=cx.listener(|this,selected:&SharedString,window,cx|{
+            this.autocomplete_input.update(cx,|input,cx|{
+                input.set_value(selected.clone(),window,cx);
+            });
+            this.autocomplete_last=selected.to_string();
+            this.autocomplete_open=false;
+            this.autocomplete_active=0;
+            cx.notify();
+        });
+        let on_open=cx.listener(|this,open:&bool,_,cx|{
+            this.autocomplete_open=*open;cx.notify();
+        });
+        let on_active=cx.listener(|this,index:&usize,_,cx|{
+            this.autocomplete_active=*index;cx.notify();
+        });
+        let open_again=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
+            this.autocomplete_open=true;cx.notify();
+        });
+        div().flex().flex_col().gap(px(20.)).w_full()
+            .child(label("Free-text input with filtered Rust/GPUI suggestions",t))
+            .child(div().h(px(252.)).flex().flex_col().gap(px(8.))
+                .child(AntAutoComplete::new("autocomplete-language",&self.autocomplete_input)
+                    .theme(t).open(self.autocomplete_open).active_index(self.autocomplete_active)
+                    .options(["Rust","Ruby","R","React","Python","Java","TypeScript","Go","Scala"])
+                    .on_select(move|value,window,cx|on_selected(&value,window,cx))
+                    .on_active_change(move|index,window,cx|on_active(&index,window,cx))
+                    .on_open_change(move|open,window,cx|on_open(&open,window,cx)))
+                .child(div().text_size(px(12.)).text_color(t.text_secondary)
+                    .child("Type to filter; Up/Down choose a suggestion, Enter accepts, Esc closes."))
+                .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                    .child(format!("Last selected: {}",self.autocomplete_last))))
+            .child(AntButton::new("autocomplete-open","Show suggestions").theme(t)
+                .on_click(open_again))
             .into_any_element()
     }
 
@@ -1605,6 +1786,11 @@ impl Render for Gallery {
             "Result"=>self.result_demo(t),
             "Skeleton"=>self.skeleton_demo(t),
             "Spin"=>self.spin_demo(t),
+            "InputNumber"=>self.input_number_demo(t),
+            "Slider"=>self.slider_demo(t),
+            "Segmented"=>self.segmented_demo(t,cx),
+            "TimePicker"=>self.time_picker_demo(t),
+            "AutoComplete"=>self.autocomplete_demo(t,cx),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")
