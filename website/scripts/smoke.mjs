@@ -10,14 +10,18 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const root = new URL('../', import.meta.url);
 const screenshots = join(process.env.RUNNER_TEMP ?? '/tmp', 'gpui-antd-smoke');
 await mkdir(screenshots, { recursive: true });
 
-const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const server = spawn(command, ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], {
-  cwd: root,
+// Spawn Vite directly, not through `npm run`. The npm wrapper can exit
+// while its Vite grandchild keeps inherited stdio pipes open forever, causing
+// an otherwise successful smoke test to hang until the workflow timeout.
+const viteCli = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
+const server = spawn(process.execPath, [viteCli, 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], {
+  cwd: fileURLToPath(root),
   stdio: ['ignore', 'pipe', 'pipe'],
   env: { ...process.env, CI: '1' },
 });
@@ -104,4 +108,6 @@ try {
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
+  server.stdout.destroy();
+  server.stderr.destroy();
 }

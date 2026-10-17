@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: gpui-antd-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   wasm-and-docs:
@@ -60,6 +60,7 @@ jobs:
           find website/dist -name '*.wasm' -print | grep -q . || { echo "WASM missing from Pages artifact"; exit 1; }
 
       - name: Smoke test real WASM rendering in Chromium
+        timeout-minutes: 8
         working-directory: website
         run: |
           npx playwright install --with-deps chromium
