@@ -78,6 +78,8 @@ not declare an independent `gpui` crate dependency. WASM bridge uses pinned
 | `typography.rs` | Title, Text, Paragraph (line clamp), Link |
 | `layout.rs` | Space, Flex, 24-column Row/Col with breakpoints |
 | `basics.rs` | Avatar, Statistic, Empty, Breadcrumb |
+| `tabs.rs` | Controlled TabBar + selected native Rust tab panels |
+| `tooltip.rs` | Theme-aware native GPUI tooltip over an arbitrary trigger |
 | `icons.rs` | Generated 848-icon catalog/embedded asset dispatch + AntIcon |
 | `tokens.rs` | AntTheme and light/dark semantic tokens |
 | `lib.rs` | Exported public API surface |

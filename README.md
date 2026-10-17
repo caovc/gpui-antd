@@ -35,7 +35,7 @@ before implementing components or changing the WASM gallery. See
 ## First milestone component set
 
 Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, Grid, Avatar, Statistic,
-Empty and Breadcrumb.
+Empty, Breadcrumb, Tabs and Tooltip.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -101,6 +101,18 @@ states; multiple selection remains a future milestone.
 The new RadioGroup supports a controlled selected index, roving Tab stops,
 arrows, Home/End navigation and disabled-item skipping. Both layouts and the
 radio-button style have examples in the interactive docs.
+
+## Tabs and Tooltip
+
+`AntTabs` wraps the GPUI Kit native TabBar with controlled selection,
+line/card/pill/segmented styling, selected Rust content panels, disabled tabs,
+tab icons, scrolling and existing Kit animation. Full roving keyboard focus
+is still a known upstream parity gap.
+
+`AntTooltip` composes a theme-aware tooltip with GPUI Kit's native
+registered provider rather than absolute-positioned HTML. Hover and disabled
+triggers are in the WASM gallery; keyboard focus and all Ant Design placement
+options remain parity work.
 
 ## Ant Design Icons
 

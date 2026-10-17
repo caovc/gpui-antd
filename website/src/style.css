@@ -276,3 +276,7 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 @media (max-width: 700px) { .icon-explorer-preview { grid-template-columns: 1fr; } }
 
 .example-card iframe.wasm-iframe[src*="component=Typography"] { height: 890px; }
+
+/* Native GPUI/WASM Tabs panels and hover tooltip story. */
+.example-card iframe.wasm-iframe[src*="component=Tabs"] { height: 660px; }
+.example-card iframe.wasm-iframe[src*="component=Tooltip"] { height: 470px; }

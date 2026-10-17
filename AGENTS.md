@@ -136,7 +136,7 @@ installation example is `.github/workflows/native.yml`. See
 
 ## Immediate priorities / known gaps
 
-Tabs, Tooltip, Dropdown, Modal/Popconfirm, icon visual parity, responsive
+Dropdown, Modal/Popconfirm, Tabs arrow-key navigation, Tooltip keyboard/placement parity, icon visual parity, responsive
 Grid offsets/order, richer Typography editing, screenshot comparison and
 accessibility. Also consult the repository's live GitHub Issues for the
 priorities and avoid creating duplicate work. The icon catalog and its

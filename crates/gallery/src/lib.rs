@@ -9,6 +9,7 @@ use gpui_antd::{
     AntIcon, AntIconName, AntIconAssets, AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone,
     AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify,
     AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem,
+    AntTabs, AntTab, TabsVariant, AntTooltip,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -66,7 +67,7 @@ impl GalleryAssets {
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Icons", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
+    "Alert", "Card", "Progress", "Divider", "Tabs", "Tooltip", "Icons", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
 ];
 
 pub struct Gallery {
@@ -100,6 +101,8 @@ pub struct Gallery {
     form_attempted: bool,
     form_success: bool,
     paragraph_expanded: bool,
+    tabs_index: usize,
+    tabs_card_index: usize,
 }
 
 impl Gallery {
@@ -152,6 +155,7 @@ impl Gallery {
             form_name, form_email, form_password, form_confirm,
             form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
             paragraph_expanded: false,
+            tabs_index: 0, tabs_card_index: 1,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -725,6 +729,113 @@ impl Gallery {
             .into_any_element()
     }
 
+    fn tabs_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let change = cx.listener(|this, next: &usize, _, cx| {
+            this.tabs_index = *next;
+            cx.notify();
+        });
+        let change_card = cx.listener(|this, next: &usize, _, cx| {
+            this.tabs_card_index = *next;
+            cx.notify();
+        });
+        div().flex().flex_col().gap(px(16.))
+            .child(label("Line tabs · controlled state and panel content", theme))
+            .child(
+                AntTabs::new("tabs-line")
+                    .theme(theme)
+                    .active_index(self.tabs_index)
+                    .variant(TabsVariant::Line)
+                    .on_change(move |index, window, cx| change(&index, window, cx))
+                    .child(AntTab::new("Overview")
+                        .icon(AntIconName::HomeOutlined)
+                        .content(div().flex().flex_col().gap(px(10.))
+                            .child("Overview panel")
+                            .child(AntText::new("This panel is selected by Rust state.")
+                                .theme(theme).tone(TextTone::Secondary))))
+                    .child(AntTab::new("Settings")
+                        .icon(AntIconName::SettingOutlined)
+                        .content(div().flex().flex_col().gap(px(10.))
+                            .child("Settings panel")
+                            .child(AntSwitch::new("tabs-settings-toggle").checked(true).theme(theme))))
+                    .child(AntTab::new("Disabled")
+                        .disabled(true)
+                        .content(div().child("Should never activate")))
+            )
+            .child(div().text_size(px(12.)).text_color(theme.text_secondary)
+                .child(format!("Controlled active tab: {}", self.tabs_index)))
+            .child(label("Card variant", theme))
+            .child(
+                AntTabs::new("tabs-card")
+                    .theme(theme)
+                    .size(ControlSize::Large)
+                    .variant(TabsVariant::Card)
+                    .active_index(self.tabs_card_index)
+                    .on_change(move |index, window, cx| change_card(&index, window, cx))
+                    .child(AntTab::new("First")
+                        .content(AntText::new("First card content").theme(theme)))
+                    .child(AntTab::new("Second")
+                        .content(AntText::new("Second card content").theme(theme)))
+                    .child(AntTab::new("Third")
+                        .content(AntText::new("Third card content").theme(theme)))
+            )
+            .child(label("Pill and segmented appearances", theme))
+            .child(
+                AntTabs::new("tabs-pill").theme(theme)
+                    .variant(TabsVariant::Pills).active_index(1)
+                    .child(AntTab::new("Alpha"))
+                    .child(AntTab::new("Beta"))
+                    .child(AntTab::new("Gamma"))
+            )
+            .child(
+                AntTabs::new("tabs-segmented").theme(theme)
+                    .variant(TabsVariant::Segmented).active_index(0)
+                    .child(AntTab::new("List"))
+                    .child(AntTab::new("Grid"))
+                    .child(AntTab::new("Columns"))
+            )
+            .into_any_element()
+    }
+
+    fn tooltip_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(22.))
+            .child(label("Hover a native GPUI control to reveal its tooltip", theme))
+            .child(row()
+                .child(AntTooltip::new("tooltip-save", "Save your changes")
+                    .theme(theme)
+                    .child(AntButton::new("tooltip-save-button", "Save")
+                        .primary().theme(theme)))
+                .child(AntTooltip::new("tooltip-info", "Additional information")
+                    .theme(theme)
+                    .child(AntButton::new("tooltip-info-button", "Info")
+                        .theme(theme)))
+                .child(AntTooltip::new("tooltip-delete", "Permanently delete this item")
+                    .theme(theme)
+                    .child(AntButton::new("tooltip-delete-button", "Delete")
+                        .danger(true).theme(theme)))
+            )
+            .child(label("Tooltips can wrap icons, not only buttons", theme))
+            .child(row()
+                .child(AntTooltip::new("tooltip-icon-search", "Search items")
+                    .theme(theme)
+                    .child(div().p(px(10.))
+                        .child(AntIcon::new(AntIconName::SearchOutlined)
+                            .theme(theme).size(22.))))
+                .child(AntTooltip::new("tooltip-icon-alert", "Important warning")
+                    .theme(theme)
+                    .child(div().p(px(10.))
+                        .child(AntIcon::new(AntIconName::WarningOutlined)
+                            .theme(theme).size(22.).color(theme.warning))))
+            )
+            .child(label("Disabled tooltip (hover deliberately suppressed)", theme))
+            .child(AntTooltip::new("tooltip-disabled", "This should not appear")
+                .theme(theme).disabled(true)
+                .child(AntButton::new("tooltip-disabled-button", "No tooltip")
+                    .theme(theme)))
+            .child(div().text_size(px(12.)).text_color(theme.text_secondary)
+                .child("Tooltip positioning and dismissal use GPUI's native overlay. Keyboard focus and all placements still need parity testing."))
+            .into_any_element()
+    }
+
     fn divider_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
         div().flex().flex_col().w_full().gap(px(18.))
             .child("Text above")
@@ -759,6 +870,8 @@ impl Render for Gallery {
             "Card"=>self.card_demo(t),
             "Progress"=>self.progress_demo(t),
             "Divider"=>self.divider_demo(t),
+            "Tabs"=>self.tabs_demo(t,cx),
+            "Tooltip"=>self.tooltip_demo(t),
             "Icons"=>self.icons_demo(t),
             name if name.starts_with("Icon:") =>
                 self.icon_single_demo(t, name.trim_start_matches("Icon:")),
