@@ -11,6 +11,16 @@
 > Ant Design, NOT compatibility with the React component API. This is the first
 > end-to-end milestone, not the completed Ant Design catalog.
 
+## Contributor / coding agent guide
+
+This repository includes a canonical [AGENTS.md](AGENTS.md) entry point
+for code agents and maintainers, with detailed
+[architecture](docs/ARCHITECTURE.md),
+[development & CI](docs/DEVELOPMENT.md), and
+[component playbook](docs/COMPONENT_PLAYBOOK.md) documents. Read these
+before implementing components or changing the WASM gallery. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for contribution expectations.
+
 ## Design philosophy
 
 - **Rust-native:** components are GPUI elements. They run on desktop GPUs.
