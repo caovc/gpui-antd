@@ -35,7 +35,7 @@ before implementing components or changing the WASM gallery. See
 ## First milestone component set
 
 Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, Grid, Avatar, Statistic,
-Empty, Breadcrumb, Tabs, Tooltip, application Layout, Menu, Dropdown, Popover, Modal and Popconfirm.
+Empty, Breadcrumb, Tabs, Tooltip, application Layout, Menu, Dropdown, Popover, Modal and Popconfirm, plus Pagination, Steps, Rate, Collapse, Descriptions, Result, Skeleton and Spin.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -288,3 +288,31 @@ Upstream frameworks: [GPUI Kit](https://gpui-kit.com/),
 [Ant Design](https://ant.design/).
 License: MIT. This is a community project and not officially affiliated with
 Ant Design or its maintainers.
+
+
+## New native component families (alpha wave 1)
+
+Eight additional Ant Design-inspired components render through the same
+Rust GPUI implementation on native desktop and browser WebAssembly:
+
+- **Navigation:** AntPagination (controlled current page, jump gaps, simple
+  mode, disabled/size/total) and AntSteps (controlled index, vertical steps,
+  descriptions, statuses and disabled items).
+- **Data entry:** AntRate (controlled whole-star rating, clear-on-repeat,
+  count and disabled states).
+- **Data display:** AntCollapse/AntCollapseItem (controlled set of expanded
+  keys, accordion, native panel content), AntDescriptions/AntDescriptionItem
+  (labeled text details, equal-width columns, bordered mode).
+- **Feedback:** AntResult (semantic status, title/subtitle/actions),
+  AntSkeleton (avatar/title/paragraph placeholders), and AntSpin
+  (actual GPUI Kit animated spinner with optional tip and content).
+
+Stateful callbacks only request the next value; the host Entity must update
+its state and call cx.notify(). The samples in Gallery do this explicitly.
+
+These are **partial Ant Design implementations**, not complete parity:
+Pagination does not yet have a quick jumper or page-size select; Rate does not
+support half-stars; Collapse lacks motion; Descriptions does not span cells;
+Result is not illustration-identical; Skeleton is static; Spin has no
+overlay mask for children. See [component coverage matrix](docs/COMPONENT_MATRIX.md)
+for the complete comparison and priority backlog.
