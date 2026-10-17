@@ -359,12 +359,17 @@ fn mix_rgb(a:u32,b:u32,blend:f32)->u32 {
     };
     (channel(16)<<16)|(channel(8)<<8)|channel(0)
 }
+fn finite_token(value:f32,min:f32,max:f32,fallback:f32)->f32 {
+    if value.is_finite() {value.clamp(min,max)} else {fallback}
+}
 impl AntTheme {
     /// Resolve Seed -> Map/Alias values for the selected native algorithm.
     /// The default primary is #1677ff and regular/compact heights are 32/28.
     pub fn from_seed(seed:AntSeedTokens,algorithm:AntThemeAlgorithm)->Self {
         let dark=algorithm.is_dark();
         let mut theme=if dark {Self::dark()} else {Self::light()};
+        let preset=if dark {AntSeedTokens::dark()} else {AntSeedTokens::default()};
+        let reference=theme;
         theme.appearance=if dark {Appearance::Dark} else {Appearance::Light};
         let primary=seed.color_primary;
         let surface=seed.color_bg_base;
@@ -397,15 +402,53 @@ impl AntTheme {
         theme.success_bg=color(mix_rgb(seed.color_success,surface,0.92));
         theme.warning_bg=color(mix_rgb(seed.color_warning,surface,0.91));
         theme.error_bg=color(mix_rgb(seed.color_error,surface,0.92));
-        theme.border_radius=seed.border_radius.clamp(0.,32.);
+        theme.border_radius=finite_token(seed.border_radius,0.,32.,6.);
         theme.border_radius_sm=(theme.border_radius-2.).max(0.);
         theme.border_radius_lg=theme.border_radius+2.;
-        theme.font_size=seed.font_size.clamp(10.,28.);
-        theme.padding=seed.spacing_unit.clamp(1.,16.)*4.;
-        theme.control_height=(seed.control_height-if algorithm.is_compact(){4.}else{0.}).clamp(20.,64.);
+        theme.font_size=finite_token(seed.font_size,10.,28.,14.);
+        theme.padding=finite_token(seed.spacing_unit,1.,16.,4.)*4.;
+        theme.control_height=(finite_token(seed.control_height,20.,64.,32.)-
+            if algorithm.is_compact(){4.}else{0.}).clamp(20.,64.);
         theme.control_height_sm=(theme.control_height-8.).max(18.);
         theme.control_height_lg=theme.control_height+8.;
         theme.motion=seed.motion;
+        // Preserve Ant Design's canonical light/dark palette for unchanged
+        // reference colors. Without this, even a radius-only edit replaces
+        // the official blue/neutral/status colors with rough RGB blends.
+        if seed.color_primary==preset.color_primary &&
+           seed.color_bg_base==preset.color_bg_base {
+            theme.primary_hover=reference.primary_hover;
+            theme.primary_active=reference.primary_active;
+            theme.primary_bg=reference.primary_bg;
+            theme.primary_border=reference.primary_border;
+            theme.primary_text=reference.primary_text;
+        }
+        if seed.color_bg_base==preset.color_bg_base &&
+           seed.color_text_base==preset.color_text_base {
+            theme.layout_body=reference.layout_body;
+            theme.surface_secondary=reference.surface_secondary;
+            theme.bg_elevated=reference.bg_elevated;
+            theme.text_secondary=reference.text_secondary;
+            theme.border=reference.border;
+            theme.disabled_bg=reference.disabled_bg;
+            theme.disabled_text=reference.disabled_text;
+        }
+        if seed.color_info==preset.color_info &&
+           seed.color_bg_base==preset.color_bg_base {
+            theme.info_bg=reference.info_bg;
+        }
+        if seed.color_success==preset.color_success &&
+           seed.color_bg_base==preset.color_bg_base {
+            theme.success_bg=reference.success_bg;
+        }
+        if seed.color_warning==preset.color_warning &&
+           seed.color_bg_base==preset.color_bg_base {
+            theme.warning_bg=reference.warning_bg;
+        }
+        if seed.color_error==preset.color_error &&
+           seed.color_bg_base==preset.color_bg_base {
+            theme.error_bg=reference.error_bg;
+        }
         theme
     }
     pub fn map_tokens(self)->AntMapTokens{
@@ -569,6 +612,40 @@ mod tests {
         assert_eq!(dark.appearance,Appearance::Dark);
         assert_eq!(dark.control_height,28.);
         assert_eq!(dark.map_tokens().control_height_sm,20.);
+    }
+    #[test]
+    fn unmodified_seed_matches_canonical_ant_design_palette() {
+        let light=AntTheme::from_seed(AntSeedTokens::default(),AntThemeAlgorithm::Default);
+        let ref_light=AntTheme::light();
+        assert_eq!(light.primary_hover,ref_light.primary_hover);
+        assert_eq!(light.primary_active,ref_light.primary_active);
+        assert_eq!(light.primary_bg,ref_light.primary_bg);
+        assert_eq!(light.primary_border,ref_light.primary_border);
+        assert_eq!(light.layout_body,ref_light.layout_body);
+        assert_eq!(light.success_bg,ref_light.success_bg);
+        let mut partial=AntSeedTokens::default();
+        partial.border_radius=14.;
+        partial.font_size=16.;
+        let changed=AntTheme::from_seed(partial,AntThemeAlgorithm::Compact);
+        assert_eq!(changed.primary_hover,ref_light.primary_hover);
+        assert_eq!(changed.border_radius,14.);
+        assert_eq!(changed.control_height,28.);
+        let dark=AntTheme::from_seed(AntSeedTokens::dark(),AntThemeAlgorithm::Dark);
+        assert_eq!(dark.primary_hover,AntTheme::dark().primary_hover);
+        assert_eq!(dark.layout_body,AntTheme::dark().layout_body);
+    }
+    #[test]
+    fn invalid_seed_geometry_remains_finite() {
+        let seed=AntSeedTokens{
+            border_radius:f32::NAN, control_height:f32::INFINITY,
+            spacing_unit:f32::NEG_INFINITY, font_size:f32::NAN,
+            ..AntSeedTokens::default()
+        };
+        let theme=AntTheme::from_seed(seed,AntThemeAlgorithm::Default);
+        assert_eq!(theme.border_radius,6.);
+        assert_eq!(theme.control_height,32.);
+        assert_eq!(theme.padding,16.);
+        assert_eq!(theme.font_size,14.);
     }
     #[test]
     fn component_overrides_are_scoped() {
