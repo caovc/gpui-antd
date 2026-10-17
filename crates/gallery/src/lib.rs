@@ -14,7 +14,7 @@ use gpui_antd::{
     AntTabs, AntTab, TabsVariant, AntTooltip,
     AntLayout, AntSider, AntHeader, AntContent, AntFooter, GridBreakpoint,
     AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm,
-    AntMenu, AntMenuItem,
+    AntMenu, AntMenuItem, AntTokenLayer, AntTokenValue, AntResolvedToken,
     AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
     AntDescriptions, AntDescriptionItem, AntResult, ResultStatus, AntSkeleton, AntSpin,
     AntInputNumber, AntSlider, AntSegmented, AntSegmentedOption, AntTimePicker, AntAutoComplete,
@@ -320,6 +320,12 @@ impl Gallery {
             this.button_clicks+=1;
             cx.notify();
         });
+        let check_change=cx.listener(|this,value:&bool,_,cx|{
+            this.checked=*value;cx.notify();
+        });
+        let switch_change=cx.listener(|this,value:&bool,_,cx|{
+            this.switch_on=*value;cx.notify();
+        });
         div().w_full().min_w_0().flex().flex_col().gap(px(t.padding))
             .child(AntTitle::new("Native Theme Lab").level(3).theme(t))
             .child(div().text_size(px(12.)).text_color(t.text_secondary)
@@ -355,12 +361,48 @@ impl Gallery {
                             .icon(AntIconName::BarChartOutlined))
                         .item(AntMenuItem::new("settings","Settings")
                             .icon(AntIconName::SettingOutlined)))))
+            .child(label("Scoped data display and input tokens",t))
+            .child(div().flex().flex_wrap().items_center().gap(px(16.))
+                .child(AntCheckbox::new("lab-checkbox","Checkbox").theme(t)
+                    .checked(self.checked)
+                    .on_change(move |next,window,cx| check_change(&next,window,cx)))
+                .child(AntSwitch::new("lab-switch").theme(t)
+                    .checked(self.switch_on)
+                    .on_change(move |next,window,cx| switch_change(&next,window,cx)))
+                .child(AntBadge::count(12).theme(t))
+                .child(AntTag::new("Tag").theme(t).tone(Tone::Blue))
+                .child(AntTooltip::new("lab-tooltip","Token-aware tooltip").theme(t)
+                    .child(AntButton::new("lab-hover","Hover for Tooltip").theme(t))))
+            .child(AntProgress::new(72.).theme(t))
+            .child(AntDivider::new().theme(t))
+            .child(AntText::new("Typography component color and size overrides.")
+                .theme(t).strong(true))
             .child(AntCard::new().theme(t).title("Card token override: padding and radius")
                 .child(AntText::new("The body padding and header color come from Card tokens.")
                     .theme(t)))
             .child(div().text_size(px(12.)).text_color(t.text_secondary)
                 .child(format!("Primary clicked {} times · menu route {}",
                     self.button_clicks,self.menu_selected)))
+            .into_any_element()
+    }
+
+    fn theme_tokens_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
+        let tokens=t.resolved_tokens();
+        div().w_full().min_w_0().flex().flex_col().gap(px(16.))
+            .child(AntTitle::new("Resolved Design Tokens").level(3).theme(t))
+            .child(AntText::new(
+                "Real Rust/GPUI Seed → Map → Alias values. Color tiles are painted by GPUI; component-scoped values apply only to the chosen component."
+            ).theme(t).tone(TextTone::Secondary))
+            .child(AntCard::new().theme(t).title("Map Token · derived values")
+                .child(div().flex().flex_wrap().gap(px(8.))
+                    .children(tokens.iter().copied()
+                        .filter(|token|token.layer==AntTokenLayer::Map)
+                        .map(|token|render_resolved_token(token,t)))))
+            .child(AntCard::new().theme(t).title("Alias Token · semantic values")
+                .child(div().flex().flex_wrap().gap(px(8.))
+                    .children(tokens.iter().copied()
+                        .filter(|token|token.layer==AntTokenLayer::Alias)
+                        .map(|token|render_resolved_token(token,t)))))
             .into_any_element()
     }
 
@@ -1735,11 +1777,35 @@ fn label(text:&'static str,t:AntTheme)->gpui_kit::Div {
     div().text_size(px(13.)).font_medium().text_color(t.text_secondary).child(text)
 }
 
+fn render_resolved_token(token:AntResolvedToken,t:AntTheme)->gpui_kit::AnyElement {
+    let value=match token.value {
+        AntTokenValue::Color(value)=>div().size(px(26.)).flex_none()
+            .rounded(px(5.)).border_1().border_color(t.border).bg(value)
+            .into_any_element(),
+        AntTokenValue::Number(value)=>div().text_size(px(12.))
+            .text_color(t.text_secondary).child(format!("{value:.1} px"))
+            .into_any_element(),
+        AntTokenValue::Boolean(value)=>div().text_size(px(12.))
+            .text_color(t.text_secondary).child(if value {"on"} else {"off"})
+            .into_any_element(),
+    };
+    div().flex().items_center().justify_between().gap(px(8.))
+        .flex_1().min_w(px(174.)).h(px(56.))
+        .rounded(px(6.)).border_1().border_color(t.border)
+        .bg(t.surface_secondary).px(px(11.))
+        .child(div().min_w_0().text_color(t.text).text_size(px(12.))
+            .child(token.name))
+        .child(value)
+        .into_any_element()
+}
+
 impl Render for Gallery {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let t=self.theme();
         let demo=match self.component.as_str() {
             "Button"=>self.button_demo(t,cx),
+            name if name.starts_with("ThemeLab") &&
+                name.split('|').any(|part|part=="scene=tokens") => self.theme_tokens_demo(t),
             name if name.starts_with("ThemeLab") => self.theme_lab_demo(t,cx),
             "Input"=>self.input_demo(t),
             "Select"=>self.select_demo(t),
