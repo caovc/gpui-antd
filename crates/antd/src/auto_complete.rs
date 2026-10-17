@@ -98,6 +98,7 @@ impl RenderOnce for AntAutoComplete {
         let active_change=self.on_active_change.clone();
         let open_change=self.on_open_change.clone();
         let input_focus=self.input.read(cx).focus_handle(cx);
+        let requested_open=self.open;
         let disabled=self.disabled;
         let on_keyboard=move|event:&KeyDownEvent,window:&mut Window,cx:&mut App|{
             if disabled || !input_focus.is_focused(window)
@@ -121,7 +122,7 @@ impl RenderOnce for AntAutoComplete {
                     return;
                 }
             }
-            if key=="escape" && self.open{
+            if key=="escape" && requested_open{
                 if let Some(callback)=&open_change{callback(false,window,cx);}
                 window.prevent_default();cx.stop_propagation();
             }
