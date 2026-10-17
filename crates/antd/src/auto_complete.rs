@@ -12,6 +12,7 @@ use gpui_kit::{
     SharedString, StatefulInteractiveElement as _, Styled as _, Window, div, px,
 };
 use gpui_kit::component::input::InputState;
+use gpui_kit::component::scroll::ScrollableElement as _;
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
 use crate::{AntInput, AntTheme, ControlSize};
@@ -135,7 +136,7 @@ impl RenderOnce for AntAutoComplete {
                 .aria_label("Autocomplete free-text input"))
             .when(open,|this|this.child(
                 div().absolute().top(px(self.size.height()+4.)).left(px(0.))
-                    .w_full().max_h(px(256.)).overflow_y_scroll()
+                    .w_full().max_h(px(256.)).overflow_y_scrollbar()
                     .rounded(px(t.border_radius)).border_1().border_color(t.border)
                     .bg(t.surface).p(px(4.))
                     .children(suggestions.into_iter().enumerate().map(|(index,value)|{
