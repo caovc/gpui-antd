@@ -421,3 +421,10 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
   border: 1px solid var(--border); border-radius: 9px;
   background: var(--surface); box-shadow: var(--shadow); }
 @media(max-width:700px){.layout-drawer-stage{padding:9px}.layout-drawer-stage iframe{height:580px}}
+
+/* One real GPUI/WASM preview: leave room for the native deferred popover. */
+.menu-flyout-stage {display:flex; justify-content:center; padding:16px; background:var(--soft);
+ border-bottom:1px solid var(--line);}
+.menu-flyout-stage iframe {display:block; box-sizing:border-box; width:min(100%,680px); height:540px;
+ border:1px solid var(--border); border-radius:8px; background:var(--surface);}
+@media(max-width:700px){.menu-flyout-stage{padding:8px}.menu-flyout-stage iframe{height:560px}}
