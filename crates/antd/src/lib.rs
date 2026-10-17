@@ -29,6 +29,7 @@ pub mod overlays;
 pub mod menu;
 pub mod navigation_extra;
 pub mod data_extra;
+pub mod list;
 pub mod feedback_extra;
 pub mod input_number;
 pub mod slider;
@@ -46,6 +47,7 @@ pub use date_picker::AntDatePicker;
 pub use form::{AntForm, AntFormItem, FormRule, FormSchema, FormValidation};
 pub use tokens::{AntTheme, Appearance, color};
 pub use design_tokens::{AntSeedTokens, AntMapTokens, AntAliasTokens,
+    AntMapTokenOverrides, AntAliasTokenOverrides,
     AntThemeAlgorithm, AntComponent, AntComponentToken, AntComponentTokens,
     AntTokenLayer, AntTokenValue, AntResolvedToken};
 pub use typography::{AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone};
@@ -67,3 +69,13 @@ pub use slider::{AntSlider, slider_key_value};
 pub use segmented::{AntSegmented, AntSegmentedOption, next_segmented_index};
 pub use time_picker::AntTimePicker;
 pub use auto_complete::{AntAutoComplete, autocomplete_matches, next_autocomplete_index};
+
+pub mod feedback_actions;
+pub mod tree;
+pub mod table;
+
+pub use feedback_actions::{AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone};
+pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, visible_tree_nodes, tree_focus_index};
+pub use table::{AntTable, AntTableColumn, AntTableRow, TableSort, sorted_table_indices};
+
+pub use list::{AntList, AntListItem, ListSize};

@@ -135,10 +135,14 @@ radio-button style have examples in the interactive docs.
 
 `AntTabs` wraps the GPUI Kit native TabBar with controlled selection,
 line/card/pill/segmented styling, selected Rust content panels, disabled tabs,
-tab icons, scrolling and existing Kit animation. The tab bar has one native
-keyboard Tab stop: Left/Right/Home/End change the controlled selection,
-wrapping and skipping disabled tabs. Full **individual-tab roving focus**,
-tab/tabpanel ARIA linkage and accessibility verification remain parity work.
+tab icons, scrolling and existing Kit animation. Each enabled tab has
+an independent, stable GPUI focus handle; only the selected tab is in
+the keyboard Tab order. Left/Right/Home/End rove focus and request controlled
+selection (wrapping and skipping disabled tabs), while Enter/Space activate
+the focused tab. Kit supplies native Tab/TabList roles and selected/disabled
+semantics; the selected content has a labeled TabPanel role.
+Explicit per-tab aria-controls/aria-labelledby ID relationships and tested
+screen-reader announcements remain separate accessibility work.
 
 `AntTooltip` composes a theme-aware tooltip with GPUI Kit's native
 registered provider rather than absolute-positioned HTML. Hover and disabled
@@ -396,3 +400,35 @@ They bring the documented alpha component count to **44**.
 
 These are alpha variants, not claims of React API compatibility or pixel parity.
 See [coverage and gap matrix](docs/COMPONENT_MATRIX.md).
+
+## Native feedback and data display — wave 3
+
+Drawer, Message, Notification, Tree and Table bring the component Gallery to
+**49 alpha pages**. All real previews share the Rust/GPUI renderer and native
+GPU APIs; the documentation website does not fake them with HTML controls.
+
+- **Drawer:** AntDrawer opens a real GPUI Kit Root Sheet with four placements,
+  optional backdrop, overlay dismissal, width/height and resize. Sheet owns
+  Escape, focus trap, close and focus return. The alpha API uses a trigger;
+  externally controlled open, nested push, rich actions and exact Ant motion
+  remain a later milestone.
+- **Message:** AntMessage is an imperative top-center Kit notification queue:
+  info/success/warning/error, persistent status, keyed replacement, and native
+  Kit auto-hide/stacking. Loading state, duration seconds and thenable handles
+  are not included yet.
+- **Notification:** AntNotification adds title/description, severity, placement,
+  persistent status and keyed update. Toast focus and auto-dismiss use Kit Root.
+- **Tree:** AntTree/AntTreeNode have application-controlled expansion, single
+  selected key, independent checked keys and native keyboard navigation.
+  Drag/drop, cascade checks, lazy loading and virtualization remain parity work.
+- **Table:** AntTable/AntTableColumn/AntTableRow use the semantic GPUI Kit Table
+  infrastructure plus app-controlled sorting, checkbox row selection,
+  Pagination, stripes and themed headers. It is nonvirtualized and intentionally
+  **not a replacement for gpui-grid** on large datasets or full Ant Design Table.
+
+See [component matrix](docs/COMPONENT_MATRIX.md) for the remaining catalog and
+known Ant Design 6 API / accessibility / visual parity gaps.
+
+## Native List
+
+`AntList` / `AntListItem` implement density, icons, descriptive text, native action slots, optional header/footer, row separators, loading and empty states using the same Rust/GPUI implementation in desktop and WASM. Virtualization and responsive grid-style listing are still pending.

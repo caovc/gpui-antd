@@ -17,7 +17,10 @@ use gpui_antd::{
     AntMenu, AntMenuItem, AntTokenLayer, AntTokenValue, AntResolvedToken,
     AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
     AntDescriptions, AntDescriptionItem, AntResult, ResultStatus, AntSkeleton, AntSpin,
+    AntList, AntListItem, ListSize,
     AntInputNumber, AntSlider, AntSegmented, AntSegmentedOption, AntTimePicker, AntAutoComplete,
+    AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone,
+    AntTree, AntTreeNode, AntTable, AntTableColumn, AntTableRow, TableSort,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -79,8 +82,8 @@ impl GalleryAssets {
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
-    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
+    "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "List", "Tabs", "Tooltip", "Icons", "Layout",
+    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
 ];
 
 /// Options in the browser icon inspector are only display parameters.
@@ -180,6 +183,14 @@ pub struct Gallery {
     steps_current: usize,
     rating: usize,
     collapse_keys: BTreeSet<String>,
+    drawer_closed:usize,
+    tree_selected:String,
+    tree_expanded:BTreeSet<String>,
+    tree_checked:BTreeSet<String>,
+    table_sort_key:String,
+    table_sort:TableSort,
+    table_selected:BTreeSet<String>,
+    table_page:usize,
     number_basic:Entity<InputState>,
     number_decimal:Entity<InputState>,
     number_disabled:Entity<InputState>,
@@ -300,6 +311,11 @@ impl Gallery {
             popconfirm_result: "Awaiting confirmation".into(),
             pagination_page:4, steps_current:1, rating:3,
             collapse_keys:BTreeSet::from(["first".to_owned()]),
+            drawer_closed:0,tree_selected:"src/main.rs".to_owned(),
+            tree_expanded:BTreeSet::from(["src".to_owned(),"src/lib".to_owned()]),
+            tree_checked:BTreeSet::from(["src/main.rs".to_owned()]),
+            table_sort_key:"score".to_owned(),table_sort:TableSort::Ascending,
+            table_selected:BTreeSet::new(),table_page:1,
             number_basic,number_decimal,number_disabled,
             slider_single,slider_range,slider_vertical,slider_value:35.,
             time_basic,time_seconds,time_12,time_disabled,
@@ -875,6 +891,36 @@ impl Gallery {
             .into_any_element()
     }
 
+    fn list_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().w_full().flex().flex_col().gap(px(18.))
+            .child(label("Bordered list · native icons and actions",t))
+            .child(AntList::new().theme(t).bordered(true)
+                .header(AntText::new("Team activity").theme(t).strong(true))
+                .item(AntListItem::new("New deployment")
+                    .icon(AntIconName::CloudUploadOutlined)
+                    .description("Production build passed GPUI/WASM verification.")
+                    .action(AntButton::new("list-view-1","View").theme(t).size(ControlSize::Small)))
+                .item(AntListItem::new("Design tokens updated")
+                    .icon(AntIconName::BgColorsOutlined)
+                    .description("Semantic colors and component tokens were refreshed.")
+                    .action(AntButton::new("list-view-2","Details").theme(t).size(ControlSize::Small)))
+                .item(AntListItem::new("Archived workspace")
+                    .icon(AntIconName::FolderOutlined).disabled(true)
+                    .description("This entry is no longer active."))
+                .footer(AntText::new("3 recent activities").theme(t).tone(TextTone::Secondary)))
+            .child(label("Small list without borders",t))
+            .child(AntList::new().theme(t).size(ListSize::Small).split(true)
+                .item(AntListItem::new("Profile").description("Update your account"))
+                .item(AntListItem::new("Security").description("Manage access")))
+            .child(label("Loading and empty states",t))
+            .child(div().flex().flex_wrap().gap(px(18.))
+                .child(div().w(px(260.)).child(AntList::new().theme(t)
+                    .bordered(true).loading(true)))
+                .child(div().w(px(260.)).child(AntList::new().theme(t)
+                    .bordered(true))))
+            .into_any_element()
+    }
+
     fn result_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
         div().flex().flex_col().gap(px(18.))
             .child(label("Success state and native action",t))
@@ -1018,6 +1064,188 @@ impl Gallery {
                     .child(format!("Last selected: {}",self.autocomplete_last))))
             .child(AntButton::new("autocomplete-open","Show suggestions").theme(t)
                 .on_click(open_again))
+            .into_any_element()
+    }
+
+
+    fn drawer_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let on_closed=cx.listener(|this,_:&(),_,cx|{
+            this.drawer_closed+=1;cx.notify();
+        });
+        div().flex().flex_col().gap(px(18.))
+            .child(label("Real GPUI Kit Sheet · Escape, mask dismiss and focus restoration",t))
+            .child(row()
+                .child(AntDrawer::new("drawer-right","Open right Drawer")
+                    .title("Edit profile").body("Your changes stay in a native GPUI Sheet.")
+                    .theme(t).placement(DrawerPlacement::Right)
+                    .on_close(move|window,cx|on_closed(&(),window,cx))
+                    .content(move|_,_|div().flex().flex_col().gap(px(12.))
+                        .child(AntText::new("Native panel content with Ant Design colors.").theme(t))
+                        .child(AntTag::new("In progress").tone(Tone::Blue).theme(t))
+                        .into_any_element()))
+                .child(AntDrawer::new("drawer-left","Open left")
+                    .theme(t).placement(DrawerPlacement::Left)
+                    .title("Navigation drawer").body("Left-side navigation panel."))
+                .child(AntDrawer::new("drawer-bottom","Open bottom")
+                    .theme(t).placement(DrawerPlacement::Bottom).size(260.)
+                    .title("Bottom sheet").body("Responsive action sheet.")))
+            .child(label("Resizable Sheet and overlay options",t))
+            .child(row()
+                .child(AntDrawer::new("drawer-resize","Resizable").theme(t)
+                    .resizable(true).size(400.)
+                    .body("Drag the edge to resize this GPUI Sheet."))
+                .child(AntDrawer::new("drawer-no-mask","Without mask").theme(t)
+                    .mask(false).body("No modal backdrop.")))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Drawer closed {} times",self.drawer_closed)))
+            .into_any_element()
+    }
+
+    fn message_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(18.))
+            .child(label("Global in-app toast queue · native GPU, top center",t))
+            .child(row()
+                .child(AntButton::new("message-success","Success").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntMessage::success("Changes saved successfully").show(window,cx);
+                    }))
+                .child(AntButton::new("message-info","Info").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntMessage::new("Your settings are synchronized").show(window,cx);
+                    }))
+                .child(AntButton::new("message-warning","Warning").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntMessage::warning("Please review the selected values").show(window,cx);
+                    }))
+                .child(AntButton::new("message-error","Error").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntMessage::error("Unable to save changes").show(window,cx);
+                    })))
+            .child(label("Replace a keyed message instead of creating duplicates",t))
+            .child(row()
+                .child(AntButton::new("message-loading-start","Start").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntMessage::new("Operation running").key("demo-task")
+                            .persistent(true).show(window,cx);
+                    }))
+                .child(AntButton::new("message-loading-done","Complete").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntMessage::success("Operation complete").key("demo-task")
+                            .show(window,cx);
+                    })))
+            .into_any_element()
+    }
+
+    fn notification_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(18.))
+            .child(label("Kit Root notification stack, top right by default",t))
+            .child(row()
+                .child(AntButton::new("notification-info","Information").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntNotification::new("New version","A new native build is ready.")
+                            .show(window,cx);
+                    }))
+                .child(AntButton::new("notification-success","Success").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntNotification::new("Upload complete","All assets were validated.")
+                            .tone(NoticeTone::Success).show(window,cx);
+                    }))
+                .child(AntButton::new("notification-error","Error").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntNotification::new("Connection lost","Try reconnecting to the service.")
+                            .tone(NoticeTone::Error).persistent(true).show(window,cx);
+                    })))
+            .child(label("Independent placement and update by key",t))
+            .child(row()
+                .child(AntButton::new("notification-bottom","Bottom left").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntNotification::new("Alternative placement","Bottom left notifications")
+                            .placement(gpui_kit::Anchor::BottomLeft).show(window,cx);
+                    }))
+                .child(AntButton::new("notification-persistent","Persistent").theme(t)
+                    .on_click(|_,window,cx|{
+                        AntNotification::new("Job status","Job 42 is still running.")
+                            .key("job42").persistent(true).show(window,cx);
+                    })))
+            .into_any_element()
+    }
+
+    fn tree_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let selected=cx.listener(|this,key:&SharedString,_,cx|{
+            this.tree_selected=key.to_string();cx.notify();
+        });
+        let expanded=cx.listener(|this,(key,opened):&(SharedString,bool),_,cx|{
+            if *opened{this.tree_expanded.insert(key.to_string());}
+            else{this.tree_expanded.remove(key.as_ref());}
+            cx.notify();
+        });
+        let checked=cx.listener(|this,(key,value):&(SharedString,bool),_,cx|{
+            if *value{this.tree_checked.insert(key.to_string());}
+            else{this.tree_checked.remove(key.as_ref());}
+            cx.notify();
+        });
+        let nodes=vec![
+            AntTreeNode::new("src","src").icon(AntIconName::FolderOutlined)
+                .child(AntTreeNode::new("src/lib","lib")
+                    .child(AntTreeNode::new("src/lib/components.rs","components.rs"))
+                    .child(AntTreeNode::new("src/lib/theme.rs","theme.rs")))
+                .child(AntTreeNode::new("src/main.rs","main.rs"))
+                .child(AntTreeNode::new("src/protected.rs","protected.rs").disabled(true)),
+            AntTreeNode::new("docs","docs").icon(AntIconName::FolderOutlined)
+                .child(AntTreeNode::new("docs/api.md","api.md"))
+                .child(AntTreeNode::new("docs/guide.md","guide.md")),
+            AntTreeNode::new("Cargo.toml","Cargo.toml"),
+        ];
+        div().flex().flex_col().gap(px(12.))
+            .child(label("Native GPUI tree · select, expand and check nodes independently",t))
+            .child(div().w(px(440.)).border_1().border_color(t.border)
+                .rounded(px(8.)).child(AntTree::new("tree-example")
+                    .theme(t).children(nodes).checkable(true)
+                    .expanded_keys(self.tree_expanded.iter().map(String::as_str))
+                    .checked_keys(self.tree_checked.iter().map(String::as_str))
+                    .selected_key(self.tree_selected.clone())
+                    .on_select(move|key,window,cx|selected(&key,window,cx))
+                    .on_expand(move|key,value,window,cx|expanded(&(key,value),window,cx))
+                    .on_check(move|key,value,window,cx|checked(&(key,value),window,cx))))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Selected: {} · Checked: {}",
+                    self.tree_selected,self.tree_checked.len())))
+            .into_any_element()
+    }
+
+    fn table_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let sorted=cx.listener(|this,(key,order):&(SharedString,TableSort),_,cx|{
+            this.table_sort_key=key.to_string();
+            this.table_sort=*order;
+            this.table_page=1;cx.notify();
+        });
+        let selection=cx.listener(|this,keys:&BTreeSet<String>,_,cx|{
+            this.table_selected=keys.clone();cx.notify();
+        });
+        let page_change=cx.listener(|this,page:&usize,_,cx|{
+            this.table_page=*page;cx.notify();
+        });
+        let data=(1..=24).map(|i|{
+            AntTableRow::new(format!("user-{i:02}"))
+                .cells([format!("User {i:02}"),format!("{}",(i*7)%101),
+                    if i%3==0{"Pending".to_owned()}else{"Active".to_owned()}])
+        });
+        div().w_full().flex().flex_col().gap(px(14.))
+            .child(label("Native table · sort Score, choose rows and change page",t))
+            .child(AntTable::new("table-demo").theme(t)
+                .column(AntTableColumn::new("name","Name").sortable(true).width(180.))
+                .column(AntTableColumn::new("score","Score").sortable(true).numeric(true).width(140.))
+                .column(AntTableColumn::new("status","Status").width(170.))
+                .rows(data).selectable(true).striped(true)
+                .selected_keys(self.table_selected.iter().map(String::as_str))
+                .sort_by(self.table_sort_key.clone(),self.table_sort)
+                .page(self.table_page).page_size(5)
+                .on_sort(move|key,order,window,cx|sorted(&(key,order),window,cx))
+                .on_selection(move|keys,window,cx|selection(&keys,window,cx))
+                .on_page_change(move|page,window,cx|page_change(&page,window,cx)))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Page {} · Sorted: {:?} · Selected rows: {}",
+                    self.table_page,self.table_sort,self.table_selected.len())))
             .into_any_element()
     }
 
@@ -1824,7 +2052,7 @@ impl Gallery {
         div().flex().flex_col().gap(px(16.))
             .child(label("Line tabs · controlled state and panel content", theme))
             .child(div().text_color(theme.text_secondary).text_size(px(12.))
-                .child("Keyboard: Tab into a tab bar, then Left/Right/Home/End switches tabs. Disabled tabs are skipped."))
+                .child("Keyboard: Tab to the selected tab; Left/Right/Home/End move focus and select, Enter/Space activate. Disabled tabs are skipped."))
             .child(
                 AntTabs::new("tabs-line")
                     .theme(theme)
@@ -2011,6 +2239,7 @@ impl Render for Gallery {
             "Rate"=>self.rate_demo(t,cx),
             "Collapse"=>self.collapse_demo(t,cx),
             "Descriptions"=>self.descriptions_demo(t),
+            "List"=>self.list_demo(t),
             "Result"=>self.result_demo(t),
             "Skeleton"=>self.skeleton_demo(t),
             "Spin"=>self.spin_demo(t),
@@ -2019,6 +2248,11 @@ impl Render for Gallery {
             "Segmented"=>self.segmented_demo(t,cx),
             "TimePicker"=>self.time_picker_demo(t),
             "AutoComplete"=>self.autocomplete_demo(t,cx),
+            "Drawer"=>self.drawer_demo(t,cx),
+            "Message"=>self.message_demo(t),
+            "Notification"=>self.notification_demo(t),
+            "Tree"=>self.tree_demo(t,cx),
+            "Table"=>self.table_demo(t,cx),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")

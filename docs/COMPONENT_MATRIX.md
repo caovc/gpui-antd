@@ -14,10 +14,10 @@ Data Entry or Feedback's similarly named full component.
 | Layout (7) | Divider, Flex, Grid, Layout, Space | Masonry, Splitter |
 | Navigation (7) | Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | Anchor |
 | Data Entry (18) | AutoComplete, Checkbox, DatePicker, Form, Input, InputNumber, Radio, Rate, Select, Slider, Switch, TimePicker | Cascader, ColorPicker, Mentions, Transfer, TreeSelect, Upload |
-| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, Popover, Segmented, Statistic, Tag, Tooltip | Calendar, Carousel, Image, List (deprecated), Listy, QRCode, Table, Timeline, Tour, Tree |
-| Feedback (11) | Alert, Modal, Popconfirm, Progress, Result, Skeleton, Spin | Drawer, Message, Notification, Watermark |
+| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, Popover, Segmented, Statistic, Table, Tag, Tooltip, Tree | Calendar, Carousel, Image, List (deprecated), Listy, QRCode, Timeline, Tour |
+| Feedback (11) | Alert, Drawer, Message, Modal, Notification, Popconfirm, Progress, Result, Skeleton, Spin | Watermark |
 | Other (5) | — | Affix, App, BorderBeam, ConfigProvider, Util |
-| **Total (73)** | **44 alpha** | **29 missing** |
+| **Total (73)** | **49 alpha** | **24 missing** |
 
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
 higher-level packages and do not count toward this 73-item core overview.
@@ -47,15 +47,25 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | TimePicker | Persistent native segmented time editor, minute/second, AM/PM, keyboard edit, status/disabled | Clock popup, presets, clear/null semantics, range selection, localization |
 | AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Anchored collision-aware popover (current panel is inline), outside click close, full ARIA combobox, virtualization |
 
+## Wave 3: feedback and enterprise display foundations
+
+| Component | Initial native implementation | Explicit parity gaps |
+| --- | --- | --- |
+| Drawer | Root-hosted Kit Sheet, four edges, backdrop, size, resizable, close callback, GPUI-content closure | Controlled open, nested push, title actions, transition callbacks and detailed motion |
+| Message | Imperative top-center Kit toast, keyed update, severity, persistent and auto-hide lifecycle | Dedicated Ant message visuals, loading, duration seconds and promise handles |
+| Notification | Root-hosted stacked notification, heading/details, severity, keyed replacement and placements | Rich custom action/close controls, Ant animated stacks and per-item duration |
+| Tree | Controlled hierarchy, expand/selected/checked keys, disabled nodes, focus navigation | Cascading/indeterminate check, virtualized rows, lazy load and drag/drop |
+| Table | Semantic Kit Table, numeric/text sorting, controlled row selection, pagination, striped mode | Filtering, virtualization, fixed columns, resize, edit cells, remote data |
+
 ## Next batches (dependency order)
 
 1. **Remaining core data entry:** Cascader, ColorPicker, Mentions, Transfer,
    TreeSelect and Upload. Finish AutoComplete and TimePicker popup semantics,
    Slider range keyboard support, and InputNumber formatter/parsing APIs.
-2. **Enterprise data display:** Table, Tree, TreeSelect, Calendar, Timeline,
-   Image, Carousel. Keep Table virtualization separate from baseline table
-   rendering; reuse the dedicated gpui-grid design where appropriate.
-3. **Rich feedback:** Drawer, Message, Notification, richer Spin/Skeleton;
+2. **Enterprise data display:** enhance Table/Tree virtualization and ARIA,
+   implement TreeSelect, Calendar, Timeline, Image and Carousel. Reuse gpui-grid
+   for high-volume tables, rather than reimplementing its engine.
+3. **Rich feedback:** finish Drawer open-state parity, Message/Notification action APIs, richer Spin/Skeleton;
    use real Kit Root overlays and focus management (never paint a fake DOM
    dialog or toast over a WASM screenshot).
 4. **Advanced/complex:** Upload, Transfer, Cascader, ColorPicker, Mentions,

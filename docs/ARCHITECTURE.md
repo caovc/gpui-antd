@@ -75,6 +75,7 @@ not declare an independent `gpui` crate dependency. WASM bridge uses pinned
 | `date_picker.rs` | GPUI Kit native calendar/range/datetime |
 | `form.rs` | Form presentation and pure Rust validation schema |
 | `display.rs` | Tag, Badge, Alert, Card, Progress, Divider |
+| `list.rs` | List items, actions, separators, loading and empty presentation |
 | `typography.rs` | Title, Text, Paragraph (line clamp), Link |
 | `layout.rs` | Space, Flex, 24-column Row/Col with breakpoints |
 | `app_layout.rs` | App shell Layout/Header/Sider/Content/Footer and responsive collapse |
