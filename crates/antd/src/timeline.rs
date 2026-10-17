@@ -131,13 +131,9 @@ impl RenderOnce for AntTimeline {
                 .child(dot)
                 .when(tail,|this|this.child(
                     div().w(px(2.)).h(px(60.+gap)).bg(stroke)));
-            div().w_full().flex().items_start().gap(px(14.))
-                .when(right,|this|this
-                    .child(track)
-                    .child(body))
-                .when(!right,|this|this
-                    .child(body)
-                    .child(track))
+            let row=div().w_full().flex().items_start().gap(px(14.));
+            if right{row.child(track).child(body)}
+            else{row.child(body).child(track)}
         };
         let mut all:Vec<AnyElement>=items.into_iter().enumerate()
             .map(|(index,item)|render_item(index,item,false,self.mode).into_any_element())
