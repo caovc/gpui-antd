@@ -234,7 +234,7 @@ impl RenderOnce for AntMenu {
 
         let focus_handles:Vec<FocusHandle>=rows.iter().map(|row| {
             let id=format!("ant-menu-{prefix}-{}",row.item.key);
-            window.use_keyed_state(id.into(),cx,|_,cx|cx.focus_handle())
+            window.use_keyed_state(id,cx,|_,cx|cx.focus_handle())
                 .read(cx).clone()
         }).collect();
         let enabled:Vec<bool>=rows.iter().map(|row|!row.item.disabled).collect();
