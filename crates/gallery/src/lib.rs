@@ -22,6 +22,7 @@ use gpui_kit::component::select::{SelectState, SearchableVec};
 use gpui_kit::component::date_picker::DatePickerState;
 use gpui_kit::component::time_field::TimePrecision;
 use gpui_kit::component::IndexPath;
+use gpui_kit::component::scroll::ScrollableElement as _;
 use gpui_kit::assets::Assets;
 use gpui_kit::base::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
@@ -568,7 +569,7 @@ impl Gallery {
             // One horizontal native GPUI scroll strip per icon variant:
             // no deep wrapped rows masked by a fixed-height WASM iframe.
             div().w_full().min_w_0().flex().gap(px(12.))
-                .overflow_x_scroll().pb(px(12.))
+                .overflow_x_scrollbar().id(format!("icon-strip-{style}")).pb(px(12.))
                 .children(AntIconName::ALL.iter()
                     .filter(move |icon| icon.style() == style)
                     // Keep the WASM showcase bounded; the full 848-name
