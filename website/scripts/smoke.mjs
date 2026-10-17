@@ -394,6 +394,70 @@ try {
     }
   }
 
+  // Wave-three pointer acceptance. Click the REAL GPUI canvas, require
+  // meaningful ink changes from the native Sheet/toast/tree/table state.
+  // The docs shell has no HTML stand-in for these components.
+  const wave3Interactions = [
+    {name:'Drawer', x:114, y:78, minChanged:5000},
+    {name:'Message', x:72, y:78, minChanged:1000},
+    {name:'Notification', x:87, y:78, minChanged:1200},
+    {name:'Tree', x:46, y:83, minChanged:550},
+    {name:'Table', x:406, y:78, minChanged:650},
+  ];
+  for (const spec of wave3Interactions) {
+    const page=await browser.newPage({viewport:{width:900,height:550}});
+    const errors=[];
+    page.on('pageerror',error=>errors.push(String(error.message)));
+    page.on('console',message=>{
+      if(message.type()!=='error')return;
+      const detail=message.text().trim();
+      if(detail!=='Wasm assets loading, will be available soon...')errors.push(detail);
+    });
+    try {
+      await page.goto(base+'demo.html?component='+spec.name,{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>{
+        const canvas=document.querySelector('canvas');
+        return canvas&&canvas.width>0&&canvas.height>0&&!document.querySelector('#status');
+      },null,{timeout:60000});
+      await page.waitForTimeout(700);
+      const before=await page.screenshot({
+        path:join(screenshots,spec.name.toLowerCase()+'-wave3-before.png')
+      });
+      await page.mouse.click(spec.x,spec.y);
+      await page.mouse.move(880,530);
+      await page.waitForTimeout(850);
+      const after=await page.screenshot({
+        path:join(screenshots,spec.name.toLowerCase()+'-wave3-after.png')
+      });
+      const diff=await changedPixels(page,before,after);
+      if(diff.total<spec.minChanged){
+        throw new Error(spec.name+' native control did not repaint enough after click: '+
+          JSON.stringify(diff)+' expected '+spec.minChanged);
+      }
+      if(errors.length)throw new Error('Browser errors: '+errors.join('; '));
+      console.log('PASS: wave3 '+spec.name+' real GPUI click '+diff.total+' pixels');
+      if(spec.name==='Drawer'){
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(600);
+        const closed=await page.screenshot({
+          path:join(screenshots,'drawer-wave3-escape.png')
+        });
+        const residual=await changedPixels(page,before,closed);
+        if(residual.total>diff.total*0.48+1000){
+          throw new Error('Native Drawer Escape failed to dismiss Sheet: '+
+            JSON.stringify({open:diff,afterEscape:residual}));
+        }
+        console.log('PASS: wave3 Drawer Escape restores the undimmed GPUI view');
+      }
+    }catch(error){
+      failures++;
+      console.error('FAIL: wave3 '+spec.name+' native GPUI interaction',String(error));
+      console.error('Browser errors:',errors.join('; '));
+    }finally{
+      await page.close();
+    }
+  }
+
   // Interactive nested GPUI Menu regression. Unlike DOM navigation,
   // these operations act on pixels in the Rust/WebAssembly canvas.
   // Native Tabs keyboard test: click a Kit tab to place focus on the
