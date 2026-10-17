@@ -69,3 +69,21 @@ test('theme import rejects untrusted values and clamps scalar limits',()=>{
   assert.equal(theme.components.Button.controlHeight,'64');
   assert.equal(theme.components.ReactOnly,undefined);
 });
+
+
+test('all 50 components are valid, with scoped Tree/Table/Timeline tokens',()=>{
+  const theme=emptyTheme();
+  theme.components.Tree={colorBgSelected:'#d9e9ff',controlHeight:'36'};
+  theme.components.Table={colorHeaderBg:'#101820',fontSize:'16'};
+  theme.components.Timeline={colorPrimary:'#ff4477'};
+  const valid=validated(theme);
+  assert.equal(Object.keys(valid.components).length,3);
+  const url=previewParam(valid);
+  assert.match(url,/Tree\.colorBgSelected=d9e9ff/);
+  assert.match(url,/Table\.colorHeaderBg=101820/);
+  assert.match(url,/Timeline\.colorPrimary=ff4477/);
+  const code=rustCode(valid);
+  for(const component of ['Tree','Table','Timeline']){
+    assert.ok(code.includes('AntComponent::'+component));
+  }
+});
