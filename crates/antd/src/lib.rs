@@ -18,6 +18,7 @@ pub mod select;
 pub mod date_picker;
 pub mod form;
 pub mod tokens;
+pub mod design_tokens;
 pub mod typography;
 pub mod layout;
 pub mod basics;
@@ -36,6 +37,8 @@ pub use select::AntSelect;
 pub use date_picker::AntDatePicker;
 pub use form::{AntForm, AntFormItem, FormRule, FormSchema, FormValidation};
 pub use tokens::{AntTheme, Appearance, color};
+pub use design_tokens::{AntSeedTokens, AntMapTokens, AntAliasTokens,
+    AntThemeAlgorithm, AntComponent, AntComponentToken, AntComponentTokens};
 pub use typography::{AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone};
 pub use layout::{AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify, GridBreakpoint};
 pub use basics::{AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem};
