@@ -19,6 +19,7 @@ pub mod form;
 pub mod tokens;
 pub mod typography;
 pub mod layout;
+pub mod basics;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
 pub use display::{AntAlert, AntBadge, AntCard, AntDivider, AntProgress, AntTag, Tone};
@@ -31,3 +32,4 @@ pub use form::{AntForm, AntFormItem, FormRule, FormSchema, FormValidation};
 pub use tokens::{AntTheme, Appearance, color};
 pub use typography::{AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone};
 pub use layout::{AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify};
+pub use basics::{AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem};
