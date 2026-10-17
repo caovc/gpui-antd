@@ -31,5 +31,5 @@ pub use date_picker::AntDatePicker;
 pub use form::{AntForm, AntFormItem, FormRule, FormSchema, FormValidation};
 pub use tokens::{AntTheme, Appearance, color};
 pub use typography::{AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone};
-pub use layout::{AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify};
+pub use layout::{AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify, GridBreakpoint};
 pub use basics::{AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem};

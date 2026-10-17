@@ -538,11 +538,31 @@ impl Gallery {
             .into_any_element()
     }
 
+    fn icon_single_demo(&self, t: AntTheme, name: &str) -> gpui_kit::AnyElement {
+        let selected=AntIconName::from_ant_name(name);
+        div().w_full().flex().flex_col().items_center()
+            .justify_center().gap(px(16.)).p(px(18.))
+            .when_some(selected, |this, icon| {
+                this.child(AntIcon::new(icon).size(64.).theme(t))
+                    .child(div().text_color(t.text).text_size(px(18.)).child(name.to_owned()))
+                    .child(div().text_color(t.text_secondary).text_size(px(12.))
+                        .child(format!("Official SVG · {}",icon.style())))
+            })
+            .when(selected.is_none(), |this| {
+                this.child(div().text_color(t.error).child("Unknown Ant Design icon"))
+            })
+            .into_any_element()
+    }
+
     fn icons_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         let catalog = |style: &'static str| {
             div().flex().flex_wrap().gap(px(14.))
                 .children(AntIconName::ALL.iter()
                     .filter(move |icon| icon.style() == style)
+                    // Keep the WASM showcase bounded; the full 848-name
+                    // catalog is searchable in the docs and each selected
+                    // icon can be previewed in its own Rust GPUI view.
+                    .take(24)
                     .map(move |name| {
                         div().w(px(94.)).flex().flex_col().items_center().gap(px(8.))
                             .p(px(8.))
@@ -681,6 +701,12 @@ impl Gallery {
                 .child(AntCol::new(6).child(cell("col-6"))))
             .child(AntRow::new().gutter(12.)
                 .child(AntCol::new(8).offset(8).child(cell("offset-8 col-8"))))
+            .child(label("Responsive: xs=24 / sm=12 / md=8 / lg=6", t))
+            .child(AntRow::new().gutter(12.).vertical_gutter(12.)
+                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item A")))
+                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item B")))
+                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item C")))
+                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item D"))))
             .into_any_element()
     }
 
@@ -719,6 +745,8 @@ impl Render for Gallery {
             "Progress"=>self.progress_demo(t),
             "Divider"=>self.divider_demo(t),
             "Icons"=>self.icons_demo(t),
+            name if name.starts_with("Icon:") =>
+                self.icon_single_demo(t, name.trim_start_matches("Icon:")),
             "Typography"=>self.typography_demo(t),
             "Space"=>self.space_demo(t),
             "Flex"=>self.flex_demo(t),

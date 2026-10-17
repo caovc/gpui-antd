@@ -138,24 +138,73 @@ impl RenderOnce for AntFlex {
     }
 }
 
+/// Official Ant Design viewport breakpoints in logical pixels.
+///
+/// GPUI's desktop and WASM viewports both expose logical dimensions, so
+/// the breakpoint contract is shared across platforms.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GridBreakpoint { Xs, Sm, Md, Lg, Xl, Xxl }
+impl GridBreakpoint {
+    pub const ALL: [Self; 6] = [Self::Xs,Self::Sm,Self::Md,Self::Lg,Self::Xl,Self::Xxl];
+    pub const fn min_width(self) -> f32 {
+        match self {
+            Self::Xs=>0., Self::Sm=>576., Self::Md=>768.,
+            Self::Lg=>992., Self::Xl=>1200., Self::Xxl=>1600.,
+        }
+    }
+    const fn index(self) -> usize {
+        match self {
+            Self::Xs=>0, Self::Sm=>1, Self::Md=>2, Self::Lg=>3,
+            Self::Xl=>4, Self::Xxl=>5,
+        }
+    }
+}
+
 /// One column in Ant Design's 24-unit grid.
+///
+/// Configure desktop/mobile spans with `.xs(24).sm(12).md(8).lg(6)`.
+/// The last applicable declared breakpoint overrides the base span.
+/// Responsive spans are evaluated against `Window::viewport_size()` at
+/// render time, so resizing native or browser windows updates the layout.
 pub struct AntCol {
     span: u8,
     offset: u8,
+    responsive: [Option<u8>; 6],
     children: Vec<AnyElement>,
 }
 impl AntCol {
     pub fn new(span: u8) -> Self {
-        Self { span:span.min(24),offset:0,children:Vec::new() }
+        Self { span:span.min(24),offset:0,responsive:[None;6],children:Vec::new() }
     }
     pub fn span(mut self, span: u8) -> Self { self.span=span.min(24);self }
     pub fn offset(mut self, offset: u8) -> Self { self.offset=offset.min(24);self }
+    pub fn breakpoint(mut self, breakpoint: GridBreakpoint, span: u8) -> Self {
+        self.responsive[breakpoint.index()]=Some(span.min(24)); self
+    }
+    pub fn xs(self, span:u8)->Self {self.breakpoint(GridBreakpoint::Xs,span)}
+    pub fn sm(self, span:u8)->Self {self.breakpoint(GridBreakpoint::Sm,span)}
+    pub fn md(self, span:u8)->Self {self.breakpoint(GridBreakpoint::Md,span)}
+    pub fn lg(self, span:u8)->Self {self.breakpoint(GridBreakpoint::Lg,span)}
+    pub fn xl(self, span:u8)->Self {self.breakpoint(GridBreakpoint::Xl,span)}
+    pub fn xxl(self, span:u8)->Self {self.breakpoint(GridBreakpoint::Xxl,span)}
     pub fn child(mut self, element: impl IntoElement) -> Self {
         self.children.push(element.into_any_element());self
     }
-    fn render_with_gutter(self, gutter: f32) -> AnyElement {
+    /// Resolve the effective column width from the viewport breakpoints.
+    pub fn span_at(&self, width: gpui_kit::Pixels) -> u8 {
+        let mut result=self.span;
+        for breakpoint in GridBreakpoint::ALL {
+            if width >= px(breakpoint.min_width()) {
+                if let Some(value)=self.responsive[breakpoint.index()] {result=value;}
+            }
+        }
+        result
+    }
+    fn render_with_gutter(self, gutter: f32, viewport_width: gpui_kit::Pixels) -> AnyElement {
+        let span=self.span_at(viewport_width);
+        if span==0 {return div().into_any_element();}
         div().flex_none()
-            .w(relative(self.span as f32 / 24.))
+            .w(relative(span as f32 / 24.))
             .ml(relative(self.offset as f32 / 24.))
             .min_w_0()
             .px(px(gutter/2.))
@@ -184,10 +233,14 @@ impl AntRow {
     }
 }
 impl RenderOnce for AntRow {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
+    fn render(self, window: &mut Window, _: &mut App) -> impl IntoElement {
+        // Match CSS media-query breakpoints using the logical GPUI viewport.
+        let viewport_width=window.viewport_size().width;
         div().w_full().flex().flex_wrap()
             .gap_y(px(self.vertical_gutter))
-            .children(self.columns.into_iter().map(|col| col.render_with_gutter(self.gutter)))
+            .children(self.columns.into_iter().map(|col| {
+                col.render_with_gutter(self.gutter, viewport_width)
+            }))
     }
 }
 
@@ -202,6 +255,27 @@ mod tests {
         assert_eq!(SpaceSize::Custom(-3.).pixels(), 0.);
         assert_eq!(SpaceSize::Custom(13.).pixels(), 13.);
     }
+    #[test]
+    fn responsive_breakpoints_match_ant_design() {
+        let col=AntCol::new(24).sm(12).md(8).lg(6).xxl(4);
+        for (width,expected) in [(0.,24),(575.,24),(576.,12),
+            (767.,12),(768.,8),(991.,8),(992.,6),(1599.,6),(1600.,4)] {
+            assert_eq!(col.span_at(px(width)), expected, "viewport={width}");
+        }
+        // Sparse declarations inherit the latest eligible override.
+        let sparse=AntCol::new(18).md(8);
+        assert_eq!(sparse.span_at(px(650.)),18);
+        assert_eq!(sparse.span_at(px(2000.)),8);
+    }
+
+    #[test]
+    fn zero_span_and_out_of_range_values_are_safe() {
+        let col=AntCol::new(24).xs(0).md(200);
+        assert_eq!(col.span_at(px(300.)),0);
+        assert_eq!(col.span_at(px(900.)),24);
+        assert_eq!(GridBreakpoint::Sm.min_width(),576.);
+    }
+
     #[test]
     fn grid_spans_clamp_to_24() {
         assert_eq!(AntCol::new(12).span, 12);
