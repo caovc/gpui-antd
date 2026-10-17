@@ -131,6 +131,10 @@ the change has passed CI and been deployed. The page offers:
 5. GPU readiness/error feedback from the embedded demo instead of using
    iframe `load` as a false renderer-success signal.
 
+The toolbar includes a **Copy preview URL** action. The copied URL opens the
+same real Rust/GPUI WASM scene with Seed, Map, Alias, and Component overrides;
+it does not render an HTML screenshot or replicate the design in the DOM.
+
 The editor panels are HTML DOM, but **every UI component and token swatch
 inside the preview iframe is painted by the Rust Gallery compiled to GPUI
 WebAssembly**. No React/CSS replica is substituted for the component preview.
