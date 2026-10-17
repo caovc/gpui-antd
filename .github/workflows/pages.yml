@@ -59,9 +59,12 @@ jobs:
           test -f website/dist/demo.html
           find website/dist -name '*.wasm' -print | grep -q . || { echo "WASM missing from Pages artifact"; exit 1; }
 
-      - name: Configure GitHub Pages
-        if: github.event_name != 'pull_request'
-        uses: actions/configure-pages@v5
+      - name: Archive built site for CI review
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpui-antd-wasm-site
+          path: website/dist
+          retention-days: 7
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
@@ -77,6 +80,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Validate GitHub Pages configuration
+        uses: actions/configure-pages@v5
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
