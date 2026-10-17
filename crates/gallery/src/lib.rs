@@ -3,7 +3,7 @@ extern crate gpui_kit as gpui;
 
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
-    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
+    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntDatePicker, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -11,6 +11,8 @@ use gpui_kit::{
 };
 use gpui_kit::component::input::InputState;
 use gpui_kit::component::select::{SelectState, SearchableVec};
+use gpui_kit::component::date_picker::DatePickerState;
+use gpui_kit::component::time_field::TimePrecision;
 use gpui_kit::component::IndexPath;
 use gpui_kit::assets::Assets;
 use gpui_kit::base::StyledExt as _;
@@ -18,7 +20,7 @@ use gpui_kit::base::StyledExt as _;
 use gpui_kit::App;
 
 pub const COMPONENTS: &[&str] = &[
-    "Button", "Input", "Select", "Checkbox", "Radio", "Switch", "Tag", "Badge",
+    "Button", "Input", "Select", "DatePicker", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider",
 ];
 
@@ -41,6 +43,10 @@ pub struct Gallery {
     select_basic: Entity<SelectState<Vec<&'static str>>>,
     select_search: Entity<SelectState<SearchableVec<&'static str>>>,
     select_disabled: Entity<SelectState<Vec<&'static str>>>,
+    date_single: Entity<DatePickerState>,
+    date_range: Entity<DatePickerState>,
+    date_time: Entity<DatePickerState>,
+    date_disabled: Entity<DatePickerState>,
 }
 
 impl Gallery {
@@ -70,12 +76,18 @@ impl Gallery {
         let select_disabled = cx.new(|cx| SelectState::new(
             vec!["Enabled", "Disabled"],
             Some(IndexPath::default()), window, cx));
+        let date_single = cx.new(|cx| DatePickerState::new(window, cx));
+        let date_range = cx.new(|cx| DatePickerState::range(window, cx));
+        let date_time = cx.new(|cx| DatePickerState::new(window, cx)
+            .time_precision(TimePrecision::Minute));
+        let date_disabled = cx.new(|cx| DatePickerState::new(window, cx));
         Self {
             component, dark, button_clicks: 0, checked: true, radio_selected: Some(0),
             radio_button_selected: Some(1), switch_on: true,
             input, input_filled, input_borderless, input_decorated, input_large,
             input_error, input_password, input_disabled,
             select_basic, select_search, select_disabled,
+            date_single, date_range, date_time, date_disabled,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -175,6 +187,30 @@ impl Gallery {
                     .child(AntRadio::new("pricing-monthly", "Monthly"))
                     .child(AntRadio::new("pricing-yearly", "Yearly"))
             )
+            .into_any_element()
+    }
+    fn date_picker_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(15.))
+            .child(label("Single date", theme))
+            .child(div().w(px(275.)).child(
+                AntDatePicker::new(&self.date_single)
+                    .theme(theme).clearable(true)
+                    .placeholder("Select a date")))
+            .child(label("Date range · two-month calendar", theme))
+            .child(div().w(px(320.)).child(
+                AntDatePicker::new(&self.date_range)
+                    .theme(theme).clearable(true)
+                    .number_of_months(2).placeholder("Choose a range")))
+            .child(label("Date and time · minute precision", theme))
+            .child(div().w(px(290.)).child(
+                AntDatePicker::new(&self.date_time)
+                    .theme(theme).placeholder("Select date and time")))
+            .child(label("Disabled", theme))
+            .child(div().w(px(275.)).child(
+                AntDatePicker::new(&self.date_disabled)
+                    .theme(theme).disabled(true).placeholder("Unavailable")))
+            .child(div().text_color(theme.text_secondary).text_size(px(12.))
+                .child("The calendar, popup, selection and keyboard interactions run inside GPUI."))
             .into_any_element()
     }
     fn select_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
@@ -321,6 +357,7 @@ impl Render for Gallery {
             "Button"=>self.button_demo(t,cx),
             "Input"=>self.input_demo(t),
             "Select"=>self.select_demo(t),
+            "DatePicker"=>self.date_picker_demo(t),
             "Checkbox"=>self.checkbox_demo(t,cx),
             "Radio"=>self.radio_demo(t,cx),
             "Switch"=>self.switch_demo(t,cx),
