@@ -104,6 +104,8 @@ try {
     {name:'Icon:CiTwoTone',dark:true},
     {name:'IconPalette',dark:false},
     {name:'IconPalette',dark:true},
+    {name:'ThemeLab|colorPrimary=9a44b2|colorInfo=114488|Card.padding=32|scene=tokens',dark:false},
+    {name:'ThemeLab|colorPrimary=00aa88|Checkbox.colorPrimary=ff9900|Tag.colorBg=fff1cc|motion=0|compact=1',dark:false},
   ];
   for (const {name, dark} of previews) {
     const page = await browser.newPage({ viewport: { width: 900, height: 550 } });
@@ -172,6 +174,33 @@ try {
         .catch(() => {});
       await page.close();
     }
+  }
+  // Exercise the documentation editor using the Rust WASM canvas, not a DOM copy.
+  const studio = await browser.newPage({viewport: {width: 1380, height: 900}});
+  try {
+    const response=await studio.goto(base+'#/theme',{waitUntil:'domcontentloaded',timeout:30000});
+    if(response?.status()!==200)throw Error('Token Studio route returned '+response?.status());
+    await studio.locator('[data-seed="colorPrimary"]').waitFor();
+    await studio.locator('#theme-scene').selectOption('tokens');
+    await studio.locator('[data-seed="colorPrimary"]').fill('#129977');
+    await studio.waitForFunction(()=>{
+      const frame=document.querySelector('#theme-preview-frame');
+      if(!frame?.src)return false;
+      const route=new URL(frame.src).searchParams.get('component')||'';
+      return route.includes('scene=tokens') && route.includes('colorPrimary=129977');
+    },null,{timeout:20000});
+    const canvas=studio.frameLocator('#theme-preview-frame').locator('canvas').first();
+    await canvas.waitFor({state:'visible',timeout:60000});
+    await studio.waitForFunction(()=>
+      document.querySelector('#theme-preview-status')?.textContent.includes('ready'),
+      null,{timeout:60000});
+    await studio.screenshot({path:join(screenshots,'token-studio-resolved.png')});
+    console.log('PASS: Theme Studio route, token controls and Rust/GPUI Map/Alias live preview');
+  } catch (error) {
+    failures++;
+    console.error('FAIL: Token Studio browser interaction:',String(error));
+  } finally {
+    await studio.close();
   }
   // These tests click actual pixels on the Rust/GPUI canvas, rather than
   // DOM controls. A large painted-pixel difference is required so a mere
