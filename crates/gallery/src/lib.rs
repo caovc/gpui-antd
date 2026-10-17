@@ -13,6 +13,8 @@ use gpui_antd::{
     AntLayout, AntSider, AntHeader, AntContent, AntFooter, GridBreakpoint,
     AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm,
     AntMenu, AntMenuItem,
+    AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
+    AntDescriptions, AntDescriptionItem, AntResult, ResultStatus, AntSkeleton, AntSpin,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -71,7 +73,7 @@ impl GalleryAssets {
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Tabs", "Tooltip", "Icons", "Layout",
+    "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
     "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
 ];
 
@@ -167,6 +169,10 @@ pub struct Gallery {
     popover_open: bool,
     modal_result: String,
     popconfirm_result: String,
+    pagination_page: usize,
+    steps_current: usize,
+    rating: usize,
+    collapse_keys: BTreeSet<String>,
 }
 
 impl Gallery {
@@ -226,6 +232,8 @@ impl Gallery {
             dropdown_selected: "None".into(), popover_open: false,
             modal_result: "No action".into(),
             popconfirm_result: "Awaiting confirmation".into(),
+            pagination_page:4, steps_current:1, rating:3,
+            collapse_keys:BTreeSet::from(["first".to_owned()]),
         }
     }
     fn theme(&self) -> AntTheme {
@@ -597,6 +605,136 @@ impl Gallery {
                 .description("No search results")
                 .icon(AntIconName::SearchOutlined)
                 .compact(true))
+            .into_any_element()
+    }
+
+
+    fn pagination_demo(&self, t:AntTheme, cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let changed=cx.listener(|this,page:&usize,_,cx|{
+            this.pagination_page=*page;cx.notify();
+        });
+        div().w_full().flex().flex_col().gap(px(20.))
+            .child(label("Controlled paging · click a page, the jump button or Prev/Next",t))
+            .child(AntPagination::new("pagination-controlled",126)
+                .page_size(10).current(self.pagination_page).show_total(true).theme(t)
+                .on_change(move |page,_,window,cx|changed(&page,window,cx)))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Selected page: {}",self.pagination_page)))
+            .child(label("Compact simple pager and disabled states",t))
+            .child(AntPagination::new("pagination-simple",145)
+                .current(4).simple(true).size(ControlSize::Small).theme(t))
+            .child(AntPagination::new("pagination-disabled",70)
+                .current(3).disabled(true).theme(t))
+            .into_any_element()
+    }
+
+    fn steps_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let changed=cx.listener(|this,step:&usize,_,cx|{
+            this.steps_current=*step;cx.notify();
+        });
+        div().flex().flex_col().gap(px(20.))
+            .child(label("Clickable, parent-controlled workflow steps",t))
+            .child(AntSteps::new("steps-basic").theme(t).current(self.steps_current)
+                .on_change(move|index,window,cx|changed(&index,window,cx))
+                .child(AntStep::new("Sign in").description("Create account"))
+                .child(AntStep::new("Verify").description("Verify email"))
+                .child(AntStep::new("Finish").description("Completed")))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Current step index: {}",self.steps_current)))
+            .child(label("Vertical steps with disabled and error presentation",t))
+            .child(AntSteps::new("steps-vertical").theme(t).current(2).vertical(true)
+                .child(AntStep::new("Requested"))
+                .child(AntStep::new("Approval").status(StepStatus::Error))
+                .child(AntStep::new("Publish").disabled(true)))
+            .into_any_element()
+    }
+
+    fn rate_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let changed=cx.listener(|this,value:&usize,_,cx|{
+            this.rating=*value;cx.notify();
+        });
+        div().flex().flex_col().gap(px(20.))
+            .child(label("Controlled star rating · click the selected star to clear",t))
+            .child(AntRate::new("rating-input").value(self.rating).theme(t)
+                .on_change(move|value,window,cx|changed(&value,window,cx)))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Rating: {} / 5",self.rating)))
+            .child(label("Readonly disabled rating",t))
+            .child(AntRate::new("rating-disabled").value(4).disabled(true).theme(t))
+            .into_any_element()
+    }
+
+    fn collapse_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let changed=cx.listener(|this,keys:&BTreeSet<String>,_,cx|{
+            this.collapse_keys=keys.clone();cx.notify();
+        });
+        div().flex().flex_col().gap(px(16.))
+            .child(label("Controlled expansion · multiple panels can stay open",t))
+            .child(AntCollapse::new("collapse-basic").theme(t)
+                .open_keys(self.collapse_keys.iter().map(String::as_str))
+                .on_change(move|keys,window,cx|changed(&keys,window,cx))
+                .child(AntCollapseItem::new("first","What is GPUI Ant Design?")
+                    .child(AntText::new("A single Rust component library running on desktop and in WASM.").theme(t)))
+                .child(AntCollapseItem::new("second","How is expansion handled?")
+                    .child(AntText::new("The application owns open panel keys and listens for changes.").theme(t)))
+                .child(AntCollapseItem::new("locked","Disabled panel").disabled(true)
+                    .child(AntText::new("Not reachable").theme(t))))
+            .child(label("Borderless accordion",t))
+            .child(AntCollapse::new("collapse-accordion").theme(t)
+                .accordion(true).bordered(false).open_keys(["usage"])
+                .child(AntCollapseItem::new("usage","Usage")
+                    .child(AntText::new("One expanded panel at a time.").theme(t)))
+                .child(AntCollapseItem::new("api","API")
+                    .child(AntText::new("Controlled via open_keys.").theme(t))))
+            .into_any_element()
+    }
+
+    fn descriptions_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(20.))
+            .child(label("Structured record details",t))
+            .child(AntDescriptions::new().title("Project information").theme(t)
+                .columns(3).bordered(true)
+                .child(AntDescriptionItem::new("Project","gpui-antd"))
+                .child(AntDescriptionItem::new("Language","Rust"))
+                .child(AntDescriptionItem::new("Platform","Desktop / WASM"))
+                .child(AntDescriptionItem::new("Theme","Light + Dark"))
+                .child(AntDescriptionItem::new("License","MIT"))
+                .child(AntDescriptionItem::new("Status","Early alpha")))
+            .child(label("Unbordered description list",t))
+            .child(AntDescriptions::new().columns(2).theme(t)
+                .child(AntDescriptionItem::new("Owner","Application state"))
+                .child(AntDescriptionItem::new("Renderer","Native GPUI")))
+            .into_any_element()
+    }
+
+    fn result_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(18.))
+            .child(label("Success state and native action",t))
+            .child(AntResult::new(ResultStatus::Success).theme(t)
+                .subtitle("Your changes have been saved.")
+                .child(AntButton::new("result-back","Back to dashboard").primary().theme(t)))
+            .child(label("Not found state",t))
+            .child(AntResult::new(ResultStatus::NotFound).theme(t)
+                .subtitle("The requested resource is unavailable."))
+            .into_any_element()
+    }
+
+    fn skeleton_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(20.))
+            .child(label("Article loading placeholder",t))
+            .child(AntSkeleton::new().theme(t).avatar(true).rows(4))
+            .child(label("Text-only placeholder",t))
+            .child(AntSkeleton::new().theme(t).rows(2))
+            .into_any_element()
+    }
+
+    fn spin_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().flex().flex_col().gap(px(22.))
+            .child(label("Native animated progress feedback",t))
+            .child(AntSpin::new().theme(t).tip("Loading your data..."))
+            .child(label("Inactive spinner preserves supplied content",t))
+            .child(AntSpin::new().theme(t).spinning(false)
+                .child(AntText::new("Data is ready.").theme(t)))
             .into_any_element()
     }
 
@@ -1372,6 +1510,14 @@ impl Render for Gallery {
             "Statistic"=>self.statistic_demo(t),
             "Empty"=>self.empty_demo(t),
             "Breadcrumb"=>self.breadcrumb_demo(t),
+            "Pagination"=>self.pagination_demo(t,cx),
+            "Steps"=>self.steps_demo(t,cx),
+            "Rate"=>self.rate_demo(t,cx),
+            "Collapse"=>self.collapse_demo(t,cx),
+            "Descriptions"=>self.descriptions_demo(t),
+            "Result"=>self.result_demo(t),
+            "Skeleton"=>self.skeleton_demo(t),
+            "Spin"=>self.spin_demo(t),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")
