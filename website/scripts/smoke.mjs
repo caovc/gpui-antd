@@ -618,7 +618,17 @@ try {
     if (style.whiteSpace==='nowrap' || style.overflowWrap!=='anywhere' || style.textOverflow==='ellipsis') {
       throw new Error('Icon name CSS clipping persists: '+JSON.stringify(style));
     }
+    // Clearing a native search input through Playwright can skip Chrome's
+    // incremental search event in some headless runs. Dispatch the input
+    // event explicitly and wait for the full 848-item catalog to reappear
+    // before pressing a pagination button that was hidden by the old filter.
     await iconDocs.locator('#icon-query').fill('');
+    await iconDocs.locator('#icon-query').dispatchEvent('input');
+    await iconDocs.waitForFunction(()=>
+      document.querySelector('#icon-query')?.value==='' &&
+      document.querySelector('#icon-load-more')?.hidden===false &&
+      document.querySelectorAll('button[data-icon-name]').length===80,
+      null,{timeout:15000});
     await iconDocs.locator('#icon-load-more').click();
     if (await iconDocs.locator('button[data-icon-name]').count() < 160) {
       throw new Error('Catalog pagination hides icons after the first 80');
