@@ -505,7 +505,9 @@ mod tests{
         let roots=sample();
         let empty=BTreeSet::new();
         let half=cascade_tree_checked_keys(&roots,&empty,"a",true);
-        assert_eq!(half,BTreeSet::from(["a".to_owned()]));
+        // The only other child is disabled, so the parent is fully
+        // selected as soon as every eligible child is selected.
+        assert_eq!(half,BTreeSet::from(["a".to_owned(),"src".to_owned()]));
         let states=tree_check_states(&roots,&half,false);
         assert_eq!(states["a"],TreeCheckState::Checked);
         assert_eq!(states["src"],TreeCheckState::Checked);
