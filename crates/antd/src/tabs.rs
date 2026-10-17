@@ -224,12 +224,22 @@ impl RenderOnce for AntTabs {
                 bar.child(item)
             },
         );
-        let bar=bar.when_some(self.on_change, |bar, callback| {
-            bar.on_click(move |index, window, cx| {
-                if allowed.get(*index).copied()==Some(true) {
+        // A pointer click on a Kit tab should also activate the wrapper's
+        // keyboard focus handle. Base Tab itself is deliberately not
+        // focusable in GPUI Kit 0.7.3, so without this, arrow navigation
+        // only works after an explicit Tab press.
+        let pointer_focus=focus.clone();
+        let pointer_handler=self.on_change;
+        let pointer_keyboard=self.keyboard;
+        let bar=bar.on_click(move |index, window, cx| {
+            if allowed.get(*index).copied()==Some(true) {
+                if pointer_keyboard {
+                    window.focus(&pointer_focus,cx);
+                }
+                if let Some(callback)=&pointer_handler {
                     callback(*index, window, cx);
                 }
-            })
+            }
         });
         let panel=self.tabs.into_iter().nth(selected)
             .filter(|tab|!tab.disabled)

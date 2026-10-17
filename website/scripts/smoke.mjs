@@ -340,6 +340,77 @@ try {
 
   // Interactive nested GPUI Menu regression. Unlike DOM navigation,
   // these operations act on pixels in the Rust/WebAssembly canvas.
+  // Native Tabs keyboard test: click a Kit tab to place focus on the
+  // wrapper's GPUI group, then use arrows and Home/End to switch the real
+  // Rust-selected panel. Tab index 2 is disabled and must be skipped.
+  const keyboardTabs=await browser.newPage({viewport:{width:900,height:550}});
+  const tabErrors=[];
+  keyboardTabs.on('pageerror',error=>tabErrors.push(error.message));
+  keyboardTabs.on('console',message=>{
+    if(message.type()!=='error')return;
+    const detail=message.text().trim();
+    if(detail!=='Wasm assets loading, will be available soon...')tabErrors.push(detail);
+  });
+  try {
+    await keyboardTabs.goto(base+'demo.html?component=Tabs',{waitUntil:'domcontentloaded'});
+    await keyboardTabs.waitForFunction(()=>{
+      const canvas=document.querySelector('canvas');
+      return canvas&&canvas.width>0&&canvas.height>0&&!document.querySelector('#status');
+    },null,{timeout:60000});
+    await keyboardTabs.waitForTimeout(600);
+    // Click well inside the *first* (Overview) tab. The previous x=92
+    // sat near the Overview/Settings boundary and could already select the
+    // last enabled tab, making the subsequent End assertion a no-op.
+    await keyboardTabs.mouse.click(42,101);
+    await keyboardTabs.mouse.move(880,530);
+    await keyboardTabs.waitForTimeout(450);
+    const original=await keyboardTabs.screenshot({
+      path:join(screenshots,'tabs-keyboard-selected-0.png')
+    });
+    await keyboardTabs.keyboard.press('ArrowRight');
+    await keyboardTabs.waitForTimeout(800);
+    const settings=await keyboardTabs.screenshot({
+      path:join(screenshots,'tabs-keyboard-selected-1.png')
+    });
+    const right=await changedPixels(keyboardTabs,original,settings);
+    if(right.total<1200){
+      throw new Error('ArrowRight did not switch native TabBar: '+JSON.stringify(right));
+    }
+    await keyboardTabs.keyboard.press('ArrowRight');
+    await keyboardTabs.waitForTimeout(800);
+    const wrapped=await keyboardTabs.screenshot({
+      path:join(screenshots,'tabs-keyboard-wrapped-over-disabled.png')
+    });
+    const wrap=await changedPixels(keyboardTabs,settings,wrapped);
+    const reset=await changedPixels(keyboardTabs,original,wrapped);
+    if(wrap.total<1200 || reset.total>right.total*0.42+700){
+      throw new Error('ArrowRight did not wrap over the disabled tab: '+
+        JSON.stringify({wrap,reset,right}));
+    }
+    await keyboardTabs.keyboard.press('End');
+    await keyboardTabs.waitForTimeout(800);
+    const end=await keyboardTabs.screenshot({
+      path:join(screenshots,'tabs-keyboard-end.png')
+    });
+    const endDiff=await changedPixels(keyboardTabs,wrapped,end);
+    if(endDiff.total<1200)throw new Error('End did not select last enabled tab: '+JSON.stringify(endDiff));
+    await keyboardTabs.keyboard.press('Home');
+    await keyboardTabs.waitForTimeout(800);
+    const home=await keyboardTabs.screenshot({
+      path:join(screenshots,'tabs-keyboard-home.png')
+    });
+    const homeDiff=await changedPixels(keyboardTabs,end,home);
+    if(homeDiff.total<1200)throw new Error('Home did not return to first enabled tab: '+JSON.stringify(homeDiff));
+    if(tabErrors.length)throw new Error('GPUI console errors: '+tabErrors.join('; '));
+    console.log('PASS: GPUI Tabs real keyboard Left/Right/Home/End wrap and disabled skipping');
+  }catch(error){
+    failures++;
+    console.error('FAIL: native GPUI Tabs keyboard controls',String(error));
+    console.error('Browser errors:',tabErrors.join('; '));
+  }finally{
+    await keyboardTabs.close();
+  }
+
   const nested=await browser.newPage({viewport:{width:900,height:550}});
   const nestedErrors=[];
   nested.on('pageerror',error=>nestedErrors.push(error.message));
