@@ -6,13 +6,14 @@
 //! hover pause). Their APIs are imperative like Ant Design's feedback APIs.
 use std::rc::Rc;
 use gpui_kit::{
-    AnyElement, App, ElementId, IntoElement, RenderOnce,
-    SharedString, Window, px, Anchor,
+    AnyElement, App, ElementId, IntoElement, ParentElement as _, RenderOnce,
+    SharedString, Styled as _, Window, px, Anchor,
 };
 use gpui_kit::component::{
     WindowExt as _, Placement,
     notification::{Notification as KitNotification, NotificationType},
 };
+use gpui_kit::prelude::FluentBuilder as _;
 use crate::{AntButton, AntTheme};
 
 /// The four supported sides of an Ant Design Drawer.
@@ -101,7 +102,7 @@ impl RenderOnce for AntDrawer{
                 let body=body.clone();
                 let content=content.clone();
                 let on_close=on_close.clone();
-                window.open_sheet_at(placement,cx,move|sheet,_,_|{
+                window.open_sheet_at(placement,cx,move|sheet,window,cx|{
                     let builder=content.clone();
                     let on_close=on_close.clone();
                     sheet.title(title.clone())
