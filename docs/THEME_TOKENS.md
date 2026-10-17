@@ -153,6 +153,9 @@ Token Studio editor (DOM input controls only)
 
 ## Compatibility limits and next milestones
 
+- Unchanged Ant Design light/dark reference seed colors preserve the canonical
+  built-in palette even when only typography or geometry changes. Custom
+  brands still use a deterministic native RGB-mixing approximation.
 - Native color mixing is a deterministic approximation. It is not the official
   Ant Design perceptual palette algorithm; screenshot and token-value parity
   need quantitative reference comparisons.
