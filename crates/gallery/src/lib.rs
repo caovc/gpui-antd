@@ -8,6 +8,7 @@ use gpui_antd::{
     AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntDatePicker, AntForm, AntFormItem, FormSchema, FormRule, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
     AntIcon, AntIconName, AntIconAssets, AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone,
     AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify,
+    AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -64,7 +65,7 @@ impl GalleryAssets {
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Icons", "Typography", "Space", "Flex", "Grid",
+    "Alert", "Card", "Progress", "Divider", "Icons", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
 ];
 
 pub struct Gallery {
@@ -468,6 +469,75 @@ impl Gallery {
             .child(AntProgress::new(100.).tone(Tone::Blue).theme(t))
             .into_any_element()
     }
+    fn avatar_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(22.))
+            .child(label("Circular avatar sizes", theme))
+            .child(AntSpace::new().size(SpaceSize::Middle)
+                .child(AntAvatar::new("Ada Lovelace").size(AvatarSize::Small).theme(theme))
+                .child(AntAvatar::new("Grace Hopper").size(AvatarSize::Middle).theme(theme))
+                .child(AntAvatar::new("Alan Turing").size(AvatarSize::Large).theme(theme))
+                .child(AntAvatar::new("Alex Chen").size(AvatarSize::Custom(56.)).theme(theme)))
+            .child(label("Square and custom color", theme))
+            .child(AntSpace::new().size(SpaceSize::Middle)
+                .child(AntAvatar::new("GPUI").shape(AvatarShape::Square).theme(theme)
+                    .size(AvatarSize::Large))
+                .child(AntAvatar::new("Design System").background(theme.error)
+                    .shape(AvatarShape::Square).theme(theme)
+                    .size(AvatarSize::Large))
+                .child(AntAvatar::new("Rust").background(theme.success)
+                    .size(AvatarSize::Custom(48.)).theme(theme)))
+            .child(AntParagraph::new("Native GPUI Base fallback avatars. Pass src() to load an image.")
+                .theme(theme).tone(TextTone::Secondary))
+            .into_any_element()
+    }
+
+    fn statistic_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(22.))
+            .child(label("Statistic summary with formatted numbers", theme))
+            .child(AntSpace::new().size(SpaceSize::Large).wrap(true)
+                .child(AntStatistic::number("Active Users", 112893., 0).theme(theme))
+                .child(AntStatistic::number("Conversion Rate", 23.89, 2)
+                    .theme(theme).suffix("%").tone(TextTone::Success))
+                .child(AntStatistic::number("Revenue", 1057280.5, 2)
+                    .theme(theme).prefix("$")))
+            .child(label("Semantic colors and suffixes", theme))
+            .child(AntSpace::new().size(SpaceSize::Large)
+                .child(AntStatistic::new("Errors", "12")
+                    .theme(theme).tone(TextTone::Danger))
+                .child(AntStatistic::number("Latency", 124.8, 1)
+                    .theme(theme).suffix("ms").tone(TextTone::Warning)))
+            .into_any_element()
+    }
+
+    fn empty_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(16.))
+            .child(label("Default empty state", theme))
+            .child(AntEmpty::new().theme(theme)
+                .child(AntButton::new("empty-action", "Create item")
+                    .primary().theme(theme)))
+            .child(label("Compact empty state", theme))
+            .child(AntEmpty::new().theme(theme)
+                .description("No search results")
+                .icon(AntIconName::SearchOutlined)
+                .compact(true))
+            .into_any_element()
+    }
+
+    fn breadcrumb_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(20.))
+            .child(label("Breadcrumb hierarchy", theme))
+            .child(AntBreadcrumb::new().theme(theme)
+                .child(AntBreadcrumbItem::new("Home").href("https://ant.design/"))
+                .child(AntBreadcrumbItem::new("Components").href("https://ant.design/components/overview"))
+                .child(AntBreadcrumbItem::new("Breadcrumb")))
+            .child(label("Custom separator and disabled intermediate item", theme))
+            .child(AntBreadcrumb::new().theme(theme).separator(">")
+                .child(AntBreadcrumbItem::new("Home").href("https://ant.design/"))
+                .child(AntBreadcrumbItem::new("Section").disabled(true))
+                .child(AntBreadcrumbItem::new("Current page")))
+            .into_any_element()
+    }
+
     fn icons_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         let catalog = |style: &'static str| {
             div().flex().flex_wrap().gap(px(14.))
@@ -653,6 +723,10 @@ impl Render for Gallery {
             "Space"=>self.space_demo(t),
             "Flex"=>self.flex_demo(t),
             "Grid"=>self.grid_demo(t),
+            "Avatar"=>self.avatar_demo(t),
+            "Statistic"=>self.statistic_demo(t),
+            "Empty"=>self.empty_demo(t),
+            "Breadcrumb"=>self.breadcrumb_demo(t),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")
