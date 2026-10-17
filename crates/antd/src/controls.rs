@@ -194,19 +194,23 @@ impl RenderOnce for AntCheckbox {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let t=self.theme;
         let checked=self.checked;
+        let comp=t.component(AntComponent::Checkbox);
+        let mark_size=comp.control_height.unwrap_or(16.).clamp(12.,32.);
+        let accent=comp.color_primary.unwrap_or(t.primary);
         BaseCheckbox::new(self.id)
             .checked(checked)
             .disabled(self.disabled)
             .flex()
             .items_center()
             .gap(px(8.))
-            .text_size(px(14.))
-            .text_color(if self.disabled {t.disabled_text} else {t.text})
+            .text_size(px(comp.font_size.unwrap_or(t.font_size)))
+            .text_color(if self.disabled {t.disabled_text} else {comp.color_text.unwrap_or(t.text)})
             .when(!self.disabled, |this| this.cursor_pointer())
             .child(
-                div().size(px(16.)).rounded(px(4.)).border_1()
-                    .border_color(if checked {t.primary} else {t.border})
-                    .bg(if checked {t.primary} else {t.surface})
+                div().size(px(mark_size))
+                    .rounded(px(comp.border_radius.unwrap_or(4.))).border_1()
+                    .border_color(comp.color_border.unwrap_or(if checked {accent} else {t.border}))
+                    .bg(if checked {accent} else {comp.color_bg.unwrap_or(t.surface)})
                     .flex().items_center().justify_center()
                     .child(if checked { "✓" } else { "" })
                     .text_color(color(0xffffff))
@@ -242,19 +246,24 @@ impl AntSwitch {
 impl RenderOnce for AntSwitch {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let t = self.theme;
+        let comp=t.component(AntComponent::Switch);
+        let height=comp.control_height.unwrap_or(22.).clamp(14.,40.);
+        let accent=comp.color_primary.unwrap_or(t.primary);
         BaseSwitch::new(self.id)
             .checked(self.checked)
             .disabled(self.disabled)
             .relative()
-            .w(px(44.))
-            .h(px(22.))
+            .w(px(height*2.))
+            .h(px(height))
             .rounded_full()
-            .bg(if self.disabled {t.disabled_bg} else if self.checked {t.primary} else {color(0xbfbfbf)})
+            .bg(if self.disabled {t.disabled_bg} else if self.checked {accent} else {
+                comp.color_bg.unwrap_or(color(0xbfbfbf))
+            })
             .when(!self.disabled, |this| this.cursor_pointer())
             .child(
                 div().absolute().top(px(2.))
-                    .left(px(if self.checked {24.} else {2.}))
-                    .size(px(18.)).rounded_full()
+                    .left(px(if self.checked {height+2.} else {2.}))
+                    .size(px(height-4.)).rounded_full()
                     .bg(color(0xffffff))
             )
             .when_some(self.on_change, |this, handler| {

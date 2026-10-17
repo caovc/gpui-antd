@@ -32,13 +32,15 @@ impl ThemeLabSpec {
         let mut menu=AntComponentToken::default();
         let mut layout=AntComponentToken::default();
         let mut component_tokens=AntComponentTokens::default();
-        for raw in input.trim_start_matches('|').split('|').take(128) {
+        for raw in input.trim_start_matches('|').split('|').take(512) {
             let Some((key,value))=raw.split_once('=') else {continue};
             if value.len()>64 {continue;}
             match key {
                 "colorPrimary"=>if let Some(hex)=hex24(value) {
                     seed.color_primary=hex;seed.color_info=hex;seed.color_link=hex;
                 },
+                "colorInfo"=>if let Some(hex)=hex24(value){seed.color_info=hex},
+                "colorLink"=>if let Some(hex)=hex24(value){seed.color_link=hex},
                 "colorSuccess"=>if let Some(hex)=hex24(value){seed.color_success=hex},
                 "colorWarning"=>if let Some(hex)=hex24(value){seed.color_warning=hex},
                 "colorError"=>if let Some(hex)=hex24(value){seed.color_error=hex},
@@ -181,6 +183,16 @@ mod tests {
         assert_eq!(t.component(AntComponent::Menu).color_bg_selected,Some(color(0x007755)));
         assert_eq!(t.component(AntComponent::Badge).color_bg,Some(color(0xabcdef)));
         assert_eq!(t.component(AntComponent::Alert).color_bg,None);
+    }
+    #[test]
+    fn independent_info_link_seeds_and_large_component_catalog_survive() {
+        let values=std::iter::repeat_n("Unknown.colorBg=eeeeee",155)
+            .collect::<Vec<_>>().join("|");
+        let route=format!("ThemeLab|colorPrimary=1677ff|colorInfo=114488|colorLink=beef12|{values}|Tooltip.borderRadius=13");
+        let theme=ThemeLabSpec::parse(&route,false).unwrap().theme;
+        assert_eq!(theme.color_info,color(0x114488));
+        assert_eq!(theme.color_link,color(0xbeef12));
+        assert_eq!(theme.component(AntComponent::Tooltip).border_radius,Some(13.));
     }
     #[test]
     fn parse_rejects_injection_and_nonfinite_inputs() {

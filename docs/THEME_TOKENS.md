@@ -1,0 +1,150 @@
+# Design Token Studio — GPUI-native theme contract
+
+This project follows Ant Design's **Seed → Map → Alias → Component** token
+architecture. The reference is [Ant Design Customize Theme](https://ant.design/docs/react/customize-theme/);
+the official [Theme Editor](https://ant-design.antgroup.com/theme-editor) is
+the interaction/design target. Our current native algorithm is an **approximation**,
+not a port of Ant Design's JavaScript color derivation and not a ConfigProvider.
+
+## Public Rust API
+
+```rust
+use gpui_antd::{
+    AntTheme, AntThemeAlgorithm, AntSeedTokens, AntComponent,
+    AntComponentToken, AntTokenLayer, AntTokenValue, color,
+};
+
+let mut seed = AntSeedTokens::default();
+seed.color_primary = 0x635bdf;
+seed.color_info = 0x1677ff; // independent from the brand color
+seed.color_link = 0x635bdf;
+seed.border_radius = 8.;
+seed.font_size = 15.;
+
+let theme = AntTheme::from_seed(seed, AntThemeAlgorithm::Compact)
+    .with_component(
+        AntComponent::Card,
+        AntComponentToken::default().padding(32.).border_radius(12.),
+    )
+    .with_component(
+        AntComponent::Tag,
+        AntComponentToken::default().color_bg(color(0xe6f4ff)),
+    );
+
+// Direct native GPUI values (no CSS variables involved).
+let map = theme.map_tokens();
+let alias = theme.alias_tokens();
+assert_eq!(map.control_height, 28.);
+assert_eq!(alias.font_size, 15.);
+for resolved in theme.resolved_tokens() {
+    match resolved.value {
+        AntTokenValue::Color(color) => { /* paint a GPUI swatch */ }
+        AntTokenValue::Number(number) => { /* show measurement */ }
+        AntTokenValue::Boolean(enabled) => { /* show feature flag */ }
+    }
+    assert!(matches!(resolved.layer, AntTokenLayer::Map | AntTokenLayer::Alias));
+}
+```
+
+`AntSeedTokens` contains base brand, status, link, neutral text/background,
+control height, border radius, font size, spacing unit and motion values.
+`AntThemeAlgorithm` supports Default, Dark, Compact and DarkCompact.
+`AntTheme::from_seed` recomputes colors, density and aliases; static
+`AntTheme::light()` / `AntTheme::dark()` remain supported.
+
+Global themes are **copyable Rust values**, passed via each component's
+`.theme(theme)`. The owning Entity changes its theme and calls
+`cx.notify()`. The library deliberately does not imply that nested
+`ConfigProvider` inheritance or live CSS variables already exist.
+
+## Component Token coverage
+
+`AntComponent::ALL` registers 31 independent namespaces. `AntComponentToken`
+has a shared typed shape, but not every field is consumed by every component.
+
+| Component | Live fields in native renderer |
+| --- | --- |
+| Button | colorPrimary, colorBg, colorText, colorBorder, colorBgHover, borderRadius, controlHeight, fontSize, padding |
+| Card | colorBg, colorText, colorBorder, colorHeaderBg, borderRadius, fontSize, padding |
+| Input | colorBg, colorBorder, borderRadius |
+| Menu | colorBg, colorText, colorBgHover, colorBgSelected, borderRadius, fontSize, controlHeight |
+| Layout (Sider) | colorBg, colorText, colorBgHover |
+| Checkbox | colorPrimary, colorBg, colorText, colorBorder, borderRadius, controlHeight, fontSize |
+| Switch | colorPrimary, colorBg, controlHeight |
+| Tag | colorBg, colorText, colorBorder, borderRadius, controlHeight, padding, fontSize |
+| Badge | colorBg, colorText, controlHeight, padding, fontSize |
+| Alert | colorPrimary, colorBg, colorText, colorBorder, borderRadius, fontSize, padding |
+| Progress | colorPrimary, colorBg, colorText, controlHeight, fontSize |
+| Divider | colorBorder, controlHeight |
+| Typography | colorPrimary, colorBg, colorText, colorBorder, borderRadius, fontSize |
+| Tooltip | colorBg, colorText, colorBorder, borderRadius |
+
+This matrix states actual **property consumption**, not visual Ant Design
+pixel parity. Other namespaces are serialized for forward compatibility but
+do not yet alter component-local rendering. The Studio marks unimplemented
+fields as **Planned** and disables the editing input rather than pretending
+it updates the preview.
+
+## Token Studio
+
+Browse **[Token Studio](https://caovc.github.io/gpui-antd/#/theme)** once
+the change has passed CI and been deployed. The page offers:
+
+1. Global Seed Token editor with independently configurable Info and Link
+   colors; presets and four light/dark/compact algorithms.
+2. Component Token overrides restricted to fields with real Rust consumers.
+3. **Components** view for Button, Card, Input, Menu and the newly wired
+   data-display/feedback tokens; **Resolved Tokens** view for a Rust/GPUI
+   rendering of Map and Alias values.
+4. JSON import/export using `gpui-antd-theme-v1`, validated before use,
+   and a copyable Rust configuration generated from the same input.
+5. GPU readiness/error feedback from the embedded demo instead of using
+   iframe `load` as a false renderer-success signal.
+
+The editor panels are HTML DOM, but **every UI component and token swatch
+inside the preview iframe is painted by the Rust Gallery compiled to GPUI
+WebAssembly**. No React/CSS replica is substituted for the component preview.
+
+### Architecture
+
+```text
+Token Studio editor (DOM input controls only)
+    -> validated seed/component JSON
+    -> same-origin URL params on GPUI demo.html
+    -> ThemeLabSpec parser (Rust, bounded/clamped)
+    -> AntTheme::from_seed() + component-scoped overrides
+    -> real Gallery::theme_lab_demo / theme_tokens_demo
+    -> GPUI WebAssembly canvas and readiness postMessage
+```
+
+## Compatibility limits and next milestones
+
+- Native color mixing is a deterministic approximation. It is not the official
+  Ant Design perceptual palette algorithm; screenshot and token-value parity
+  need quantitative reference comparisons.
+- The public Map/Alias inspector intentionally covers a useful subset of
+  official tokens. Extend it only together with actual consumers.
+- There is no global/nested ConfigProvider, component-specific derivation
+  algorithm, persistent theme context, RTL density mode, CSS variables,
+  motion system parity, or font-family configurator.
+- Theme Studio currently reloads the WASM preview after a debounced change.
+  A stable Rust message bridge for in-place state updates remains planned.
+- Hidden/intermediate component namespaces must not be described as live.
+  Tabs/Menu overlay and responsive Drawer interaction milestones remain
+  separately tracked in repository Issues #6, #8 and #7.
+
+## Checks
+
+```bash
+cargo check --workspace
+cargo test -p gpui-antd --lib
+cargo test -p gpui-antd-gallery --lib
+cd website
+npm run test:tokens
+npm run build
+npm run smoke
+```
+
+The browser smoke checks the **actual Rust canvas** and the Token Studio
+editor-to-WASM route. It does not prove exact screenshot parity or screen-reader
+compatibility.

@@ -35,6 +35,7 @@ try {
       if (canvas && canvas.width > 0 && canvas.height > 0) {
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         status.remove();
+        if(window.parent!==window)window.parent.postMessage({type:'gpui-antd:ready',component},location.origin);
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -47,4 +48,7 @@ try {
   status.classList.add('error');
   status.innerHTML = '<strong>Unable to start GPUI preview</strong><p></p>';
   status.querySelector('p').textContent = String(error?.message || error);
+  if(window.parent!==window)window.parent.postMessage({
+    type:'gpui-antd:error',component,error:String(error?.message||error)
+  },location.origin);
 }

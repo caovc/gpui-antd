@@ -2,13 +2,30 @@
  * Token Studio: DOM editing UI around the REAL Rust GPUI/WASM ThemeLab.
  * Never substitute DOM components for the GPU preview.
  *
- * The first native token milestone supports all 31 namespaces, but only
- * Button/Card/Input/Menu/Layout currently consume their scoped overrides.
+ * All 31 component namespaces can be serialized. Exact native consumption
+ * is listed per field: unsupported fields are not disguised as live changes.
  */
 const COMPONENTS='Button Input Select DatePicker Form Checkbox Radio Switch Tag Badge Alert Card Progress Divider Tabs Tooltip Icons Typography Space Flex Grid Layout Menu Dropdown Popover Modal Popconfirm Avatar Statistic Empty Breadcrumb'.split(' ');
-const WIRED=new Set(['Button','Card','Input','Menu','Layout']);
+const COVERAGE={
+  Button:['colorPrimary','colorBg','colorText','colorBorder','colorBgHover','borderRadius','controlHeight','fontSize','padding'],
+  Card:['colorBg','colorText','colorBorder','colorHeaderBg','borderRadius','fontSize','padding'],
+  Input:['colorBg','colorBorder','borderRadius'],
+  Menu:['colorBg','colorText','colorBgHover','colorBgSelected','borderRadius','fontSize','controlHeight'],
+  Layout:['colorBg','colorText','colorBgHover'],
+  Checkbox:['colorPrimary','colorBg','colorText','colorBorder','borderRadius','controlHeight','fontSize'],
+  Switch:['colorPrimary','colorBg','controlHeight'],
+  Tag:['colorBg','colorText','colorBorder','borderRadius','controlHeight','padding','fontSize'],
+  Badge:['colorBg','colorText','controlHeight','padding','fontSize'],
+  Alert:['colorPrimary','colorBg','colorText','colorBorder','borderRadius','fontSize','padding'],
+  Progress:['colorPrimary','colorBg','colorText','controlHeight','fontSize'],
+  Divider:['colorBorder','controlHeight'],
+  Typography:['colorPrimary','colorBg','colorText','colorBorder','borderRadius','fontSize'],
+  Tooltip:['colorBg','colorText','colorBorder','borderRadius'],
+};
 const SEEDS=[
   ['colorPrimary','Primary color','#1677ff','#1668dc','color'],
+  ['colorInfo','Info color','#1677ff','#1668dc','color'],
+  ['colorLink','Link color','#1677ff','#3c89e8','color'],
   ['colorSuccess','Success','#52c41a','#49aa19','color'],
   ['colorWarning','Warning','#faad14','#d89614','color'],
   ['colorError','Error','#ff4d4f','#dc4446','color'],
@@ -31,10 +48,14 @@ const PRESETS={'Ant Blue':'#1677ff','Emerald':'#12a676','Indigo':'#635bdf','Suns
 const escapeHtml=x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;')
   .replaceAll('>','&gt;').replaceAll('"','&quot;');
 const isColor=v=>/^#[0-9a-f]{6}$/i.test(String(v));
-const validateValue=(v,type)=>{
+const LIMITS={radius:[0,32],height:[20,64],fontSize:[10,28],
+  spacing:[1,16],borderRadius:[0,32],controlHeight:[20,64],padding:[0,64]};
+const validateValue=(v,type,key)=>{
   if(type==='color')return isColor(v)?String(v).toLowerCase():null;
+  if(v==null||String(v).trim()==='')return null;
   const n=Number(v);
-  return Number.isFinite(n)?String(Math.min(64,Math.max(0,n))):null;
+  const [min,max]=LIMITS[key]??[0,64];
+  return Number.isFinite(n)?String(Math.min(max,Math.max(min,n))):null;
 };
 function emptyTheme(){
   return {format:'gpui-antd-theme-v1',algorithm:'default',motion:true,
@@ -48,7 +69,7 @@ function validated(raw){
   state.motion=raw.motion!==false;
   for(const [key,,, ,kind] of SEEDS) {
     const value=raw.seed?.[key];
-    const valid=value==null?null:validateValue(value,kind);
+    const valid=value==null?null:validateValue(value,kind,key);
     if(valid!==null)state.seed[key]=valid;
   }
   for(const component of COMPONENTS) {
@@ -56,7 +77,7 @@ function validated(raw){
     const fieldValues={};
     for(const [key,,kind] of FIELDS) {
       const v=raw.components[component][key];
-      const valid=v==null?null:validateValue(v,kind);
+      const valid=v==null?null:validateValue(v,kind,key);
       if(valid!==null)fieldValues[key]=valid;
     }
     if(Object.keys(fieldValues).length)state.components[component]=fieldValues;
@@ -65,11 +86,12 @@ function validated(raw){
 }
 const modeDark=s=>s.algorithm.includes('dark');
 const rgbParam=value=>String(value).replace('#','');
-function previewParam(state){
+function previewParam(state,scene='components'){
   const parts=['ThemeLab'];
   for(const [key] of SEEDS)parts.push(key+'='+rgbParam(state.seed[key]));
   if(state.algorithm.includes('compact'))parts.push('compact=1');
   if(!state.motion)parts.push('motion=0');
+  if(scene==='tokens')parts.push('scene=tokens');
   for(const [component,values] of Object.entries(state.components))
     for(const [key,value] of Object.entries(values))
       parts.push(component+'.'+key+'='+rgbParam(value));
@@ -80,7 +102,8 @@ function rustCode(state){
     default:'Default',dark:'Dark',compact:'Compact','dark-compact':'DarkCompact'
   }[state.algorithm];
   const rustNames={
-    colorPrimary:'color_primary',colorSuccess:'color_success',colorWarning:'color_warning',
+    colorPrimary:'color_primary',colorInfo:'color_info',colorLink:'color_link',
+    colorSuccess:'color_success',colorWarning:'color_warning',
     colorError:'color_error',colorBgBase:'color_bg_base',colorTextBase:'color_text_base',
     radius:'border_radius',height:'control_height',fontSize:'font_size',spacing:'spacing_unit',
   };
@@ -97,9 +120,7 @@ function rustCode(state){
     const value=state.seed[key];
     lines.push('seed.'+rustNames[key]+' = '+(type==='color'?'0x'+rgbParam(value):value+'.')+';');
   }
-  lines.push('seed.color_info = seed.color_primary;',
-    'seed.color_link = seed.color_primary;',
-    'seed.motion = '+state.motion+';',
+  lines.push('seed.motion = '+state.motion+';',
     'let theme = AntTheme::from_seed(seed, AntThemeAlgorithm::'+algorithm+')');
   for(const [component,values] of Object.entries(state.components)){
     const chain=Object.entries(values).map(([key,value])=>'.'+methods[key]+'('+
@@ -126,6 +147,8 @@ export function themeDesignerHtml(){
     '<label>Algorithm<select id="theme-mode"><option value="default">Light</option>'+
     '<option value="dark">Dark</option><option value="compact">Compact</option>'+
     '<option value="dark-compact">Dark + Compact</option></select></label>'+
+    '<label>Preview<select id="theme-scene"><option value="components">Components</option>'+
+    '<option value="tokens">Resolved Tokens</option></select></label>'+
     '<label>Brand preset<select id="theme-preset"><option value="">Custom</option>'+
     Object.keys(PRESETS).map(k=>'<option value="'+k+'">'+k+'</option>').join('')+
     '</select></label>'+
@@ -140,14 +163,14 @@ export function themeDesignerHtml(){
     '<label class="token-motion"><input id="theme-motion" type="checkbox" checked /> Enable motion</label>'+
     '</details>'+
     '<details open><summary>Component Token · independent overrides</summary>'+
-    '<p class="theme-caption">All 31 component namespaces are registered. Overrides are applied only by components whose native token adoption is complete.</p>'+
+    '<p class="theme-caption">All 31 namespaces can be exported. Only fields marked Live are connected to the Rust renderer; unimplemented fields cannot be edited here.</p>'+
     '<label>Component<select id="theme-component">'+COMPONENTS.map(x=>
       '<option value="'+x+'">'+x+'</option>').join('')+'</select></label>'+
     '<p id="theme-coverage" class="theme-coverage"></p>'+
     '<div id="theme-fields" class="token-form-grid"></div>'+
     '</details>'+
-    '<details><summary>Seed → Map → Alias results</summary>'+
-    '<p class="theme-caption">Resolved values are calculated by the Rust theme engine; colors in this summary show supplied seeds, not a JavaScript imitation of Map token derivation.</p>'+
+    '<details><summary>Seed Token values and derivation</summary>'+
+    '<p class="theme-caption">These are the editable inputs. For actual derived Map and Alias values, choose <strong>Resolved Tokens</strong> in Preview: those tiles are rendered by the Rust engine, not calculated by the DOM.</p>'+
     '<div id="theme-seed-summary" class="theme-summary"></div></details>'+
     '<details><summary>Generated Rust configuration</summary>'+
     '<button type="button" id="theme-copy">Copy Rust</button>'+
@@ -173,6 +196,7 @@ export function initThemeDesigner(base){
   try{state=validated(JSON.parse(localStorage.getItem('gpui-antd-theme-v1')||'null'));}
   catch{state=emptyTheme();}
   let timer;
+  let scene='components';
   function fillAll(){
     $('#theme-mode').value=state.algorithm;
     $('#theme-motion').checked=state.motion;
@@ -182,22 +206,26 @@ export function initThemeDesigner(base){
   function drawFields(){
     const component=$('#theme-component').value;
     const config=state.components[component]||{};
-    $('#theme-coverage').textContent=WIRED.has(component)?
-      'Runtime wired: changing these overrides affects native '+component+' components.':
-      'Registered namespace; native '+component+' styling has not yet adopted these overrides.';
+    const live=COVERAGE[component]||[];
+    $('#theme-coverage').textContent=live.length?
+      component+': '+live.length+' live native token fields. Other fields are not implemented.':
+      component+': namespace registered, but native component token adoption is not implemented.';
     fields.innerHTML=FIELDS.map(([key,label,type])=>{
       const enabled=Object.hasOwn(config,key);
+      const supported=live.includes(key);
       const value=enabled?config[key]:(type==='color'?'#1677ff':'6');
-      return '<label class="token-field"><span><input type="checkbox" data-enable="'+key+
-        '" '+(enabled?'checked':'')+' /> '+escapeHtml(label)+'</span>'+
+      return '<label class="token-field'+(supported?'':' token-field-unwired')+'">'+
+        '<span><input type="checkbox" data-enable="'+key+'" '+
+        (enabled?'checked ':'')+(supported?'':'disabled ')+' /> '+
+        escapeHtml(label)+' <em>'+(supported?'Live':'Planned')+'</em></span>'+
         '<input data-field="'+key+'" type="'+type+'" value="'+escapeHtml(value)+'" '+
-        (!enabled?'disabled':'')+(type==='number'?' min="0" max="64" step="1"':'')+
+        (!enabled||!supported?'disabled':'')+(type==='number'?' min="0" max="64" step="1"':'')+
         ' aria-label="'+component+' '+escapeHtml(label)+'" /><small>'+key+'</small></label>';
     }).join('');
   }
   function drawPreview(){
     clearTimeout(timer);
-    const params=new URLSearchParams({component:previewParam(state),dark:modeDark(state)?'1':'0'});
+    const params=new URLSearchParams({component:previewParam(state,scene),dark:modeDark(state)?'1':'0'});
     $('#theme-preview-status').textContent='Rendering…';
     frame.src=base+'demo.html?'+params.toString();
     $('#theme-code').textContent=rustCode(state);
@@ -211,14 +239,21 @@ export function initThemeDesigner(base){
   function schedule(){clearTimeout(timer);timer=setTimeout(drawPreview,250);}
   root.querySelectorAll('[data-seed]').forEach(control=>control.addEventListener('input',()=>{
     const config=SEEDS.find(([key])=>key===control.dataset.seed);
-    const valid=validateValue(control.value,config[4]);
-    if(valid!==null){state.seed[config[0]]=valid;schedule();}
+    const valid=validateValue(control.value,config[4],config[0]);
+    if(valid!==null){
+      const key=config[0],previous=state.seed[key];
+      state.seed[key]=valid;
+      if(key==='colorPrimary')for(const follow of ['colorInfo','colorLink']){
+        if(state.seed[follow]===previous){state.seed[follow]=valid;$('[data-seed="'+follow+'"]').value=valid;}
+      }
+      schedule();
+    }
   }));
   $('#theme-mode').addEventListener('change',()=>{
     const before=modeDark(state);
     state.algorithm=$('#theme-mode').value;
     if(before!==modeDark(state))for(const [key,,light,darkValue] of SEEDS){
-      if(['colorBgBase','colorTextBase'].includes(key))
+      if(state.seed[key]===(before?darkValue:light))
         state.seed[key]=modeDark(state)?darkValue:light;
     }
     fillAll();schedule();
@@ -226,7 +261,15 @@ export function initThemeDesigner(base){
   $('#theme-preset').addEventListener('change',()=>{
     const chosen=PRESETS[$('#theme-preset').value];
     if(!chosen)return;
+    const old=state.seed.colorPrimary;
+    for(const key of ['colorInfo','colorLink']){
+      if(state.seed[key]===old)state.seed[key]=chosen;
+    }
     state.seed.colorPrimary=chosen;fillAll();schedule();
+  });
+  $('#theme-scene').addEventListener('change',()=>{
+    scene=$('#theme-scene').value;
+    drawPreview();
   });
   $('#theme-motion').addEventListener('change',()=>{
     state.motion=$('#theme-motion').checked;schedule();
@@ -250,7 +293,7 @@ export function initThemeDesigner(base){
     if(!input||input.disabled)return;
     const component=$('#theme-component').value,key=input.dataset.field;
     const kind=FIELDS.find(([field])=>field===key)[2];
-    const value=validateValue(input.value,kind);
+    const value=validateValue(input.value,kind,key);
     if(value===null)return;
     state.components[component]||={};
     state.components[component][key]=value;
@@ -282,6 +325,20 @@ export function initThemeDesigner(base){
     try{await navigator.clipboard.writeText(rustCode(state));$('#theme-message').textContent='Rust code copied.';}
     catch{$('#theme-message').textContent='Clipboard unavailable.';}
   });
-  frame.addEventListener('load',()=>{$('#theme-preview-status').textContent='GPUI / WASM';});
+  frame.addEventListener('load',()=>{
+    $('#theme-preview-status').textContent='Initializing GPUI…';
+  });
+  window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==frame.contentWindow)return;
+    if(event.data?.type==='gpui-antd:ready')
+      $('#theme-preview-status').textContent='GPUI / WASM ready';
+    if(event.data?.type==='gpui-antd:error'){
+      $('#theme-preview-status').textContent='GPUI failed';
+      $('#theme-message').textContent=String(event.data.error||'Renderer error');
+    }
+  });
   fillAll();drawPreview();
 }
+
+// Pure functions are exported for node:test without mounting a DOM or a fake GPUI preview.
+export const tokenStudioLogic={emptyTheme,validated,previewParam,rustCode,validateValue};

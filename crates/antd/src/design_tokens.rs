@@ -246,14 +246,26 @@ pub struct AntMapTokens {
     pub color_primary:Hsla,
     pub color_primary_hover:Hsla,
     pub color_primary_active:Hsla,
+    pub color_primary_bg:Hsla,
+    pub color_primary_border:Hsla,
+    pub color_primary_text:Hsla,
     pub color_bg_container:Hsla,
     pub color_bg_elevated:Hsla,
+    pub color_bg_layout:Hsla,
+    pub color_text:Hsla,
+    pub color_text_secondary:Hsla,
+    pub color_success_bg:Hsla,
+    pub color_warning_bg:Hsla,
+    pub color_error_bg:Hsla,
     pub color_border:Hsla,
+    pub border_radius:f32,
     pub border_radius_sm:f32,
     pub border_radius_lg:f32,
+    pub control_height:f32,
     pub control_height_sm:f32,
     pub control_height_lg:f32,
     pub font_size:f32,
+    pub padding:f32,
     pub motion:bool,
 }
 /// Derived Alias Tokens consumed across multiple components.
@@ -262,12 +274,31 @@ pub struct AntAliasTokens {
     pub color_text:Hsla,
     pub color_text_secondary:Hsla,
     pub color_link:Hsla,
+    pub color_bg_container:Hsla,
+    pub color_bg_layout:Hsla,
+    pub color_border:Hsla,
+    pub color_text_disabled:Hsla,
     pub color_success:Hsla,
     pub color_warning:Hsla,
     pub color_error:Hsla,
     pub padding:f32,
     pub font_size:f32,
     pub border_radius:f32,
+    pub control_height:f32,
+    pub motion:bool,
+}
+
+/// One resolved token, intended for inspection by native apps and the WASM studio.
+/// This exposes GPUI-resolved values, never a second JavaScript theme algorithm.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum AntTokenLayer { Map, Alias }
+#[derive(Clone,Copy,Debug,PartialEq)]
+pub enum AntTokenValue { Color(Hsla), Number(f32), Boolean(bool) }
+#[derive(Clone,Copy,Debug,PartialEq)]
+pub struct AntResolvedToken {
+    pub layer:AntTokenLayer,
+    pub name:&'static str,
+    pub value:AntTokenValue,
 }
 
 fn mix_rgb(a:u32,b:u32,blend:f32)->u32 {
@@ -294,12 +325,17 @@ impl AntTheme {
             if dark {0.26} else {0.19}));
         theme.primary_active=color(mix_rgb(primary,0x000000,
             if dark {0.10} else {0.17}));
+        theme.primary_bg=color(mix_rgb(primary,surface,if dark {0.88} else {0.90}));
+        theme.primary_border=color(mix_rgb(primary,surface,if dark {0.70} else {0.55}));
+        theme.primary_text=color(mix_rgb(primary,
+            if dark {0xffffff} else {0x000000},if dark {0.26} else {0.15}));
         theme.success=color(seed.color_success);
         theme.warning=color(seed.color_warning);
         theme.error=color(seed.color_error);
         theme.color_info=color(seed.color_info);
         theme.color_link=color(seed.color_link);
         theme.surface=color(surface);
+        theme.layout_body=color(mix_rgb(surface,text,if dark {0.10} else {0.045}));
         theme.surface_secondary=color(mix_rgb(surface,text,if dark {0.075} else {0.025}));
         theme.bg_elevated=color(mix_rgb(surface,if dark {0xffffff}else{0xffffff},
             if dark {0.06} else {0.}));
@@ -328,25 +364,92 @@ impl AntTheme {
             color_primary:self.primary,
             color_primary_hover:self.primary_hover,
             color_primary_active:self.primary_active,
+            color_primary_bg:self.primary_bg,
+            color_primary_border:self.primary_border,
+            color_primary_text:self.primary_text,
             color_bg_container:self.surface,
             color_bg_elevated:self.bg_elevated,
+            color_bg_layout:self.layout_body,
+            color_text:self.text,
+            color_text_secondary:self.text_secondary,
+            color_success_bg:self.success_bg,
+            color_warning_bg:self.warning_bg,
+            color_error_bg:self.error_bg,
             color_border:self.border,
+            border_radius:self.border_radius,
             border_radius_sm:self.border_radius_sm,
             border_radius_lg:self.border_radius_lg,
+            control_height:self.control_height,
             control_height_sm:self.control_height_sm,
             control_height_lg:self.control_height_lg,
             font_size:self.font_size,
+            padding:self.padding,
             motion:self.motion,
         }
     }
     pub fn alias_tokens(self)->AntAliasTokens {
         AntAliasTokens {
             color_text:self.text,color_text_secondary:self.text_secondary,
-            color_link:self.color_link,color_success:self.success,
+            color_link:self.color_link,
+            color_bg_container:self.surface,color_bg_layout:self.layout_body,
+            color_border:self.border,color_text_disabled:self.disabled_text,
+            color_success:self.success,
             color_warning:self.warning,color_error:self.error,
             padding:self.padding,font_size:self.font_size,
             border_radius:self.border_radius,
+            control_height:self.control_height,motion:self.motion,
         }
+    }
+    /// Typed, resolved token inspector analogous to `getDesignToken` in Ant Design.
+    /// Components consume these native values and their scoped overrides;
+    /// component token namespaces are inspected separately via `component()`.
+    pub fn resolved_tokens(self)->Vec<AntResolvedToken> {
+        use AntTokenLayer::{Alias,Map};
+        use AntTokenValue::{Color,Number,Boolean};
+        let m=self.map_tokens();
+        let a=self.alias_tokens();
+        let item=|layer,name,value| AntResolvedToken{layer,name,value};
+        vec![
+            item(Map,"colorPrimary",Color(m.color_primary)),
+            item(Map,"colorPrimaryHover",Color(m.color_primary_hover)),
+            item(Map,"colorPrimaryActive",Color(m.color_primary_active)),
+            item(Map,"colorPrimaryBg",Color(m.color_primary_bg)),
+            item(Map,"colorPrimaryBorder",Color(m.color_primary_border)),
+            item(Map,"colorPrimaryText",Color(m.color_primary_text)),
+            item(Map,"colorBgContainer",Color(m.color_bg_container)),
+            item(Map,"colorBgElevated",Color(m.color_bg_elevated)),
+            item(Map,"colorBgLayout",Color(m.color_bg_layout)),
+            item(Map,"colorText",Color(m.color_text)),
+            item(Map,"colorTextSecondary",Color(m.color_text_secondary)),
+            item(Map,"colorSuccessBg",Color(m.color_success_bg)),
+            item(Map,"colorWarningBg",Color(m.color_warning_bg)),
+            item(Map,"colorErrorBg",Color(m.color_error_bg)),
+            item(Map,"colorBorder",Color(m.color_border)),
+            item(Map,"borderRadius",Number(m.border_radius)),
+            item(Map,"borderRadiusSM",Number(m.border_radius_sm)),
+            item(Map,"borderRadiusLG",Number(m.border_radius_lg)),
+            item(Map,"controlHeight",Number(m.control_height)),
+            item(Map,"controlHeightSM",Number(m.control_height_sm)),
+            item(Map,"controlHeightLG",Number(m.control_height_lg)),
+            item(Map,"fontSize",Number(m.font_size)),
+            item(Map,"padding",Number(m.padding)),
+            item(Map,"motion",Boolean(m.motion)),
+            item(Alias,"colorText",Color(a.color_text)),
+            item(Alias,"colorTextSecondary",Color(a.color_text_secondary)),
+            item(Alias,"colorTextDisabled",Color(a.color_text_disabled)),
+            item(Alias,"colorLink",Color(a.color_link)),
+            item(Alias,"colorBgContainer",Color(a.color_bg_container)),
+            item(Alias,"colorBgLayout",Color(a.color_bg_layout)),
+            item(Alias,"colorBorder",Color(a.color_border)),
+            item(Alias,"colorSuccess",Color(a.color_success)),
+            item(Alias,"colorWarning",Color(a.color_warning)),
+            item(Alias,"colorError",Color(a.color_error)),
+            item(Alias,"padding",Number(a.padding)),
+            item(Alias,"fontSize",Number(a.font_size)),
+            item(Alias,"borderRadius",Number(a.border_radius)),
+            item(Alias,"controlHeight",Number(a.control_height)),
+            item(Alias,"motion",Boolean(a.motion)),
+        ]
     }
     pub fn component(self,name:AntComponent)->AntComponentToken {
         self.components.get(name)
@@ -398,6 +501,28 @@ mod tests {
         assert_eq!(theme.component(AntComponent::Card).padding,Some(32.));
         assert_eq!(theme.component(AntComponent::Card).border_radius,Some(16.));
         assert_eq!(theme.component(AntComponent::Button).padding,None);
+    }
+    #[test]
+    fn resolved_inspector_reflects_seed_and_preserves_token_layers() {
+        let mut seed=AntSeedTokens::default();
+        seed.color_primary=0x9a44b2;
+        seed.color_bg_base=0xeef8ec;
+        seed.motion=false;
+        let t=AntTheme::from_seed(seed,AntThemeAlgorithm::Compact);
+        let tokens=t.resolved_tokens();
+        assert_eq!(tokens.iter().filter(|v| v.name=="colorPrimaryBg" &&
+            v.layer==AntTokenLayer::Map).count(),1);
+        assert_eq!(tokens.iter().find(|v|v.name=="colorPrimaryBg").unwrap().value,
+            AntTokenValue::Color(t.primary_bg));
+        assert_eq!(tokens.iter().find(|v|v.name=="colorBgLayout").unwrap().value,
+            AntTokenValue::Color(t.layout_body));
+        assert_eq!(tokens.iter().find(|v|v.name=="motion").unwrap().value,
+            AntTokenValue::Boolean(false));
+        assert_eq!(tokens.iter().find(|v|v.name=="controlHeight").unwrap().value,
+            AntTokenValue::Number(28.));
+        assert!(tokens.iter().any(|v|v.layer==AntTokenLayer::Alias && v.name=="colorTextDisabled"));
+        assert_ne!(t.primary_bg,AntTheme::light().primary_bg);
+        assert_ne!(t.layout_body,AntTheme::light().layout_body);
     }
     #[test]
     fn invalid_scalar_values_are_clamped() {

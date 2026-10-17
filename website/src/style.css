@@ -319,3 +319,96 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 
 .example-card iframe.wasm-iframe[src*="component=Menu"] { height: 1240px; }
 .example-card iframe.wasm-iframe[src*="component=MenuTree"] { height: 670px; }
+
+/* Token Studio: the editor is DOM-only; every preview pixel comes from Rust GPUI/WASM. */
+.app-shell.studio-route { grid-template-columns: 248px minmax(0, 1fr); }
+.app-shell.studio-route .toc { display: none; }
+.theme-designer.page-container { max-width: 1600px; width: 100%; padding: 34px 34px 80px; }
+.theme-designer .component-heading { margin: 14px 0 22px; }
+.theme-designer .component-heading h1 { font-size: clamp(28px,3.4vw,40px); letter-spacing: -1.2px; }
+.theme-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 16px;
+  border: 1px solid var(--border); border-radius: 12px 12px 0 0; background: var(--soft); }
+.theme-toolbar label { display: flex; flex-direction: column; gap: 4px; font-size: 11px;
+  font-weight: 650; color: var(--muted); }
+.theme-toolbar select { min-width: 135px; height: 36px; padding: 0 9px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 7px; font: inherit; }
+.theme-toolbar button, .theme-import { display: inline-flex; align-items: center; justify-content: center;
+  min-height: 36px; padding: 7px 13px; color: var(--ink); border: 1px solid var(--border);
+  border-radius: 7px; background: var(--surface); font-size: 12px; cursor: pointer; }
+.theme-toolbar button:hover,.theme-import:hover { border-color: var(--blue); color: var(--blue); }
+.theme-import input { display: none; }
+.theme-workspace { display: grid; grid-template-columns: minmax(300px, 370px) minmax(0, 1fr);
+  gap: 22px; align-items: start; padding: 22px; border: 1px solid var(--border);
+  border-top: 0; border-radius: 0 0 12px 12px; }
+.theme-edit-panel { min-width: 0; display: flex; flex-direction: column; gap: 15px; }
+.theme-edit-panel details { padding: 0 14px 14px; border: 1px solid var(--border);
+  border-radius: 9px; background: var(--surface); box-shadow: var(--shadow); }
+.theme-edit-panel summary { cursor: pointer; margin: 0 -14px; padding: 14px;
+  font-size: 13px; font-weight: 700; color: var(--ink); }
+.theme-edit-panel details[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+.theme-edit-panel details > label { display: block; margin: 8px 0 12px; }
+.theme-edit-panel details > label > select { width: 100%; margin-top: 7px;
+  padding: 8px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; }
+.token-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.token-field { display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); }
+.token-field > span { display: flex; align-items: center; gap: 5px; min-height: 21px;
+  font-size: 11px; font-weight: 650; color: var(--ink); }
+.token-field > span input[type="checkbox"] { margin: 0; accent-color: var(--blue); }
+.token-field em { margin-left: auto; padding: 1px 5px; color: var(--blue);
+  background: var(--soft-blue); border-radius: 4px; font-style: normal; font-size: 9px; }
+.token-field input[type="color"] { width: 100%; height: 36px; padding: 3px;
+  cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+.token-field input[type="number"] { width: 100%; height: 36px; padding: 7px;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.token-field input:focus-visible, .theme-toolbar select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.token-field small { font-size: 10px; font-family: ui-monospace,monospace; color: var(--muted); overflow-wrap: anywhere; }
+.token-field-unwired { opacity: .55; }
+.token-field-unwired em { color: var(--muted); background: var(--line); }
+.theme-caption,.theme-coverage,.theme-studio-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.theme-coverage { padding: 8px 10px; background: var(--soft-blue); border-radius: 6px; }
+.token-motion { display: flex !important; flex-direction: row; align-items: center; gap: 8px; }
+.token-motion input { accent-color: var(--blue); }
+.theme-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.theme-summary > div { display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid var(--line);
+  padding: 8px 2px; font-size: 11px; min-width: 0; }
+.theme-summary > div b { font-weight: 500; color: var(--muted); }
+.theme-summary > div span { display: flex; align-items: center; gap: 7px; font-family: ui-monospace,monospace; color: var(--ink); }
+.theme-summary i { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--border); border-radius: 4px; }
+.theme-edit-panel #theme-copy { padding: 6px 10px; border-radius: 6px; color: var(--blue);
+  background: var(--soft-blue); border: 1px solid var(--border); cursor: pointer; }
+.theme-code { padding: 12px; max-height: 340px; overflow: auto; background: var(--soft);
+  border-radius: 8px; border: 1px solid var(--border); color: var(--ink);
+  font: 11px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace; white-space: pre; }
+.theme-live-panel { min-width: 0; position: sticky; top: 88px; border: 1px solid var(--border);
+  padding: 18px; border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+.theme-preview-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 13px; }
+.theme-preview-title h2 { font-size: 19px; letter-spacing: -.35px; margin: 4px 0 0; }
+#theme-preview-status { color: var(--muted); font-size: 11px; }
+.theme-live-panel iframe { display: block; width: 100%; height: min(680px, 68vh); min-height: 480px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--soft); }
+.theme-live-panel .theme-caption { margin: 12px 0 0; }
+.theme-studio-note { margin: 18px 0 0; }
+.theme-studio-note a { color: var(--blue); }
+@media (max-width: 1250px) {
+  .theme-workspace { grid-template-columns: minmax(250px,330px) minmax(0,1fr); gap: 13px; padding: 13px; }
+  .theme-designer.page-container { padding: 26px 20px 60px; }
+  .token-form-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 1000px) {
+  .theme-workspace { grid-template-columns: minmax(0,1fr); }
+  .token-form-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .theme-live-panel { position: static; }
+  .theme-live-panel iframe { height: 600px; }
+}
+@media (max-width: 700px) {
+  .app-shell.studio-route { grid-template-columns: minmax(0,1fr); }
+  .theme-designer.page-container { padding: 22px 15px 60px; }
+  .theme-workspace { padding: 10px; }
+  .token-form-grid { grid-template-columns: minmax(0,1fr); }
+  .theme-toolbar { padding: 10px; }
+  .theme-toolbar label { flex: 1 1 120px; }
+  .theme-toolbar select { width: 100%; min-width: 0; }
+  .theme-live-panel { padding: 10px; }
+  .theme-live-panel iframe { height: 540px; min-height: 450px; }
+}

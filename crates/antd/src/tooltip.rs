@@ -12,6 +12,7 @@ use gpui_kit::{
 use gpui_kit::component::tooltip::Tooltip as KitTooltip;
 use gpui_kit::prelude::FluentBuilder as _;
 use crate::AntTheme;
+use crate::design_tokens::AntComponent;
 
 /// Descriptive tooltip attached to a GPUI element.
 ///
@@ -59,14 +60,15 @@ impl RenderOnce for AntTooltip {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let theme=self.theme;
         let title=self.title;
+        let comp=theme.component(AntComponent::Tooltip);
         div().id(self.id)
             .when(!self.disabled, |this| {
                 this.tooltip(move |window, cx| {
                     KitTooltip::new(title.clone())
-                        .bg(theme.text)
-                        .text_color(theme.surface)
-                        .border_color(theme.text_secondary)
-                        .rounded(px(6.))
+                        .bg(comp.color_bg.unwrap_or(theme.text))
+                        .text_color(comp.color_text.unwrap_or(theme.surface))
+                        .border_color(comp.color_border.unwrap_or(theme.text_secondary))
+                        .rounded(px(comp.border_radius.unwrap_or(6.)))
                         .build(window, cx)
                 })
             })
