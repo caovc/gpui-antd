@@ -104,6 +104,82 @@ try {
       await page.close();
     }
   }
+  // These tests click actual pixels on the Rust/GPUI canvas, rather than
+  // DOM controls. A large painted-pixel difference is required so a mere
+  // hover tint does not count as an opened popup or collapsed dashboard.
+  // Keep both screenshots as CI artifacts for manual visual review.
+  const interactions = [
+    { name: 'Dropdown', x: 76, y: 78, minChanged: 5500 },
+    { name: 'Popover', x: 78, y: 78, minChanged: 6500 },
+    { name: 'Modal', x: 82, y: 78, minChanged: 25000 },
+    { name: 'Popconfirm', x: 82, y: 78, minChanged: 6500 },
+    { name: 'Layout', x: 98, y: 500, minChanged: 12000 },
+  ];
+
+  const changedPixels = async (page, beforePng, afterPng) => page.evaluate(async ({before,after}) => {
+    async function decode(base64) {
+      const binary = atob(base64);
+      const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+      const bitmap = await createImageBitmap(new Blob([bytes], {type:'image/png'}));
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext('2d', {willReadFrequently:true});
+      ctx.drawImage(bitmap,0,0);
+      bitmap.close();
+      return ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    }
+    const a=await decode(before), b=await decode(after);
+    if (a.length !== b.length) throw new Error('Screenshot dimensions changed');
+    let count=0;
+    for (let i=0;i<a.length;i+=4) {
+      if (Math.abs(a[i]-b[i])>35 || Math.abs(a[i+1]-b[i+1])>35 ||
+          Math.abs(a[i+2]-b[i+2])>35) count++;
+    }
+    return count;
+  }, {before:beforePng.toString('base64'),after:afterPng.toString('base64')});
+
+  for (const spec of interactions) {
+    const page=await browser.newPage({viewport:{width:900,height:550}});
+    const errors=[];
+    page.on('pageerror', err => errors.push(err.message));
+    page.on('console', message => {
+      if (message.type() !== 'error') return;
+      const detail=message.text().trim();
+      if (detail !== 'Wasm assets loading, will be available soon...') errors.push(detail);
+    });
+    try {
+      await page.goto(base+'demo.html?component='+spec.name,{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(() => {
+        const canvas=document.querySelector('canvas');
+        return canvas && canvas.width>0 && canvas.height>0 &&
+          !document.querySelector('#status');
+      },null,{timeout:60000});
+      await page.waitForTimeout(800);
+      const baseline=await page.screenshot({
+        path:join(screenshots,spec.name.toLowerCase()+'-before.png')
+      });
+      await page.mouse.click(spec.x,spec.y);
+      await page.mouse.move(880,530);
+      await page.waitForTimeout(800);
+      const opened=await page.screenshot({
+        path:join(screenshots,spec.name.toLowerCase()+'-after.png')
+      });
+      const diff=await changedPixels(page,baseline,opened);
+      if(diff<spec.minChanged) {
+        throw new Error(spec.name+' changed only '+diff+' pixels after click; expected >= '+spec.minChanged);
+      }
+      if(errors.length) throw new Error('Browser errors: '+errors.join('; '));
+      console.log('PASS: '+spec.name+' GPUI canvas interaction changed '+diff+' pixels');
+    } catch(error) {
+      failures++;
+      console.error('FAIL: '+spec.name+' native GPUI pointer interaction',String(error));
+      console.error('Browser errors:',errors.join('; '));
+    } finally {
+      await page.close();
+    }
+  }
+
   // Regression: long official icon names are visible, and all 848 names
   // remain browsable instead of the first 80 results being silently clipped.
   const iconDocs = await browser.newPage({ viewport: {width: 980, height: 700} });
