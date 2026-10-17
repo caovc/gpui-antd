@@ -61,27 +61,40 @@ async function paintedIcons(page,png,entries){
       const x1=Math.round((24+136*col+97)*ratio);
       const y0=Math.round((24+112*row+13)*ratio);
       const y1=Math.round((24+112*row+71)*ratio);
-      let painted=0;
+      let painted=0,secondary=0;
       for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){
         if(x>=cv.width||y>=cv.height)continue;
         const k=(y*cv.width+x)*4;
         const r=data[k],g=data[k+1],b=data[k+2];
         if(icon.style==='twotone'){
           if(r<115 && g>52 && g<200 && b>185 && b-r>95)painted++;
+          // The secondary fill is intentionally light; count its own pixels
+          // separately so missing interior details are visible in report.json.
+          if(r>=224 && r<=236 && g>=238 && g<=250 && b>=250)secondary++;
         }else{
           if(r<145 && g<145 && b<145)painted++;
         }
       }
-      counts.push({name:icon.name,style:icon.style,pixels:painted});
+      const area=(x1-x0)*(y1-y0);
+      counts.push({
+        name:icon.name,style:icon.style,pixels:painted,
+        secondaryPixels:secondary,coverage:Math.round(1000*painted/area)/10,
+      });
     }
     return counts;
   },{base64:png.toString('base64'),entries});
 }
 
 let browser;
-const report={count:catalog.count,pages:Math.ceil(catalog.count/24),
-  checked:0,failed:[],screenshots:[],check:'GPU glyph paint presence'};
 const sample=process.argv.includes('--sample');
+const dpr=Number(process.argv.find(arg=>arg.startsWith('--dpr='))?.split('=')[1]??1);
+if(![1,2].includes(dpr))throw new Error('Only --dpr=1 and --dpr=2 are supported');
+const report={
+  count:catalog.count,revision:catalog.revision,gitSha:process.env.GITHUB_SHA??null,
+  pages:Math.ceil(catalog.count/24),sample,deviceScaleFactor:dpr,
+  checked:0,failed:[],suspicious:[],results:[],screenshots:[],
+  check:'GPUI GPU glyph paint presence and palette/coverage diagnostics',
+};
 const samplePages=[0,18,29,35];
 try{
   await ready();
@@ -92,7 +105,7 @@ try{
   const pages=sample?samplePages:Array.from({length:report.pages},(_,i)=>i);
   for(const index of pages){
     const entries=catalog.icons.slice(index*24,(index+1)*24);
-    const page=await browser.newPage({viewport:{width:930,height:545}});
+    const page=await browser.newPage({viewport:{width:930,height:545},deviceScaleFactor:dpr});
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     page.on('console',message=>{
@@ -120,6 +133,13 @@ try{
       const missing=counts.filter(icon=>icon.pixels<7);
       if(errors.length)report.failed.push({page:index,errors});
       for(const entry of missing)report.failed.push({page:index,...entry});
+      report.results.push(...counts.map(icon=>({page:index,...icon})));
+      // A near-solid mask often indicates incorrectly flattened paths.
+      // Record suspected regressions for review without misrepresenting this
+      // heuristic as an official reference-pixel comparison.
+      for(const entry of counts.filter(icon=>icon.coverage>=90)) {
+        report.suspicious.push({page:index,...entry});
+      }
       report.checked+=counts.length;
       report.screenshots.push(filename);
       console.log('AUDIT '+(index+1)+'/'+report.pages+': '+counts.length+' GPUI icons; '+
@@ -132,8 +152,9 @@ try{
     }
   }
   await writeFile(join(output,'report.json'),JSON.stringify(report,null,2)+'\n');
-  console.log('GPUI icon audit: '+report.checked+' icon previews checked, '+
-    report.failed.length+' failures; '+report.screenshots.length+' mosaics archived');
+  console.log('GPUI icon audit: '+report.checked+' icon previews checked at '+dpr+'x, '+
+    report.failed.length+' failures, '+report.suspicious.length+
+    ' high-coverage candidates; '+report.screenshots.length+' mosaics archived');
   if(report.failed.length)throw new Error('Official icon audit failed: '+JSON.stringify(report.failed.slice(0,12)));
   if(!sample && report.checked!==848)throw new Error('Expected 848 checked icon previews');
 }finally{

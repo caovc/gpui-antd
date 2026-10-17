@@ -68,10 +68,17 @@ jobs:
           npx playwright install --with-deps chromium
           npm run smoke
 
-      - name: Audit real GPUI icon glyphs at catalog boundaries
-        timeout-minutes: 10
+      - name: Audit official icon catalog on the real GPUI canvas
+        timeout-minutes: 20
         working-directory: website
-        run: npm run audit:icons -- --sample
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Validate four catalog boundary pages at Retina scale on PRs.
+            npm run audit:icons -- --sample --dpr=2
+          else
+            # Main deployments and manually dispatched runs verify all 848.
+            npm run audit:icons
+          fi
 
       - name: Archive icon audit mosaics and report
         if: always()
