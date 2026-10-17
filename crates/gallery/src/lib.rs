@@ -22,6 +22,7 @@ use gpui_kit::component::time_field::TimePrecision;
 use gpui_kit::component::IndexPath;
 use gpui_kit::assets::Assets;
 use gpui_kit::base::StyledExt as _;
+use gpui_kit::prelude::FluentBuilder as _;
 #[cfg(target_family = "wasm")]
 use gpui_kit::App;
 
