@@ -35,6 +35,10 @@ pub struct AntTheme {
     pub success_bg: Hsla,
     pub warning_bg: Hsla,
     pub error_bg: Hsla,
+    pub layout_body: Hsla,
+    pub layout_dark: Hsla,
+    pub layout_dark_text: Hsla,
+    pub layout_sider_hover: Hsla,
     pub control_height: f32,
     pub border_radius: f32,
 }
@@ -64,6 +68,10 @@ impl AntTheme {
             success_bg: color(0xf6ffed),
             warning_bg: color(0xfffbe6),
             error_bg: color(0xfff2f0),
+            layout_body: color(0xf5f5f5),
+            layout_dark: color(0x001529),
+            layout_dark_text: color(0xffffff),
+            layout_sider_hover: color(0x0c2b45),
             control_height: 32.0,
             border_radius: 6.0,
         }
@@ -89,6 +97,10 @@ impl AntTheme {
             success_bg: color(0x162312),
             warning_bg: color(0x2b2111),
             error_bg: color(0x2c1618),
+            layout_body: color(0x000000),
+            layout_dark: color(0x111a2c),
+            layout_dark_text: color(0xf3f3f3),
+            layout_sider_hover: color(0x1f314d),
             control_height: 32.0,
             border_radius: 6.0,
         }
