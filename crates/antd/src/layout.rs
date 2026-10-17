@@ -2,7 +2,7 @@
 //! All geometry is evaluated by GPUI's native/WASM layout engine.
 
 use gpui_kit::{
-    AnyElement, App, IntoElement, ParentElement as _, RenderOnce, Window, div, px, relative,
+    AnyElement, App, IntoElement, ParentElement as _, RenderOnce, Styled as _, Window, div, px, relative,
 };
 use gpui_kit::prelude::FluentBuilder as _;
 
