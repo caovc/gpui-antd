@@ -131,6 +131,12 @@ the change has passed CI and been deployed. The page offers:
 5. GPU readiness/error feedback from the embedded demo instead of using
    iframe `load` as a false renderer-success signal.
 
+The toolbar includes a **Viewport** selector for Desktop (fluid),
+Tablet (768 logical CSS pixels), and Mobile (390px). It changes the
+**actual Rust/GPUI WASM iframe viewport** without restarting the preview;
+the selected viewport is a local editor preference, not an exported token.
+Browser smoke asserts the real iframe width and unchanged WASM source URL.
+
 The toolbar includes a **Copy preview URL** action. The copied URL opens the
 same real Rust/GPUI WASM scene with Seed, Map, Alias, and Component overrides;
 it does not render an HTML screenshot or replicate the design in the DOM.
