@@ -27,6 +27,9 @@ pub mod tooltip;
 pub mod app_layout;
 pub mod overlays;
 pub mod menu;
+pub mod navigation_extra;
+pub mod data_extra;
+pub mod feedback_extra;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
 pub use display::{AntAlert, AntBadge, AntCard, AntDivider, AntProgress, AntTag, Tone};
@@ -48,3 +51,7 @@ pub use app_layout::{AntLayout, AntHeader, AntSider, AntContent, AntFooter};
 pub use overlays::{AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm};
 
 pub use menu::{AntMenu, AntMenuItem};
+
+pub use navigation_extra::{AntPagination, PageSlot, AntSteps, AntStep, StepStatus};
+pub use data_extra::{AntRate, AntCollapse, AntCollapseItem, AntDescriptions, AntDescriptionItem};
+pub use feedback_extra::{AntResult, ResultStatus, AntSkeleton, AntSpin};
