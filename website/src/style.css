@@ -220,3 +220,6 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 
 /* Native calendar popovers need a taller GPUI canvas than simple controls. */
 .example-card iframe.wasm-iframe[src*="component=DatePicker"] { height: 540px; }
+
+/* Four native form fields plus inline errors need a taller preview. */
+.example-card iframe.wasm-iframe[src*="component=Form"] { height: 650px; }

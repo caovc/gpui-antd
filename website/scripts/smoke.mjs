@@ -60,7 +60,7 @@ try {
     ],
   });
 
-  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker'];
+  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form'];
   for (const name of components) {
     const page = await browser.newPage({ viewport: { width: 900, height: 550 } });
     const errors = [];
