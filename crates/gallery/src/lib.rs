@@ -1,15 +1,18 @@
 //! One set of real Rust/GPUI previews for desktop and browser WebAssembly.
 extern crate gpui_kit as gpui;
 
-use std::collections::BTreeMap;
+use std::{borrow::Cow, collections::BTreeMap};
 
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
     AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntDatePicker, AntForm, AntFormItem, FormSchema, FormRule, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
+    AntIcon, AntIconName, AntIconAssets, AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone,
+    AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     StatefulInteractiveElement as _, Styled as _, Window, WindowOptions, div, px,
+    AssetSource, SharedString,
 };
 use gpui_kit::component::input::InputState;
 use gpui_kit::component::select::{SelectState, SearchableVec};
@@ -21,9 +24,47 @@ use gpui_kit::base::StyledExt as _;
 #[cfg(target_family = "wasm")]
 use gpui_kit::App;
 
+/// Retains GPUI Kit's default component icon source while also resolving
+/// official Ant Design SVGs from embedded Rust assets. On WASM, GPUI Kit's
+/// existing async icon loader is kept only for non-Ant paths.
+#[derive(Default)]
+struct GalleryAssets {
+    #[cfg(target_family = "wasm")]
+    fallback: Option<Assets>,
+}
+impl AssetSource for GalleryAssets {
+    fn load(&self, path: &str) -> gpui_kit::Result<Option<Cow<'static, [u8]>>> {
+        if path.starts_with("antd-icons/") {
+            return AntIconAssets.load(path);
+        }
+        #[cfg(not(target_family = "wasm"))]
+        { Assets.load(path) }
+        #[cfg(target_family = "wasm")]
+        { self.fallback.as_ref().expect("WASM icons source").load(path) }
+    }
+    fn list(&self, prefix: &str) -> gpui_kit::Result<Vec<SharedString>> {
+        let mut icons = AntIconAssets.list(prefix)?;
+        #[cfg(not(target_family = "wasm"))]
+        icons.extend(Assets.list(prefix)?);
+        #[cfg(target_family = "wasm")]
+        icons.extend(self.fallback.as_ref().expect("WASM icons source").list(prefix)?);
+        icons.sort();
+        icons.dedup();
+        Ok(icons)
+    }
+}
+impl GalleryAssets {
+    fn new() -> Self {
+        Self {
+            #[cfg(target_family = "wasm")]
+            fallback: Some(Assets::new("https://gpui-kit.com/gallery/")),
+        }
+    }
+}
+
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider",
+    "Alert", "Card", "Progress", "Divider", "Icons", "Typography", "Space", "Flex", "Grid",
 ];
 
 pub struct Gallery {
@@ -427,6 +468,152 @@ impl Gallery {
             .child(AntProgress::new(100.).tone(Tone::Blue).theme(t))
             .into_any_element()
     }
+    fn icons_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        let catalog = |style: &'static str| {
+            div().flex().flex_wrap().gap(px(14.))
+                .children(AntIconName::ALL.iter()
+                    .filter(move |icon| icon.style() == style)
+                    .map(move |name| {
+                        div().w(px(94.)).flex().flex_col().items_center().gap(px(8.))
+                            .p(px(8.))
+                            .rounded(px(7.))
+                            .border_1().border_color(t.border)
+                            .child(AntIcon::new(*name).size(26.).theme(t))
+                            .child(div().w_full().text_size(px(10.)).text_color(t.text_secondary)
+                                .truncate().child(name.ant_name()))
+                    }))
+        };
+        div().flex().flex_col().gap(px(16.))
+            .child(label("Outlined — official Ant Design SVGs", t))
+            .child(catalog("outlined"))
+            .child(label("Filled", t))
+            .child(catalog("filled"))
+            .child(label("Two Tone (primary blue and light fill)", t))
+            .child(catalog("twotone"))
+            .child(label("Theme tint and animated loading", t))
+            .child(
+                AntSpace::new().size(SpaceSize::Middle)
+                    .child(AntIcon::new(AntIconName::HeartFilled).size(28.).color(t.error))
+                    .child(AntIcon::new(AntIconName::CheckOutlined).size(28.).color(t.success))
+                    .child(AntIcon::new(AntIconName::InfoCircleOutlined).size(28.).color(t.primary))
+                    .child(AntIcon::loading().size(26.).color(t.primary)),
+            )
+            .into_any_element()
+    }
+
+    fn typography_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        AntTypography::new().gap(15.)
+            .child(AntTitle::new("Ant Design Typography").level(1).theme(t))
+            .child(AntTitle::new("Heading level 2").level(2).theme(t))
+            .child(AntTitle::new("Heading level 3").level(3).theme(t))
+            .child(AntTitle::new("Heading level 4").level(4).theme(t))
+            .child(AntTitle::new("Heading level 5").level(5).theme(t))
+            .child(AntParagraph::new(
+                "Typography offers readable visual hierarchy and consistent line height.                  The primitives below are real GPUI text elements with native callbacks."
+            ).theme(t).width(680.))
+            .child(AntSpace::new().wrap(true).size(SpaceSize::Middle)
+                .child(AntText::new("Strong text").theme(t).strong(true))
+                .child(AntText::new("Italic text").theme(t).italic(true))
+                .child(AntText::new("Underline").theme(t).underline(true))
+                .child(AntText::new("Deleted").theme(t).deleted(true))
+                .child(AntText::new("Marked").theme(t).marked(true))
+                .child(AntText::new("inline code").theme(t).code(true)))
+            .child(AntSpace::new().wrap(true).size(SpaceSize::Middle)
+                .child(AntText::new("Secondary").theme(t).tone(TextTone::Secondary))
+                .child(AntText::new("Success").theme(t).tone(TextTone::Success))
+                .child(AntText::new("Warning").theme(t).tone(TextTone::Warning))
+                .child(AntText::new("Danger").theme(t).tone(TextTone::Danger))
+                .child(AntText::new("Disabled").theme(t).disabled(true)))
+            .child(AntText::new("Click the copy icon to write this text to your clipboard")
+                .theme(t).copyable("typography-copy"))
+            .child(AntLink::new("typography-link", "Open the Ant Design documentation", "https://ant.design/components/typography")
+                .theme(t).underline(true))
+            .child(AntParagraph::new(
+                "A long single-line paragraph that is truncated to show how Ant Design ellipsis behaves when a container has a limited width."
+            ).theme(t).ellipsis(true).width(360.))
+            .into_any_element()
+    }
+
+    fn space_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(22.))
+            .child(label("Space Small · 8px", t))
+            .child(AntSpace::new().size(SpaceSize::Small)
+                .child(AntButton::new("space-small-1", "Cancel").theme(t))
+                .child(AntButton::new("space-small-2", "Save").theme(t).primary()))
+            .child(label("Space Middle · 16px", t))
+            .child(AntSpace::new().size(SpaceSize::Middle)
+                .child(AntTag::new("Design").tone(Tone::Blue).theme(t))
+                .child(AntTag::new("Components").tone(Tone::Green).theme(t))
+                .child(AntTag::new("Rust").tone(Tone::Purple).theme(t)))
+            .child(label("Space Large · 24px (vertical)", t))
+            .child(AntSpace::new().size(SpaceSize::Large).vertical(true).align(FlexAlign::Start)
+                .child(AntText::new("First item").theme(t))
+                .child(AntText::new("Second item").theme(t))
+                .child(AntText::new("Third item").theme(t)))
+            .child(label("Wrap and custom size", t))
+            .child(AntSpace::new().size(SpaceSize::Custom(9.)).wrap(true)
+                .child(AntTag::new("Alpha").theme(t))
+                .child(AntTag::new("Beta").tone(Tone::Blue).theme(t))
+                .child(AntTag::new("Gamma").tone(Tone::Green).theme(t))
+                .child(AntTag::new("Delta").tone(Tone::Gold).theme(t)))
+            .into_any_element()
+    }
+
+    fn flex_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        let chip = |name: &'static str| {
+            div().rounded(px(6.)).bg(t.info_bg).border_1().border_color(t.primary)
+                .text_color(t.primary).px(px(14.)).py(px(9.)).child(name)
+        };
+        div().flex().flex_col().gap(px(20.))
+            .child(label("Horizontal / SpaceBetween", t))
+            .child(AntFlex::new().gap(12.).fill(true)
+                .justify(FlexJustify::SpaceBetween)
+                .child(chip("Left")).child(chip("Center")).child(chip("Right")))
+            .child(label("Centered", t))
+            .child(AntFlex::new().gap(14.).fill(true)
+                .justify(FlexJustify::Center)
+                .child(chip("A")).child(chip("B")).child(chip("C")))
+            .child(label("Vertical, aligned start", t))
+            .child(AntFlex::new().vertical(true).gap(9.).align(FlexAlign::Start)
+                .child(chip("Row one"))
+                .child(chip("Row two"))
+                .child(chip("Row three")))
+            .child(label("Wrapping children", t))
+            .child(AntFlex::new().wrap(true).gap(11.).fill(true)
+                .child(chip("Tag one")).child(chip("Tag two")).child(chip("Tag three"))
+                .child(chip("Tag four")))
+            .into_any_element()
+    }
+
+    fn grid_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        let cell = |label: &'static str| {
+            div().w_full().h(px(42.))
+                .flex().items_center().justify_center()
+                .rounded(px(5.)).bg(t.info_bg)
+                .border_1().border_color(t.primary)
+                .text_color(t.primary).child(label)
+        };
+        div().flex().flex_col().gap(px(19.))
+            .child(label("24-column responsive composition", t))
+            .child(AntRow::new().gutter(12.)
+                .child(AntCol::new(24).child(cell("col-24"))))
+            .child(AntRow::new().gutter(12.)
+                .child(AntCol::new(12).child(cell("col-12")))
+                .child(AntCol::new(12).child(cell("col-12"))))
+            .child(AntRow::new().gutter(12.)
+                .child(AntCol::new(8).child(cell("col-8")))
+                .child(AntCol::new(8).child(cell("col-8")))
+                .child(AntCol::new(8).child(cell("col-8"))))
+            .child(AntRow::new().gutter(12.)
+                .child(AntCol::new(6).child(cell("col-6")))
+                .child(AntCol::new(6).child(cell("col-6")))
+                .child(AntCol::new(6).child(cell("col-6")))
+                .child(AntCol::new(6).child(cell("col-6"))))
+            .child(AntRow::new().gutter(12.)
+                .child(AntCol::new(8).offset(8).child(cell("offset-8 col-8"))))
+            .into_any_element()
+    }
+
     fn divider_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
         div().flex().flex_col().w_full().gap(px(18.))
             .child("Text above")
@@ -461,6 +648,11 @@ impl Render for Gallery {
             "Card"=>self.card_demo(t),
             "Progress"=>self.progress_demo(t),
             "Divider"=>self.divider_demo(t),
+            "Icons"=>self.icons_demo(t),
+            "Typography"=>self.typography_demo(t),
+            "Space"=>self.space_demo(t),
+            "Flex"=>self.flex_demo(t),
+            "Grid"=>self.grid_demo(t),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")
@@ -476,7 +668,7 @@ impl Render for Gallery {
 #[cfg(not(target_family="wasm"))]
 pub fn run_desktop() {
     gpui_kit::application()
-        .with_assets(Assets)
+         .with_assets(GalleryAssets::new())
         .run(|cx| {
             gpui_kit::init(cx);
             gpui_kit::open_window(WindowOptions::default(),cx,|window,cx|{
@@ -512,7 +704,7 @@ mod browser {
         let _=console_log::init_with_level(log::Level::Info);
         gpui_kit::platform::web_init();
 
-        let app=web_application().with_assets(Assets::new("https://gpui-kit.com/gallery/"));
+        let app=web_application().with_assets(GalleryAssets::new());
         let component=component.unwrap_or_else(||"Button".to_owned());
         let dark=dark.unwrap_or(false);
         APPLICATION.with(|app_handle|{
