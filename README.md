@@ -424,3 +424,7 @@ GPU APIs; the documentation website does not fake them with HTML controls.
 
 See [component matrix](docs/COMPONENT_MATRIX.md) for the remaining catalog and
 known Ant Design 6 API / accessibility / visual parity gaps.
+
+## Native List
+
+`AntList` / `AntListItem` implement density, icons, descriptive text, native action slots, optional header/footer, row separators, loading and empty states using the same Rust/GPUI implementation in desktop and WASM. Virtualization and responsive grid-style listing are still pending.
