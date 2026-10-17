@@ -1460,6 +1460,67 @@ impl Gallery {
 
     /// Test-only route "MenuTree" and the embedded nested example on the
     /// public Menu page both use this same real Rust GPUI view.
+    /// Collapsed icon-only navigation with controlled native anchored flyouts.
+    /// A click outside or Escape dismisses the popover; clicking a leaf both
+    /// selects the route and closes the flyout.
+    fn menu_collapsed_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_select=cx.listener(|this,key:&SharedString,_,cx|{
+            this.menu_selected=key.to_string();cx.notify();
+        });
+        let on_open=cx.listener(|this,change:&(SharedString,bool),_,cx|{
+            let (key,open)=change;
+            if *open {
+                this.menu_open_keys.insert(key.to_string());
+            } else {
+                this.menu_open_keys.remove(key.as_ref());
+            }
+            cx.notify();
+        });
+        div().w_full().min_h(px(470.)).flex().flex_col().gap(px(12.))
+            .child(label("Collapsed icon menu · click or ArrowRight for a native GPUI flyout",theme))
+            .child(div().flex().gap(px(24.))
+                .child(div().w(px(76.)).flex_none().rounded(px(7.))
+                    .bg(theme.layout_dark)
+                    .child(AntMenu::new("menu-collapsed-flyouts").theme(theme).dark(true)
+                        .inline_collapsed(true)
+                        .selected_key(self.menu_selected.clone())
+                        .open_keys(self.menu_open_keys.iter())
+                        .on_open_change(move|key,open,window,cx|{
+                            on_open(&(key,open),window,cx)
+                        })
+                        .on_select(move|key,window,cx|on_select(&key,window,cx))
+                        .item(AntMenuItem::submenu("reports","Reports")
+                            .icon(AntIconName::BarChartOutlined)
+                            .child(AntMenuItem::new("daily","Daily report")
+                                .icon(AntIconName::CalendarOutlined))
+                            .child(AntMenuItem::submenu("advanced","Advanced reports")
+                                .icon(AntIconName::AppstoreOutlined)
+                                .child(AntMenuItem::new("trends","Trend analysis")
+                                    .icon(AntIconName::LineChartOutlined))
+                                .child(AntMenuItem::new("monthly","Monthly summary")
+                                    .icon(AntIconName::FileTextOutlined))))
+                        .item(AntMenuItem::new("dashboard","Dashboard")
+                            .icon(AntIconName::DashboardOutlined))
+                        .item(AntMenuItem::submenu("workspace","Workspace")
+                            .icon(AntIconName::FolderOutlined)
+                            .child(AntMenuItem::new("settings","Settings")
+                                .icon(AntIconName::SettingOutlined))
+                            .child(AntMenuItem::new("team","Team")
+                                .icon(AntIconName::TeamOutlined)))
+                        .item(AntMenuItem::submenu("disabled","Disabled group")
+                            .icon(AntIconName::StopOutlined).disabled(true)
+                            .child(AntMenuItem::new("hidden","Hidden child")))))
+                .child(div().flex_1().flex().flex_col().gap(px(10.))
+                    .child(AntText::new(format!("Selected: {}",self.menu_selected))
+                        .theme(theme).strong(true))
+                    .child(AntText::new(format!("Open: {}",
+                        self.menu_open_keys.iter().cloned().collect::<Vec<_>>().join(", ")))
+                        .theme(theme).tone(TextTone::Secondary))
+                    .child(AntAlert::new("The popover is rendered in GPUI's native overlay layer. Escape and outside clicks dismiss it; disabled groups cannot open.")
+                        .theme(theme).tone(Tone::Blue))))
+            .into_any_element()
+    }
+
     fn menu_tree_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
         let on_select=cx.listener(|this, key: &SharedString, _, cx| {
             this.menu_selected=key.to_string();
@@ -1936,6 +1997,7 @@ impl Render for Gallery {
             "LayoutDrawer"=>self.layout_drawer_demo(t,window,cx),
             "Menu"=>self.menu_demo(t,cx),
             "MenuTree"=>self.menu_tree_demo(t,cx),
+            "MenuCollapsed"=>self.menu_collapsed_demo(t,cx),
             "Dropdown"=>self.dropdown_demo(t,cx),
             "Popover"=>self.popover_demo(t,cx),
             "Modal"=>self.modal_demo(t,cx),
