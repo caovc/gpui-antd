@@ -23,6 +23,7 @@ pub mod basics;
 pub mod tabs;
 pub mod tooltip;
 pub mod app_layout;
+pub mod overlays;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
 pub use display::{AntAlert, AntBadge, AntCard, AntDivider, AntProgress, AntTag, Tone};
@@ -39,3 +40,4 @@ pub use basics::{AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, Ant
 pub use tabs::{AntTab, AntTabs, TabsVariant};
 pub use tooltip::AntTooltip;
 pub use app_layout::{AntLayout, AntHeader, AntSider, AntContent, AntFooter};
+pub use overlays::{AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm};
