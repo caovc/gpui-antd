@@ -1,7 +1,7 @@
 //! Additional native Ant Design navigation primitives. All state is controlled.
 use std::rc::Rc;
 use gpui_kit::{
-    App, ElementId, IntoElement, ParentElement as _, RenderOnce, SharedString,
+    App, ElementId, IntoElement, InteractiveElement as _, ParentElement as _, RenderOnce, SharedString,
     Styled as _, Window, div, px,
 };
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
