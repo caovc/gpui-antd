@@ -60,7 +60,7 @@ try {
     ],
   });
 
-  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb'];
+  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Icon:SearchOutlined'];
   for (const name of components) {
     const page = await browser.newPage({ viewport: { width: 900, height: 550 } });
     const errors = [];
@@ -104,7 +104,25 @@ try {
       await page.close();
     }
   }
-  if (failures > 0) throw new Error(failures + ' real GPUI/WASM gallery pages failed browser smoke tests');
+  // The search catalog must select a real GPUI/WASM standalone preview.
+  const docs = await browser.newPage({ viewport: {width: 1100, height: 750} });
+  try {
+    await docs.goto(base + '#/components/Icons', {waitUntil: 'domcontentloaded'});
+    await docs.locator('#icon-query').fill('CheckCircleTwoTone');
+    await docs.locator('button[data-icon-name="CheckCircleTwoTone"]').waitFor({timeout: 15000});
+    await docs.locator('button[data-icon-name="CheckCircleTwoTone"]').click();
+    const src = await docs.locator('#icon-live-preview').getAttribute('src');
+    if (!src.includes('Icon%3ACheckCircleTwoTone')) {
+      throw new Error('Icon explorer did not switch the Rust GPUI iframe: ' + src);
+    }
+    console.log('PASS: full official icon catalog search controls live GPUI icon preview');
+  } catch(error) {
+    failures++;
+    console.error('FAIL: official icon search and GPUI preview', String(error));
+  } finally {
+    await docs.close();
+  }
+  if (failures > 0) throw new Error(failures + ' GPUI/WASM browser smoke tests failed');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

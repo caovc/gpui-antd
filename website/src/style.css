@@ -236,3 +236,41 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 .example-card iframe.wasm-iframe[src*="component=Statistic"] { height: 370px; }
 .example-card iframe.wasm-iframe[src*="component=Empty"] { height: 450px; }
 .example-card iframe.wasm-iframe[src*="component=Breadcrumb"] { height: 380px; }
+
+/* Icon catalog: text-only DOM indexing; previews use the real Rust/GPUI WASM canvas. */
+.icon-explorer { margin: 24px 0 36px; }
+.icon-explorer-toolbar { display: flex; flex-wrap: wrap; gap: 12px; }
+.icon-explorer-toolbar input, .icon-explorer-toolbar select {
+  appearance: none; padding: 11px 14px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 9px; outline-color: var(--blue);
+}
+.icon-explorer-toolbar input { flex: 1 1 270px; }
+.icon-explorer-toolbar select { flex: 0 0 150px; cursor: pointer; }
+.icon-count { color: var(--muted); font-size: 12px; margin: 12px 0 14px; }
+.icon-result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.icon-name-hit {
+  min-width: 0; border: 1px solid var(--border); background: var(--surface);
+  color: var(--ink); border-radius: 9px; padding: 9px 11px; display: flex;
+  flex-direction: column; align-items: flex-start; text-align: left; gap: 5px;
+  cursor: pointer; transition: border-color .16s, background .16s;
+}
+.icon-name-hit span { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; }
+.icon-name-hit small { font-size: 10px; color: var(--muted); }
+.icon-name-hit:hover, .icon-name-hit.selected { border-color: var(--blue); background: var(--soft-blue); }
+.icon-name-hit:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.icon-empty-results { color: var(--muted); grid-column: 1/-1; padding: 20px; }
+.icon-explorer-preview { display: grid; grid-template-columns: minmax(0,1fr) minmax(230px, 1fr); gap: 22px; align-items: center;
+  padding: 22px; margin-top: 18px; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--soft); }
+.icon-explorer-preview h3 { font-size: 20px; margin: 9px 0; overflow-wrap: anywhere; }
+.icon-explorer-preview p { font-size: 12px; color: var(--muted); }
+.icon-explorer-preview pre { overflow: auto; color: var(--ink); font-size: 11px; padding: 12px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.icon-explorer-preview iframe { width: 100%; height: 230px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px; }
+.icon-copy { padding: 9px 13px; border: 1px solid var(--blue); border-radius: 8px;
+  background: var(--blue); color: #fff; cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@media (max-width: 700px) { .icon-explorer-preview { grid-template-columns: 1fr; } }
