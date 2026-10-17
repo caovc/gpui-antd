@@ -123,8 +123,14 @@ Dropdown/Modal/Popconfirm:
   Collapsed icon-only items retain accessible names.
 - Use `AntMenu` in Sider and in standalone navigation; do not substitute
   decorative `div` rows with no interaction.
-- Nested SubMenu, horizontal menu modes and keyboard roving focus have not
-  yet been implemented and must not be claimed.
+- Inline `AntMenuItem::submenu(key,label).child(...)` nests entries.
+  The parent Entity owns expanded keys through `.open_keys(...)` and
+  `on_open_change(key, next_open, window, cx)`, separate from route selection.
+- Up/Down/Home/End rove focus and skip disabled visible rows; Right expands
+  a group and Left/Escape closes one, restoring focus to the group header.
+  Enter/Space and pointer activation use GPUI Base Buttons.
+- Collapsed submenu flyouts, horizontal menu and typeahead have **not**
+  been implemented. Verify keyboard behavior before claiming full a11y parity.
 
 ### Responsive Layout behavior
 

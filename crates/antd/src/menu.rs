@@ -314,6 +314,7 @@ impl RenderOnce for AntMenu {
                 let highlighted=chosen || row.selected_descendant;
                 let label=row.item.label.clone();
                 let key=row.item.key.clone();
+                let open_key=key.clone();
                 let bg=if highlighted {
                     if dark {theme.primary} else {theme.info_bg}
                 } else if dark {theme.layout_dark} else {theme.surface};
@@ -354,7 +355,7 @@ impl RenderOnce for AntMenu {
                         this.when_some(expand_callback,|this,callback|{
                             let new_open=!row.expanded;
                             this.on_click(move |_,window,cx|{
-                                callback(key.clone(),new_open,window,cx);
+                                callback(open_key.clone(),new_open,window,cx);
                             })
                         })
                     })

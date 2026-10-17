@@ -1,7 +1,7 @@
 //! One set of real Rust/GPUI previews for desktop and browser WebAssembly.
 extern crate gpui_kit as gpui;
 
-use std::{borrow::Cow, collections::BTreeMap};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}};
 
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
@@ -112,6 +112,8 @@ pub struct Gallery {
     layout_mobile_open: bool,
     layout_selected: String,
     menu_selected: String,
+    menu_open_keys: BTreeSet<String>,
+    layout_menu_open_keys: BTreeSet<String>,
     dropdown_selected: String,
     popover_open: bool,
     modal_result: String,
@@ -171,6 +173,7 @@ impl Gallery {
             tabs_index: 0, tabs_card_index: 1, layout_collapsed: false,
             layout_mobile_open: false,
             layout_selected: "dashboard".into(), menu_selected:"dashboard".into(),
+            menu_open_keys:BTreeSet::new(),layout_menu_open_keys:BTreeSet::new(),
             dropdown_selected: "None".into(), popover_open: false,
             modal_result: "No action".into(),
             popconfirm_result: "Awaiting confirmation".into(),
@@ -938,7 +941,61 @@ impl Gallery {
                         .item(AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined)))))
             .child(div().text_size(px(13.)).text_color(theme.text_secondary)
                 .child(format!("Selected menu key: {}",self.menu_selected)))
-            .child(AntAlert::new("Menu items use native keyboard-accessible buttons; nested SubMenu and arrow-key roving focus remain future work.")
+            .child(self.menu_tree_demo(theme,cx))
+            .into_any_element()
+    }
+
+    /// Test-only route "MenuTree" and the embedded nested example on the
+    /// public Menu page both use this same real Rust GPUI view.
+    fn menu_tree_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_select=cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected=key.to_string();
+            cx.notify();
+        });
+        let on_open=cx.listener(|this, change: &(SharedString,bool), _, cx| {
+            let (key,open)=change;
+            if *open {
+                this.menu_open_keys.insert(key.to_string());
+            } else {
+                this.menu_open_keys.remove(key.as_ref());
+            }
+            cx.notify();
+        });
+        div().w_full().flex().flex_col().gap(px(12.))
+            .child(label("Nested SubMenu · click headings, or use Arrow keys / Home / End", theme))
+            .child(div().w(px(305.)).border_1().border_color(theme.border)
+                .rounded(px(7.))
+                .child(AntMenu::new("menu-nested").theme(theme)
+                    .selected_key(self.menu_selected.clone())
+                    .open_keys(self.menu_open_keys.iter())
+                    .on_select(move |key,window,cx| on_select(&key,window,cx))
+                    .on_open_change(move |key,open,window,cx| on_open(&(key,open),window,cx))
+                    .item(AntMenuItem::submenu("reports","Reports")
+                        .icon(AntIconName::BarChartOutlined)
+                        .child(AntMenuItem::new("daily","Daily report")
+                            .icon(AntIconName::CalendarOutlined))
+                        .child(AntMenuItem::submenu("advanced","Advanced reports")
+                            .icon(AntIconName::AppstoreOutlined)
+                            .child(AntMenuItem::new("trends","Trend analysis")
+                                .icon(AntIconName::LineChartOutlined))
+                            .child(AntMenuItem::new("monthly","Monthly summary")
+                                .icon(AntIconName::FileTextOutlined))))
+                    .item(AntMenuItem::new("dashboard","Dashboard")
+                        .icon(AntIconName::DashboardOutlined))
+                    .item(AntMenuItem::submenu("workspace","Workspace")
+                        .icon(AntIconName::FolderOutlined)
+                        .child(AntMenuItem::new("settings","Settings")
+                            .icon(AntIconName::SettingOutlined))
+                        .child(AntMenuItem::new("team","Team")
+                            .icon(AntIconName::TeamOutlined)))
+                    .item(AntMenuItem::submenu("blocked","Disabled group")
+                        .icon(AntIconName::StopOutlined).disabled(true)
+                        .child(AntMenuItem::new("blocked-child","Hidden child")))))
+            .child(div().text_size(px(12.)).text_color(theme.text_secondary)
+                .child(format!("Selected: {} · Expanded: {}",
+                    self.menu_selected,
+                    self.menu_open_keys.iter().cloned().collect::<Vec<_>>().join(", "))))
+            .child(AntAlert::new("Arrows move focus, Enter/Space activates a leaf or toggles a group. Right opens groups; Left/Escape close them.")
                 .tone(Tone::Blue).theme(theme))
             .into_any_element()
     }
@@ -959,6 +1016,15 @@ impl Gallery {
         });
         let on_nav=cx.listener(|this, key: &SharedString, _, cx| {
             this.layout_selected=key.to_string();
+            cx.notify();
+        });
+        let on_nav_open=cx.listener(|this, change: &(SharedString,bool), _, cx| {
+            let (key,open)=change;
+            if *open {
+                this.layout_menu_open_keys.insert(key.to_string());
+            } else {
+                this.layout_menu_open_keys.remove(key.as_ref());
+            }
             cx.notify();
         });
         let metric=|title: &'static str, value: f64, tone: TextTone| {
@@ -987,6 +1053,8 @@ impl Gallery {
                         .child(AntMenu::new("layout-sidebar-menu")
                             .theme(t).dark(true).inline_collapsed(compact)
                             .selected_key(self.layout_selected.clone())
+                            .open_keys(self.layout_menu_open_keys.iter())
+                            .on_open_change(move |key,open,window,cx| on_nav_open(&(key,open),window,cx))
                             .on_select(move |key,window,cx| on_nav(&key,window,cx))
                             .item(AntMenuItem::new("dashboard","Dashboard")
                                 .icon(AntIconName::DashboardOutlined))
@@ -994,8 +1062,12 @@ impl Gallery {
                                 .icon(AntIconName::BarChartOutlined))
                             .item(AntMenuItem::new("documents","Documents")
                                 .icon(AntIconName::FileTextOutlined))
-                            .item(AntMenuItem::new("settings","Settings")
-                                .icon(AntIconName::SettingOutlined))))
+                            .item(AntMenuItem::submenu("workspace","Workspace")
+                                .icon(AntIconName::FolderOutlined)
+                                .child(AntMenuItem::new("settings","Settings")
+                                    .icon(AntIconName::SettingOutlined))
+                                .child(AntMenuItem::new("team","Team")
+                                    .icon(AntIconName::TeamOutlined)))))
                     .child(AntLayout::new().theme(t)
                         .child(AntHeader::new().theme(t).dark(false)
                             .height(56.).padding(20.)
@@ -1222,6 +1294,7 @@ impl Render for Gallery {
             "Grid"=>self.grid_demo(t),
             "Layout"=>self.layout_demo(t,window,cx),
             "Menu"=>self.menu_demo(t,cx),
+            "MenuTree"=>self.menu_tree_demo(t,cx),
             "Dropdown"=>self.dropdown_demo(t,cx),
             "Popover"=>self.popover_demo(t,cx),
             "Modal"=>self.modal_demo(t,cx),

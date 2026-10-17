@@ -201,8 +201,14 @@ disabled/danger states and icon-only collapsed Sider rendering with accessible
 labels. GPUI Base Button handles Tab, Enter/Space, focus and activation. The
 Layout gallery uses a **real AntMenu** in its sidebar; no inert icon/text rows.
 
-Nested SubMenu, full roving arrow-key navigation and horizontal menu modes
-remain future Ant Design parity work.
+Nested inline `AntMenuItem::submenu(key,label).child(...)` supports
+controlled `AntMenu::open_keys([...])` and
+`on_open_change(key, next_open, window, cx)` callbacks. Up/Down/Home/End
+move keyboard focus across enabled visible rows; Right opens a submenu
+and Left/Escape return to its parent. Pointer, Enter and Space activation
+are handled by GPUI Base Button. When inline-collapsed, nested children
+are hidden; an icon-only flyout submenu remains future parity work.
+Horizontal menu and typeahead also remain future milestones.
 
 ## Dropdown, Popover, Modal and Popconfirm (alpha)
 
