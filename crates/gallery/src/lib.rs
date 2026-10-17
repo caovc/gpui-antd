@@ -1302,6 +1302,8 @@ impl Gallery {
         });
         div().flex().flex_col().gap(px(16.))
             .child(label("Line tabs · controlled state and panel content", theme))
+            .child(div().text_color(theme.text_secondary).text_size(px(12.))
+                .child("Keyboard: Tab into a tab bar, then Left/Right/Home/End switches tabs. Disabled tabs are skipped."))
             .child(
                 AntTabs::new("tabs-line")
                     .theme(theme)

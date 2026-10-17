@@ -2,12 +2,15 @@
 //!
 //! Tab selection is owned by the application. GPUI Kit provides pointer
 //! activation, native animation, overflow scrolling and tab accessibility.
-//! Arrow/Home/End roving focus is a known gap in the pinned Kit version;
-//! do not claim full keyboard parity until it is implemented and tested.
+//! The pinned Kit TabBar has no individual-tab keyboard focus. This wrapper
+//! adds a **single focusable tab-bar navigation target** that implements
+//! Left/Right/Home/End selection while preserving Kit's animated indicator.
+//! Per-tab roving-focus accessibility semantics remain a separate milestone.
 
 use std::rc::Rc;
 use gpui_kit::{
-    AnyElement, App, ElementId, IntoElement, ParentElement as _, RenderOnce, SharedString,
+    AnyElement, App, ElementId, InteractiveElement as _, IntoElement, KeyDownEvent,
+    ParentElement as _, RenderOnce, Role, SharedString, StatefulInteractiveElement as _,
     Styled as _, Window, div, px,
 };
 use gpui_kit::component::{
@@ -72,9 +75,12 @@ impl AntTab {
 /// ```
 ///
 /// Disabled or unknown indices never invoke `on_change`. The parent must
-/// apply the requested index and call `cx.notify()`. Keyboard semantics are
-/// inherited from the pinned GPUI Kit tab primitives; arrow-key roving focus
-/// is not yet implemented upstream.
+/// apply the requested index and call `cx.notify()`.
+///
+/// The bar has a single keyboard Tab stop. Once focused, Left/Right and
+/// Home/End move the controlled selection, wrapping and skipping disabled
+/// tabs. This adds useful keyboard navigation to the pinned Kit TabBar,
+/// but is not yet true per-tab roving focus with individual Tab stop targets.
 #[derive(IntoElement)]
 pub struct AntTabs {
     id: ElementId,
@@ -85,6 +91,7 @@ pub struct AntTabs {
     theme: AntTheme,
     on_change: Option<Change>,
     panel_padding: f32,
+    keyboard: bool,
 }
 
 impl AntTabs {
@@ -93,6 +100,7 @@ impl AntTabs {
             id: id.into(),tabs:Vec::new(),active_index:0,
             variant:TabsVariant::default(),size:ControlSize::Middle,
             theme:AntTheme::default(),on_change:None,panel_padding:16.,
+            keyboard:true,
         }
     }
     pub fn active_index(mut self, index: usize) -> Self {
@@ -110,6 +118,11 @@ impl AntTabs {
     pub fn panel_padding(mut self, padding: f32) -> Self {
         self.panel_padding=padding.max(0.);self
     }
+    /// Enable a single keyboard Tab stop on the tab bar, supporting
+    /// Left/Right/Home/End. Enabled by default.
+    pub fn keyboard(mut self, enabled: bool) -> Self {
+        self.keyboard=enabled;self
+    }
     pub fn child(mut self, child: AntTab) -> Self {
         self.tabs.push(child);self
     }
@@ -126,10 +139,63 @@ impl AntTabs {
     }
 }
 
+
+/// Find the next enabled tab for keyboard navigation.
+///
+/// The selection remains controlled: callers use the returned index to
+/// request an update. Out-of-range or disabled selections fall back to the
+/// first enabled tab, without ever indexing outside the tab collection.
+fn next_enabled_tab(enabled: &[bool], selected: usize, key: &str) -> Option<usize> {
+    let first=enabled.iter().position(|value|*value)?;
+    match key {
+        "home"=>Some(first),
+        "end"=>enabled.iter().rposition(|value|*value),
+        "right" | "left" => {
+            if !enabled.get(selected).copied().unwrap_or(false) {
+                return Some(first);
+            }
+            let len=enabled.len();
+            for step in 1..=len {
+                let candidate=if key=="right" {
+                    (selected+step)%len
+                } else {
+                    (selected+len-(step%len))%len
+                };
+                if enabled[candidate] {return Some(candidate);}
+            }
+            None
+        },
+        _=>None,
+    }
+}
+
 impl RenderOnce for AntTabs {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
+    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let selected=self.active_index;
         let allowed=self.tabs.iter().map(|t|!t.disabled).collect::<Vec<_>>();
+        let nav_id=format!("ant-tabs-navigation:{:?}",self.id);
+        let focus=window.use_keyed_state(nav_id.clone(),cx,|_,cx|cx.focus_handle())
+            .read(cx).clone();
+        let keyboard_focus=focus.clone();
+        let keyboard_allowed=allowed.clone();
+        let keyboard_handler=self.on_change.clone();
+        let on_keyboard=move |event:&KeyDownEvent, window:&mut Window, cx:&mut App| {
+            // Never hijack shortcuts or nested Kit overflow-menu navigation.
+            if !keyboard_focus.is_focused(window) ||
+                event.keystroke.modifiers.modified() ||
+                event.keystroke.is_ime_in_progress() {
+                return;
+            }
+            if let Some(next)=next_enabled_tab(&keyboard_allowed,selected,
+                event.keystroke.key.as_str())
+            {
+                if next!=selected {
+                    if let Some(callback)=&keyboard_handler {callback(next,window,cx);}
+                }
+                window.prevent_default();
+                cx.stop_propagation();
+            }
+        };
         let size=match self.size {
             ControlSize::Small=>Size::Small,
             ControlSize::Middle=>Size::Medium,
@@ -169,7 +235,15 @@ impl RenderOnce for AntTabs {
             .filter(|tab|!tab.disabled)
             .and_then(|tab|tab.content);
         div().w_full().flex().flex_col().gap(px(0.))
-            .child(bar)
+            // Focus the bar rather than the surrounding panel; child editors
+            // and form controls must keep their own arrow-key behavior.
+            .child(
+                div().id(nav_id).role(Role::Group)
+                    .aria_label("Tabs: use Left/Right, Home or End to select")
+                    .track_focus(&focus.tab_stop(self.keyboard))
+                    .when(self.keyboard, |this| this.on_key_down(on_keyboard))
+                    .child(bar)
+            )
             .when_some(panel, |this, panel| {
                 this.child(
                     div().w_full().min_w_0().p(px(self.panel_padding))
@@ -198,6 +272,23 @@ mod tests {
         assert!(!tabs.can_activate(100));
     }
 
+    #[test]
+    fn native_arrow_navigation_wraps_and_skips_disabled_tabs() {
+        assert_eq!(next_enabled_tab(&[true,false,true],0,"right"),Some(2));
+        assert_eq!(next_enabled_tab(&[true,false,true],2,"right"),Some(0));
+        assert_eq!(next_enabled_tab(&[true,false,true],0,"left"),Some(2));
+        assert_eq!(next_enabled_tab(&[false,false],0,"left"),None);
+        assert_eq!(next_enabled_tab(&[],0,"right"),None);
+        assert_eq!(next_enabled_tab(&[false,true,false],0,"home"),Some(1));
+        assert_eq!(next_enabled_tab(&[false,true,false],0,"end"),Some(1));
+        assert_eq!(next_enabled_tab(&[true,false,true],99,"right"),Some(0));
+        assert_eq!(next_enabled_tab(&[true,false,true],2,"pageup"),None);
+    }
+    #[test]
+    fn keyboard_navigation_can_be_disabled_by_consumer() {
+        assert!(AntTabs::new("default").keyboard);
+        assert!(!AntTabs::new("manual").keyboard(false).keyboard);
+    }
     #[test]
     fn builders_store_variants_sizes_and_panels() {
         let tabs=AntTabs::new("settings")

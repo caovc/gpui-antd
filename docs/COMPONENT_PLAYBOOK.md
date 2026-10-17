@@ -97,8 +97,13 @@ Tabs:
 - Disabled tabs cannot activate. Their accessible state should be announced.
 - Prefer GPUI Kit's TabBar for scrolling tabs, tab indicator motion, overflow
   and foundation semantics; add Rust-owned panel rendering.
-- Do not claim complete arrow-key roving-focus behavior unless tested in
-  the pinned Kit version; Kit's Base Tabs currently documents that as a gap.
+- `AntTabs` adds a keyboard-focusable **tab bar group**, with Left/Right/
+  Home/End controlled selection, wrapping and skipping disabled tabs.
+  Keyboard handling lives on the bar wrapper, never the content panel, so
+  nested Input/Slider and other controls keep their own keys.
+- The pinned Kit TabBar's individual Base Tab elements are not keyboard
+  focus targets. This is **not** true per-tab roving-focus/tabpanel ARIA
+  parity; document the remaining gap and add browser keyboard tests.
 
 Tooltips:
 - Tooltip content should be descriptive, non-interactive and hidden on
