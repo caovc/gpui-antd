@@ -30,6 +30,11 @@ pub mod menu;
 pub mod navigation_extra;
 pub mod data_extra;
 pub mod feedback_extra;
+pub mod input_number;
+pub mod slider;
+pub mod segmented;
+pub mod time_picker;
+pub mod auto_complete;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
 pub use display::{AntAlert, AntBadge, AntCard, AntDivider, AntProgress, AntTag, Tone};
@@ -55,3 +60,9 @@ pub use menu::{AntMenu, AntMenuItem};
 pub use navigation_extra::{AntPagination, PageSlot, AntSteps, AntStep, StepStatus};
 pub use data_extra::{AntRate, AntCollapse, AntCollapseItem, AntDescriptions, AntDescriptionItem};
 pub use feedback_extra::{AntResult, ResultStatus, AntSkeleton, AntSpin};
+
+pub use input_number::AntInputNumber;
+pub use slider::{AntSlider, slider_key_value};
+pub use segmented::{AntSegmented, AntSegmentedOption, next_segmented_index};
+pub use time_picker::AntTimePicker;
+pub use auto_complete::{AntAutoComplete, autocomplete_matches, next_autocomplete_index};

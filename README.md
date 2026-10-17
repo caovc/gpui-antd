@@ -338,3 +338,32 @@ support half-stars; Collapse lacks motion; Descriptions does not span cells;
 Result is not illustration-identical; Skeleton is static; Spin has no
 overlay mask for children. See [component coverage matrix](docs/COMPONENT_MATRIX.md)
 for the complete comparison and priority backlog.
+
+
+## Data-entry wave 2 (additional five public components)
+
+InputNumber, Slider, TimePicker, AutoComplete and Segmented now have Rust
+APIs, real native/GPU-backed WASM examples and browser startup checks.
+They bring the documented alpha component count to **44**.
+
+- AntInputNumber wraps Kit NumberInput; create a persistent InputState with
+  .min, .max, .step, .default_value, then use AntInputNumber::new(&state).
+  Number keyboard input, IME, caret, clamping on blur and stepper events are
+  provided by the upstream editor.
+- AntSlider wraps Kit SliderState/Slider. Pointer and touch support single and
+  range sliders. Tab focus + arrow, PageUp/Down, Home/End update single values;
+  subscribe to SliderEvent::Change and SliderEvent::Release as appropriate.
+  Range keyboard manipulation is not complete.
+- AntTimePicker wraps Kit TimeFieldState and TimeField, including minute/second
+  precision, 12/24-hour editing, segment keyboard navigation and event subscription.
+  This is **not yet** the popup selector of the full Ant Design TimePicker.
+- AntSegmented adds controlled selections, icons, disabled options, block
+  layout and roving keyboard focus. It is independent of Tabs because it does
+  not render tabs or content panels.
+- AntAutoComplete uses a real InputState (free text) plus filtered suggestion
+  actions. Owner state controls open, highlight and selected value; suggestions
+  render as an in-flow native GPUI panel, not DOM. Outside click collision
+  handling and complete combobox ARIA behavior remain for follow-up.
+
+These are alpha variants, not claims of React API compatibility or pixel parity.
+See [coverage and gap matrix](docs/COMPONENT_MATRIX.md).
