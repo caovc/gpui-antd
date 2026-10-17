@@ -13,11 +13,11 @@ Data Entry or Feedback's similarly named full component.
 | General (4) | Button, Icon (Icons), Typography | FloatButton |
 | Layout (7) | Divider, Flex, Grid, Layout, Space | Masonry, Splitter |
 | Navigation (7) | Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | Anchor |
-| Data Entry (18) | Checkbox, DatePicker, Form, Input, Radio, Rate, Select, Switch | AutoComplete, Cascader, ColorPicker, InputNumber, Mentions, Slider, TimePicker, Transfer, TreeSelect, Upload |
-| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, Popover, Statistic, Tag, Tooltip | Calendar, Carousel, Image, List (deprecated), Listy, QRCode, Segmented, Table, Timeline, Tour, Tree |
+| Data Entry (18) | AutoComplete, Checkbox, DatePicker, Form, Input, InputNumber, Radio, Rate, Select, Slider, Switch, TimePicker | Cascader, ColorPicker, Mentions, Transfer, TreeSelect, Upload |
+| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, Popover, Segmented, Statistic, Tag, Tooltip | Calendar, Carousel, Image, List (deprecated), Listy, QRCode, Table, Timeline, Tour, Tree |
 | Feedback (11) | Alert, Modal, Popconfirm, Progress, Result, Skeleton, Spin | Drawer, Message, Notification, Watermark |
 | Other (5) | — | Affix, App, BorderBeam, ConfigProvider, Util |
-| **Total (73)** | **39 alpha** | **34 missing** |
+| **Total (73)** | **44 alpha** | **29 missing** |
 
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
 higher-level packages and do not count toward this 73-item core overview.
@@ -37,11 +37,21 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | Skeleton | Avatar, title and 0–20 paragraph placeholders | Animated shimmer, Input/Button/Image subcomponents |
 | Spin | Animated GPUI Kit Spinner, visibility, tip and native content | Container masking, nested loading overlay, custom indicators |
 
+## Wave 2: data entry and view selection
+
+| Component | Implemented foundation | Remaining Ant Design parity work |
+| --- | --- | --- |
+| InputNumber | Persistent GPUI Kit numeric state, stepper buttons, 0..100 bounds and decimal steps, status/size/disabled tokens | Precision/formats beyond Kit, exact Ant Design stepper placement, dedicated formatter/parser facade |
+| Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls | Range keyboard thumbs, marks, tooltips, custom handle formatting |
+| Segmented | Controlled selection, disabled options, official icon slots, Arrow/Home/End roving focus, block and size | Animated selection indicator and more exact Ant CSS geometry |
+| TimePicker | Persistent native segmented time editor, minute/second, AM/PM, keyboard edit, status/disabled | Clock popup, presets, clear/null semantics, range selection, localization |
+| AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Actual collision-aware popover, outside click close, full ARIA combobox, virtualization |
+
 ## Next batches (dependency order)
 
-1. **Core form/data entry:** InputNumber, Slider, Segmented, TimePicker,
-   AutoComplete. Prioritize controlled state, keyboard navigation and minimum
-   text-input/drag semantics; reuse Kit models.
+1. **Remaining core data entry:** Cascader, ColorPicker, Mentions, Transfer,
+   TreeSelect and Upload. Finish AutoComplete and TimePicker popup semantics,
+   Slider range keyboard support, and InputNumber formatter/parsing APIs.
 2. **Enterprise data display:** Table, Tree, TreeSelect, Calendar, Timeline,
    Image, Carousel. Keep Table virtualization separate from baseline table
    rendering; reuse the dedicated gpui-grid design where appropriate.
