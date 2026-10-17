@@ -6,6 +6,7 @@ use gpui_kit::{
     Styled as _, Window, div, px,
 };
 use gpui_kit::prelude::FluentBuilder as _;
+use gpui_kit::base::StyledExt as _;
 use crate::{AntIcon,AntIconName,AntTheme};
 use crate::design_tokens::AntComponent;
 
