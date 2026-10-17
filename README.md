@@ -203,11 +203,13 @@ in 36 native-GPUI gallery grids:
 ```bash
 cd website
 npm run audit:icons          # all 848 official icons, screenshot mosaics
-npm run audit:icons -- --sample  # four boundary pages, used by Pages CI
+npm run audit:icons -- --sample --dpr=2 # Retina-scale subset on PRs
 ```
 
-The audit checks pixel presence in each glyph's GPU canvas region and
-stores PNG pages plus a JSON report under `$RUNNER_TEMP/gpui-antd-icon-audit`
+Production Pages CI now runs the complete 848-icon audit; PRs run four
+boundary-page samples at 2x DPI. The audit records pixel coverage and
+secondary-layer color counts for diagnosis, checks paint presence for every
+glyph, and stores PNG mosaics plus a per-icon JSON report under `$RUNNER_TEMP/gpui-antd-icon-audit`
 (default `/tmp/gpui-antd-icon-audit`). This is a smoke-level visual
 regression, not a reference screenshot parity certification.
 

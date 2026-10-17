@@ -88,16 +88,29 @@ comparison of 848 icons remains future parity work.
 
 ## Full official icon visual-audit tool
 
-`npm run smoke` verifies selected gallery interactions plus animated TwoTone
-pixels at 2x device pixel ratio. `npm run audit:icons -- --sample` also checks
-four deterministic real-GPUI 24-icon grids at catalog boundaries, storing
-PNG mosaics and `report.json` in `${RUNNER_TEMP:-/tmp}/gpui-antd-icon-audit`.
-The Pages job runs this sampled audit on each build.
+`npm run smoke` verifies component interactions plus animated TwoTone pixels
+at 2x device pixel ratio. Pages CI on PRs runs
+`npm run audit:icons -- --sample --dpr=2` to sample four real-GPUI icon grids
+at high DPI. Main branch and manual Pages builds run `npm run audit:icons`
+without `--sample`, covering all 848 official icons in 36 GPU-painted grids.
+Both forms archive PNG mosaics and `report.json` under
+`${RUNNER_TEMP:-/tmp}/gpui-antd-icon-audit`.
 
 Run `npm run audit:icons` **without** `--sample` from `website/` after
 building WASM and Vite to render all 848 official icons in 36 Rust/GPUI grids.
 Each icon is checked for dark (Outlined/Filled) or primary-blue (TwoTone)
-painted pixels within its known glyph region. This detects empty or
+painted pixels within its known glyph region. The report also records per-icon
+painted pixel counts, secondary-palette pixel counts, coverage percentages,
+commit SHA, pinned revision and suspiciously opaque candidates for review.
+
+**2x browser scaling:** The pinned GPUI/Web backend scales its logical
+layout with devicePixelRatio, and Playwright's screenshot resolution applies
+the devicePixelRatio a second time. The audit therefore scales PNG sampling
+coordinates by `DPR²` and the browser viewport dimensions by `DPR`. For
+`--dpr=2`, each 136-unit tile is 544 screenshot pixels wide; the expanded
+viewport ensures all six columns and four rows are visible. Do not change the
+DPR multiplier to `DPR` alone or the audit will generate false negatives.
+The pixel-bounds check flags offscreen tiles instead of silently passing. This detects empty or
 incorrectly monochrome images, and archives every page for visual review;
 it does **not** establish pixel-perfect parity with official Ant Design
 screenshots. The route `IconAudit:<page>` is an internal Gallery diagnostic,

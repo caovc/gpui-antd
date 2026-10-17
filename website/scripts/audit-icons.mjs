@@ -39,9 +39,14 @@ async function ready(){
   throw new Error('Vite preview did not start: '+logs);
 }
 
-// The geometry corresponds to Gallery::icon_audit_demo: root padding 24px,
-// 6 columns x 4 rows of 136x112px cards, with 60px icons at x+38,y+12.
-// Only the icon rectangle is sampled, not its text caption or card border.
+// Geometry corresponds to Gallery::icon_audit_demo: 24px root padding,
+// six columns x four rows of 136x112px cards and 60px icons at x+38,y+12.
+// The pinned GPUI/Web backend applies the device scale to its logical pixel
+// layout, while the Chromium screenshot applies DPR again. At DPR=2, adjacent
+// 136px cards are 136 * 2 * 2 = 544 PNG pixels apart, *not* 272.
+// Scale the screenshot viewport as well so every one of the 24 glyphs remains
+// in view. The geometry assertion fails closed if that ever changes.
+// Only the glyph rectangle is sampled (never captions or card borders).
 async function paintedIcons(page,png,entries){
   return page.evaluate(async ({base64,entries})=>{
     const image = new Image();
@@ -52,7 +57,9 @@ async function paintedIcons(page,png,entries){
     const ctx=cv.getContext('2d',{willReadFrequently:true});
     ctx.drawImage(image,0,0);
     const data=ctx.getImageData(0,0,cv.width,cv.height).data;
-    const ratio=window.devicePixelRatio||1;
+    // One factor from GPUI layout and one from Chromium PNG rasterization.
+    const deviceScale=window.devicePixelRatio||1;
+    const ratio=deviceScale*deviceScale;
     const counts=[];
     for(let i=0;i<entries.length;i++){
       const icon=entries[i];
@@ -61,27 +68,46 @@ async function paintedIcons(page,png,entries){
       const x1=Math.round((24+136*col+97)*ratio);
       const y0=Math.round((24+112*row+13)*ratio);
       const y1=Math.round((24+112*row+71)*ratio);
-      let painted=0;
+      if(x0<0 || y0<0 || x1>cv.width || y1>cv.height){
+        counts.push({name:icon.name,style:icon.style,pixels:0,
+          secondaryPixels:0,coverage:0,offscreen:true,
+          bounds:{x0,y0,x1,y1},screenshot:{width:cv.width,height:cv.height}});
+        continue;
+      }
+      let painted=0,secondary=0;
       for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){
         if(x>=cv.width||y>=cv.height)continue;
         const k=(y*cv.width+x)*4;
         const r=data[k],g=data[k+1],b=data[k+2];
         if(icon.style==='twotone'){
           if(r<115 && g>52 && g<200 && b>185 && b-r>95)painted++;
+          // The secondary fill is intentionally light; count its own pixels
+          // separately so missing interior details are visible in report.json.
+          if(r>=224 && r<=236 && g>=238 && g<=250 && b>=250)secondary++;
         }else{
           if(r<145 && g<145 && b<145)painted++;
         }
       }
-      counts.push({name:icon.name,style:icon.style,pixels:painted});
+      const area=(x1-x0)*(y1-y0);
+      counts.push({
+        name:icon.name,style:icon.style,pixels:painted,
+        secondaryPixels:secondary,coverage:Math.round(1000*painted/area)/10,
+      });
     }
     return counts;
   },{base64:png.toString('base64'),entries});
 }
 
 let browser;
-const report={count:catalog.count,pages:Math.ceil(catalog.count/24),
-  checked:0,failed:[],screenshots:[],check:'GPU glyph paint presence'};
 const sample=process.argv.includes('--sample');
+const dpr=Number(process.argv.find(arg=>arg.startsWith('--dpr='))?.split('=')[1]??1);
+if(![1,2].includes(dpr))throw new Error('Only --dpr=1 and --dpr=2 are supported');
+const report={
+  count:catalog.count,revision:catalog.revision,gitSha:process.env.GITHUB_SHA??null,
+  pages:Math.ceil(catalog.count/24),sample,deviceScaleFactor:dpr,
+  checked:0,failed:[],suspicious:[],results:[],screenshots:[],
+  check:'GPUI GPU glyph paint presence and palette/coverage diagnostics',
+};
 const samplePages=[0,18,29,35];
 try{
   await ready();
@@ -92,7 +118,12 @@ try{
   const pages=sample?samplePages:Array.from({length:report.pages},(_,i)=>i);
   for(const index of pages){
     const entries=catalog.icons.slice(index*24,(index+1)*24);
-    const page=await browser.newPage({viewport:{width:930,height:545}});
+    // GPUI logical layout is already DPR-scaled. A larger CSS viewport at
+    // Retina resolution keeps all 6x4 cells visible in the PNG screenshot.
+    // At DPR=2 the screenshot will be 3720 x 2180 physical pixels.
+    const page=await browser.newPage({
+      viewport:{width:930*dpr,height:545*dpr},deviceScaleFactor:dpr,
+    });
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     page.on('console',message=>{
@@ -120,6 +151,13 @@ try{
       const missing=counts.filter(icon=>icon.pixels<7);
       if(errors.length)report.failed.push({page:index,errors});
       for(const entry of missing)report.failed.push({page:index,...entry});
+      report.results.push(...counts.map(icon=>({page:index,...icon})));
+      // A near-solid mask often indicates incorrectly flattened paths.
+      // Record suspected regressions for review without misrepresenting this
+      // heuristic as an official reference-pixel comparison.
+      for(const entry of counts.filter(icon=>icon.coverage>=90)) {
+        report.suspicious.push({page:index,...entry});
+      }
       report.checked+=counts.length;
       report.screenshots.push(filename);
       console.log('AUDIT '+(index+1)+'/'+report.pages+': '+counts.length+' GPUI icons; '+
@@ -132,8 +170,9 @@ try{
     }
   }
   await writeFile(join(output,'report.json'),JSON.stringify(report,null,2)+'\n');
-  console.log('GPUI icon audit: '+report.checked+' icon previews checked, '+
-    report.failed.length+' failures; '+report.screenshots.length+' mosaics archived');
+  console.log('GPUI icon audit: '+report.checked+' icon previews checked at '+dpr+'x, '+
+    report.failed.length+' failures, '+report.suspicious.length+
+    ' high-coverage candidates; '+report.screenshots.length+' mosaics archived');
   if(report.failed.length)throw new Error('Official icon audit failed: '+JSON.stringify(report.failed.slice(0,12)));
   if(!sample && report.checked!==848)throw new Error('Expected 848 checked icon previews');
 }finally{
