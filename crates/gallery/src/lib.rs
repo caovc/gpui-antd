@@ -3,7 +3,7 @@ extern crate gpui_kit as gpui;
 
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
-    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSwitch, AntTag, AntTheme, ControlSize, Tone,
+    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -29,13 +29,29 @@ pub struct Gallery {
     radio_button_selected: Option<usize>,
     switch_on: bool,
     input: Entity<InputState>,
+    input_filled: Entity<InputState>,
+    input_error: Entity<InputState>,
+    input_password: Entity<InputState>,
+    input_disabled: Entity<InputState>,
 }
 
 impl Gallery {
     pub fn new(component: String, dark: bool, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let input = cx.new(|cx| InputState::new(window, cx)
             .placeholder("Type your message..."));
-        Self {component, dark, button_clicks: 0, checked: true, radio_selected: Some(0), radio_button_selected: Some(1), switch_on: true, input}
+        let input_filled = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("Filled input"));
+        let input_error = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("Invalid email address"));
+        let input_password = cx.new(|cx| InputState::new(window, cx)
+            .masked(true).placeholder("Password"));
+        let input_disabled = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("Disabled input").default_value("Cannot edit"));
+        Self {
+            component, dark, button_clicks: 0, checked: true, radio_selected: Some(0),
+            radio_button_selected: Some(1), switch_on: true,
+            input, input_filled, input_error, input_password, input_disabled,
+        }
     }
     fn theme(&self) -> AntTheme {
         if self.dark {AntTheme::dark()} else {AntTheme::light()}
@@ -151,12 +167,34 @@ impl Gallery {
             .child(div().text_size(px(13.)).text_color(t.text_secondary).child(format!("Controlled value: {}",self.switch_on)))
             .into_any_element()
     }
-    fn input_demo(&self, t:AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Text input • real GPUI editing engine",t))
-            .child(div().w(px(330.)).child(AntInput::new(&self.input).theme(t).clearable(true)))
+    fn input_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(14.))
+            .child(label("Outlined · Filled · Borderless", t))
+            .child(row()
+                .child(div().w(px(255.)).child(AntInput::new(&self.input)
+                    .theme(t).clearable(true).aria_label("Outlined text input")))
+                .child(div().w(px(255.)).child(AntInput::new(&self.input_filled)
+                    .theme(t).variant(InputVariant::Filled).aria_label("Filled text input")))
+                .child(div().w(px(255.)).child(AntInput::new(&self.input)
+                    .theme(t).variant(InputVariant::Borderless).aria_label("Borderless text input"))))
+            .child(label("Validation status", t))
+            .child(div().w(px(330.)).child(AntInput::new(&self.input_error)
+                .theme(t).status(InputStatus::Error).aria_label("Error input")))
+            .child(label("Password and decorations", t))
+            .child(row()
+                .child(div().w(px(260.)).child(AntInput::new(&self.input_password)
+                    .theme(t).password_toggle(true).aria_label("Password input")))
+                .child(div().w(px(260.)).child(AntInput::new(&self.input)
+                    .theme(t).prefix(div().text_color(t.primary).child("@"))
+                    .suffix(div().text_color(t.text_secondary).child(".com")))))
+            .child(label("Size and disabled state", t))
+            .child(row()
+                .child(div().w(px(230.)).child(AntInput::new(&self.input_filled)
+                    .theme(t).size(ControlSize::Large).aria_label("Large text input")))
+                .child(div().w(px(230.)).child(AntInput::new(&self.input_disabled)
+                    .theme(t).disabled(true).aria_label("Disabled text input"))))
             .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child("Native text selection, clipboard, caret, and keyboard input."))
+                .child("GPUI Kit handles real keyboard, IME, caret, selection, copy and paste."))
             .into_any_element()
     }
     fn tag_demo(&self,t:AntTheme)->gpui_kit::AnyElement {

@@ -16,6 +16,6 @@ pub mod tokens;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
 pub use display::{AntAlert, AntBadge, AntCard, AntDivider, AntProgress, AntTag, Tone};
-pub use input::AntInput;
+pub use input::{AntInput, InputStatus, InputVariant};
 pub use radio::{AntRadio, AntRadioGroup};
 pub use tokens::{AntTheme, Appearance, color};
