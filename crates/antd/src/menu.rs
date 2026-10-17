@@ -425,7 +425,7 @@ impl RenderOnce for AntMenu {
                                 .child(AntMenu::new(flyout_menu_id)
                                     .theme(theme).dark(false).item_height(item_height)
                                     .open_keys(flyout_open.iter())
-                                    .children(flyout_children)
+                                    .items(flyout_children)
                                     .selected_key(flyout_selected.unwrap_or_else(||"".into()))
                                     .on_open_change(move |key,open,window,cx| {
                                         if let Some(listener)=&nested_change {
