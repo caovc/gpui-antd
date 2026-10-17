@@ -2,7 +2,7 @@
 //! pointer selection and controlled keyboard highlight.
 //!
 //! The input is NOT restricted to the suggestion values (unlike Select).
-//! The suggestion list currently uses an anchored GPUI surface but does not
+//! The suggestion list currently uses an inline GPUI surface but does not
 //! yet have Kit popup collision/dismissal handling or full ARIA combobox roles.
 
 use std::rc::Rc;
@@ -129,13 +129,13 @@ impl RenderOnce for AntAutoComplete {
             }
         };
         let prefix=format!("{:?}",self.id);
-        div().id(self.id).relative().w(px(self.width))
+        div().id(self.id).w(px(self.width)).flex().flex_col().gap(px(4.))
             .on_key_down(on_keyboard)
             .child(AntInput::new(&self.input).theme(t).size(self.size)
                 .disabled(self.disabled).clearable(self.clearable)
                 .aria_label("Autocomplete free-text input"))
             .when(open,|this|this.child(
-                div().absolute().top(px(self.size.height()+4.)).left(px(0.))
+                div()
                     .w_full().max_h(px(256.)).overflow_y_scrollbar()
                     .rounded(px(t.border_radius)).border_1().border_color(t.border)
                     .bg(t.surface).p(px(4.))
