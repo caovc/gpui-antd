@@ -35,6 +35,52 @@ pub(crate) fn parse_layer_asset_key(path: &str) -> Option<(&str, TwoToneLayer)> 
     Some((path, layer))
 }
 
+/// The pinned Ant Design TwoTone catalog contains multiple generations of
+/// SVG artwork: some use #1677ff/#e6f4ff, while earlier ones use #D9D9D9 and
+/// omit path fills (inheriting the root's currentColor). Normalize every
+/// *path* to one of the two canonical colors before tinting or masking.
+/// Keep official on-disk SVG files unchanged and preserve all path geometry.
+pub(crate) fn normalize_two_tone_svg(bytes: &[u8]) -> Vec<u8> {
+    let svg = std::str::from_utf8(bytes).expect("Pinned Ant Design SVG is UTF-8");
+    let mut normalized = String::with_capacity(svg.len() + 96);
+    let mut cursor = 0;
+    while let Some(relative) = svg[cursor..].find("<path") {
+        let start = cursor + relative;
+        let Some(close) = svg[start..].find('>') else { break; };
+        let end = start + close + 1;
+        normalized.push_str(&svg[cursor..start]);
+        let tag = &svg[start..end];
+        if let Some(fill) = tag.find(" fill=\"") {
+            let value_start = fill + " fill=\"".len();
+            if let Some(stop) = tag[value_start..].find('"') {
+                let value_end = value_start + stop;
+                let old_color = &tag[value_start..value_end];
+                let color = old_color.to_ascii_lowercase();
+                let normalized_color = match color.as_str() {
+                    "#d9d9d9" | "#e6e6e6" | "#e6f4ff" | "#d8d8d8" => "#e6f4ff",
+                    "#333" | "#333333" | "#1677ff" | "currentcolor" => "#1677ff",
+                    // Preserve authored transparent/stroke-only paths.
+                    "none" | "transparent" => old_color,
+                    _ => old_color,
+                };
+                normalized.push_str(&tag[..value_start]);
+                normalized.push_str(normalized_color);
+                normalized.push_str(&tag[value_end..]);
+            } else {
+                normalized.push_str(tag);
+            }
+        } else {
+            // Older SVGs rely on <svg fill="currentColor">. A full-color
+            // GPUI img() would paint those paths black unless made explicit.
+            normalized.push_str("<path fill=\"#1677ff\"");
+            normalized.push_str(&tag["<path".len()..]);
+        }
+        cursor = end;
+    }
+    normalized.push_str(&svg[cursor..]);
+    normalized.into_bytes()
+}
+
 /// Drop the opposite SVG fill layer while retaining official path geometry.
 /// The mask painter uses alpha only; each result is tinted during GPUI paint.
 pub(crate) fn svg_layer_mask(svg: &[u8], layer: TwoToneLayer) -> Vec<u8> {
@@ -132,7 +178,14 @@ mod tests {
                 let svg = std::str::from_utf8(&data).unwrap();
                 assert!(svg.contains(r#"viewBox="0 0 1024 1024""#), "{key}");
                 assert!(svg.contains("<path "), "{key}");
-                assert!(svg.contains("fill=\"none\""), "{key}");
+                let old_svg = std::str::from_utf8(&original).unwrap();
+                let other = match layer {
+                    TwoToneLayer::Primary => r##"fill="#e6f4ff""##,
+                    TwoToneLayer::Secondary => r##"fill="#1677ff""##,
+                };
+                if old_svg.contains(other) {
+                    assert!(svg.contains("fill=\"none\""), "{key}");
+                }
                 assert!(!svg.contains(match layer {
                     TwoToneLayer::Primary => r##"fill="#e6f4ff""##,
                     TwoToneLayer::Secondary => r##"fill="#1677ff""##,

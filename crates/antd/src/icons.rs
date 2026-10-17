@@ -14,7 +14,7 @@ use gpui_kit::{
 use crate::tokens::AntTheme;
 use crate::icon_palette::{
     TwoToneLayer, layer_asset_key, palette_asset_key, parse_layer_asset_key,
-    parse_palette_asset_key, recolor_svg, svg_layer_mask,
+    parse_palette_asset_key, recolor_svg, normalize_two_tone_svg, svg_layer_mask,
 };
 use gpui_kit::component::{Icon as KitIcon, Size, Sizable as _};
 
@@ -5251,13 +5251,13 @@ fn two_tone_image_svg(bytes: &'static [u8]) -> Cow<'static, [u8]> {
     if root.windows(7).any(|part| part == b" width=")
         || root.windows(8).any(|part| part == b" height=")
     {
-        return Cow::Borrowed(bytes);
+        return Cow::Owned(normalize_two_tone_svg(bytes));
     }
     let mut resized = Vec::with_capacity(bytes.len() + TWO_TONE_IMAGE_DIMENSIONS.len());
     resized.extend_from_slice(&bytes[..start + 4]);
     resized.extend_from_slice(TWO_TONE_IMAGE_DIMENSIONS);
     resized.extend_from_slice(&bytes[start + 4..]);
-    Cow::Owned(resized)
+    Cow::Owned(normalize_two_tone_svg(&resized))
 }
 
 /// Embedded source for every official Ant Design SVG. No network or
