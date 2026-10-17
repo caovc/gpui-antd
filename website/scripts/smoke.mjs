@@ -107,6 +107,7 @@ try {
     {name:'LayoutDrawer',dark:false},
     {name:'LayoutDrawer',dark:true},
     {name:'ThemeLab|colorPrimary=9a44b2|colorInfo=114488|Card.padding=32|scene=tokens',dark:false},
+    {name:'ThemeLab|colorPrimary=1677ff|Map.colorPrimaryBg=d9f7be|Alias.colorLink=de7f22|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=00aa88|Checkbox.colorPrimary=ff9900|Tag.colorBg=fff1cc|motion=0|compact=1',dark:false},
   ];
   for (const {name, dark} of previews) {
@@ -185,11 +186,20 @@ try {
     await studio.locator('[data-seed="colorPrimary"]').waitFor();
     await studio.locator('#theme-scene').selectOption('tokens');
     await studio.locator('[data-seed="colorPrimary"]').fill('#129977');
+    await studio.locator('details').filter({hasText:'Map Token'}).locator('summary').click();
+    await studio.locator('#theme-map-fields [data-token-toggle="colorPrimaryBg"]').check();
+    await studio.locator('#theme-map-fields [data-token-value="colorPrimaryBg"]').fill('#d9f7be');
+    await studio.locator('details').filter({hasText:'Alias Token'}).locator('summary').click();
+    await studio.locator('#theme-alias-fields [data-token-toggle="colorLink"]').check();
+    await studio.locator('#theme-alias-fields [data-token-value="colorLink"]').fill('#de7f22');
     await studio.waitForFunction(()=>{
       const frame=document.querySelector('#theme-preview-frame');
       if(!frame?.src)return false;
       const route=new URL(frame.src).searchParams.get('component')||'';
-      return route.includes('scene=tokens') && route.includes('colorPrimary=129977');
+      return route.includes('scene=tokens') &&
+        route.includes('colorPrimary=129977') &&
+        route.includes('Map.colorPrimaryBg=d9f7be') &&
+        route.includes('Alias.colorLink=de7f22');
     },null,{timeout:20000});
     const canvas=studio.frameLocator('#theme-preview-frame').locator('canvas').first();
     await canvas.waitFor({state:'visible',timeout:60000});
