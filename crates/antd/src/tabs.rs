@@ -256,7 +256,8 @@ impl RenderOnce for AntTabs {
             )
             .when_some(panel, |this, panel| {
                 this.child(
-                    div().role(Role::TabPanel).aria_label("Selected tab content")
+                    div().id(format!("{nav_id}:panel")).role(Role::TabPanel)
+                        .aria_label("Selected tab content")
                         .w_full().min_w_0().p(px(self.panel_padding))
                         .text_color(self.theme.text)
                         .child(panel)
