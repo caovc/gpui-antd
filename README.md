@@ -24,7 +24,7 @@
 
 ## First milestone component set
 
-Button, Input, Select, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress and Divider.
+Button, Input, Select, DatePicker, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress and Divider.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -74,6 +74,9 @@ let save = AntButton::new("save", "Save")
 ```
 
 Initialize GPUI Kit (`gpui_kit::init(cx)`) before creating component views.
+
+DatePicker is a Rust wrapper around GPUI Kit's single-date/range/datetime
+calendar controls; the gallery exercises each mode through real GPUI/WASM.
 
 Select is a typed single-value wrapper around GPUI Kit's searchable SelectState.
 It supports filtering, clearable values, popup width, placeholders and disabled
