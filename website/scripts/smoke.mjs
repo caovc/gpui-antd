@@ -109,11 +109,13 @@ try {
   // hover tint does not count as an opened popup or collapsed dashboard.
   // Keep both screenshots as CI artifacts for manual visual review.
   const interactions = [
-    { name: 'Dropdown', x: 76, y: 78, minChanged: 5500 },
-    { name: 'Popover', x: 78, y: 78, minChanged: 6500 },
-    { name: 'Modal', x: 82, y: 78, minChanged: 25000 },
-    { name: 'Popconfirm', x: 82, y: 78, minChanged: 6500 },
-    { name: 'Layout', x: 98, y: 500, minChanged: 12000 },
+    // GPUI draws translucent surfaces on the same GPU canvas. Count changed
+    // ink pixels rather than assuming the entire popup rectangle is opaque.
+    { name: 'Dropdown', x: 76, y: 78, minChanged: 2100, minOutside: 700 },
+    { name: 'Popover', x: 78, y: 78, minChanged: 3300, minOutside: 1200 },
+    { name: 'Modal', x: 82, y: 78, minChanged: 8000, minOutside: 4000 },
+    { name: 'Popconfirm', x: 82, y: 78, minChanged: 4300, minOutside: 1400 },
+    { name: 'Layout', x: 98, y: 500, minChanged: 12000, minOutside: 8000 },
   ];
 
   const changedPixels = async (page, beforePng, afterPng) => page.evaluate(async ({before,after}) => {
@@ -131,12 +133,19 @@ try {
     }
     const a=await decode(before), b=await decode(after);
     if (a.length !== b.length) throw new Error('Screenshot dimensions changed');
-    let count=0;
+    let total=0,outside=0;
+    const viewportWidth=900;
     for (let i=0;i<a.length;i+=4) {
       if (Math.abs(a[i]-b[i])>35 || Math.abs(a[i+1]-b[i+1])>35 ||
-          Math.abs(a[i+2]-b[i+2])>35) count++;
+          Math.abs(a[i+2]-b[i+2])>35) {
+        total++;
+        const pixel=i/4, x=pixel%viewportWidth, y=Math.floor(pixel/viewportWidth);
+        // All four popup triggers live in the top-left area of the canvas.
+        // Require change OUTSIDE that button area to reject hover/focus-only.
+        if (x>220 || y>112) outside++;
+      }
     }
-    return count;
+    return {total,outside};
   }, {before:beforePng.toString('base64'),after:afterPng.toString('base64')});
 
   for (const spec of interactions) {
@@ -166,11 +175,14 @@ try {
         path:join(screenshots,spec.name.toLowerCase()+'-after.png')
       });
       const diff=await changedPixels(page,baseline,opened);
-      if(diff<spec.minChanged) {
-        throw new Error(spec.name+' changed only '+diff+' pixels after click; expected >= '+spec.minChanged);
+      if(diff.total<spec.minChanged || diff.outside<spec.minOutside) {
+        throw new Error(spec.name+' canvas changed '+JSON.stringify(diff)+
+          ' pixels; expected total >= '+spec.minChanged+
+          ' and outside trigger >= '+spec.minOutside);
       }
       if(errors.length) throw new Error('Browser errors: '+errors.join('; '));
-      console.log('PASS: '+spec.name+' GPUI canvas interaction changed '+diff+' pixels');
+      console.log('PASS: '+spec.name+' real GPUI click changed '+diff.total+
+        ' pixels ('+diff.outside+' outside trigger)');
     } catch(error) {
       failures++;
       console.error('FAIL: '+spec.name+' native GPUI pointer interaction',String(error));
