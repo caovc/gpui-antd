@@ -265,7 +265,7 @@ impl Gallery {
             .child(div().flex().flex_wrap().gap(px(14.))
                 .child(div().flex().flex_col().gap(px(10.))
                     .child(label("Input · background and radius overrides",t))
-                    .child(AntInput::new("lab-input",&self.input).theme(t))
+                    .child(AntInput::new(&self.input).theme(t).aria_label("Theme Lab input"))
                     .child(label("Feedback · semantic Seed colors",t))
                     .child(AntAlert::new("Saved successfully").tone(Tone::Green).theme(t))
                     .child(AntAlert::new("Please review warning").tone(Tone::Gold).theme(t))
