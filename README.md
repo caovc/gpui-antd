@@ -30,6 +30,16 @@ See [Native token API, implementation and parity coverage](docs/THEME_TOKENS.md)
 The Token Studio URL is available **once the corresponding GitHub Pages
 deployment succeeds**.
 
+## Responsive Layout Drawer (experimental)
+
+`AntMobileDrawer` opens a **native GPUI Kit Sheet** below the chosen layout
+breakpoint while `AntSider::mobile_hidden(true)` frees the inline sidebar
+space for content. It uses GPUI Kit's title bar, mask, keyboard dismissal
+and focus handling, and a rebuildable Rust content factory for navigation
+state. The [Layout component](https://caovc.github.io/gpui-antd/#/components/Layout)
+has both regular Sider and narrow-viewport Drawer previews. See
+[mobile Drawer implementation and API guide](docs/MOBILE_DRAWER.md).
+
 ## Contributor / coding agent guide
 
 This repository includes a canonical [AGENTS.md](AGENTS.md) entry point

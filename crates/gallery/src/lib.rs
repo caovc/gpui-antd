@@ -3,7 +3,7 @@ extern crate gpui_kit as gpui;
 mod theme_lab;
 use theme_lab::ThemeLabSpec;
 
-use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, rc::Rc};
 
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
@@ -12,7 +12,7 @@ use gpui_antd::{
     AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify,
     AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem,
     AntTabs, AntTab, TabsVariant, AntTooltip,
-    AntLayout, AntSider, AntHeader, AntContent, AntFooter, GridBreakpoint,
+    AntLayout, AntSider, AntMobileDrawer, AntHeader, AntContent, AntFooter, GridBreakpoint,
     AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm,
     AntMenu, AntMenuItem, AntTokenLayer, AntTokenValue, AntResolvedToken,
     AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
@@ -32,6 +32,7 @@ use gpui_kit::component::date_picker::DatePickerState;
 use gpui_kit::component::time_field::TimePrecision;
 use gpui_kit::component::IndexPath;
 use gpui_kit::component::scroll::ScrollableElement as _;
+use gpui_kit::component::WindowExt as _;
 use gpui_kit::assets::Assets;
 use gpui_kit::base::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
@@ -1617,6 +1618,104 @@ impl Gallery {
             .into_any_element()
     }
 
+    /// Narrow Layout route: GPUI Kit Sheet owns the modal navigation surface,
+    /// backdrop dismissal, keyboard Escape, and focus restoration.
+    fn layout_drawer_demo(
+        &self,t:AntTheme,window:&Window,cx:&mut Context<Self>
+    )->gpui_kit::AnyElement {
+        let mobile=window.viewport_size().width < px(768.);
+        let selected=self.layout_selected.clone();
+        let selected_for_sheet=selected.clone();
+        let on_select=Rc::new(cx.listener(|this,key:&SharedString,_,cx|{
+            this.layout_selected=key.to_string();cx.notify();
+        }));
+        let desktop_select=on_select.clone();
+        let drawer_select=on_select.clone();
+        let drawer_open=cx.listener(|this,open:&bool,_,cx|{
+            this.layout_mobile_open=*open;cx.notify();
+        });
+        let links=|| [
+            AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined),
+            AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined),
+            AntMenuItem::new("documents","Documents").icon(AntIconName::FileTextOutlined),
+            AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined),
+        ];
+        div().w_full().flex().flex_col().gap(px(14.))
+            .child(label("Native left Sheet · resize below md to open Drawer",t))
+            .child(div().w_full().border_1().border_color(t.border)
+                .rounded(px(8.)).overflow_hidden()
+                .child(AntLayout::new().horizontal(true).height(480.).theme(t)
+                    .child(AntSider::new("drawer-layout-sider")
+                        .theme(t).dark(true).width(192.).collapsed_width(64.)
+                        .breakpoint(GridBreakpoint::Md).mobile_hidden(true)
+                        .child(div().h(px(62.)).px(px(16.))
+                            .flex().items_center()
+                            .text_color(t.layout_dark_text).font_semibold()
+                            .child("GPUI Admin"))
+                        .child(AntMenu::new("drawer-desktop-nav").theme(t).dark(true)
+                            .selected_key(selected.clone())
+                            .items(links())
+                            .on_select(move|key,w,cx|desktop_select(&key,w,cx))))
+                    .child(AntLayout::new().theme(t)
+                        .child(AntHeader::new().theme(t).dark(false)
+                            .height(56.).padding(16.)
+                            .child(AntMobileDrawer::new("drawer-layout-trigger")
+                                .theme(t).title("Workspace navigation")
+                                .width(280.).breakpoint(GridBreakpoint::Md)
+                                .mask_closable(true)
+                                .on_open_change(move|open,w,cx|{
+                                    drawer_open(&open,w,cx);
+                                })
+                                .content(move|_,_|{
+                                    let on_select=drawer_select.clone();
+                                    AntMenu::new("drawer-sheet-navigation")
+                                        .theme(t).selected_key(selected_for_sheet.clone())
+                                        .items([
+                                            AntMenuItem::new("dashboard","Dashboard")
+                                                .icon(AntIconName::DashboardOutlined),
+                                            AntMenuItem::new("analytics","Analytics")
+                                                .icon(AntIconName::BarChartOutlined),
+                                            AntMenuItem::new("documents","Documents")
+                                                .icon(AntIconName::FileTextOutlined),
+                                            AntMenuItem::new("settings","Settings")
+                                                .icon(AntIconName::SettingOutlined),
+                                        ])
+                                        .on_select(move|key,window,cx|{
+                                            on_select(&key,window,cx);
+                                            window.close_sheet(cx);
+                                        })
+                                }))
+                            .when(!mobile,|header|header.child(
+                                AntIcon::new(AntIconName::MenuOutlined).theme(t).size(19.)
+                            ))
+                            .child(div().ml(px(12.)).font_semibold()
+                                .text_color(t.text).child("Workspace")))
+                        .child(AntContent::new().theme(t).scrollable(true)
+                            .scroll_id("drawer-layout-content").padding(18.)
+                            .child(div().w_full().flex().flex_col().gap(px(15.))
+                                .child(AntTitle::new("Mobile dashboard").level(4).theme(t))
+                                .child(AntCard::new().theme(t).title("Responsive navigation")
+                                    .child(AntText::new(
+                                        "On a narrow viewport the permanent sidebar gives way to an accessible left Drawer. Tap the header menu to open GPUI Kit Sheet; Escape and the mask close it."
+                                    ).theme(t)))
+                                .child(AntTag::new(if self.layout_mobile_open {
+                                    "Drawer open"
+                                } else {
+                                    "Drawer closed"
+                                }).theme(t).tone(Tone::Blue))
+                                .child(AntText::new(format!("Active route: {}",selected))
+                                    .theme(t).tone(TextTone::Secondary))))
+                        .child(AntFooter::new().theme(t)
+                            .child(AntText::new("GPUI native Sheet + Ant Design Layout")
+                                .theme(t).tone(TextTone::Secondary))))))
+            .child(AntText::new(if mobile {
+                "Mobile viewport: permanent Sider hidden; open navigation in the header."
+            } else {
+                "Desktop viewport: regular Sider visible; Drawer trigger hidden."
+            }).theme(t).tone(TextTone::Secondary))
+            .into_any_element()
+    }
+
     fn grid_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         let cell = |label: &'static str| {
             div().w_full().h(px(42.))
@@ -1834,6 +1933,7 @@ impl Render for Gallery {
             "Flex"=>self.flex_demo(t),
             "Grid"=>self.grid_demo(t),
             "Layout"=>self.layout_demo(t,window,cx),
+            "LayoutDrawer"=>self.layout_drawer_demo(t,window,cx),
             "Menu"=>self.menu_demo(t,cx),
             "MenuTree"=>self.menu_tree_demo(t,cx),
             "Dropdown"=>self.dropdown_demo(t,cx),

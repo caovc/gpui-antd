@@ -53,7 +53,7 @@ pub use layout::{AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJu
 pub use basics::{AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem};
 pub use tabs::{AntTab, AntTabs, TabsVariant};
 pub use tooltip::AntTooltip;
-pub use app_layout::{AntLayout, AntHeader, AntSider, AntContent, AntFooter};
+pub use app_layout::{AntLayout, AntHeader, AntSider, AntMobileDrawer, AntContent, AntFooter};
 pub use overlays::{AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm};
 
 pub use menu::{AntMenu, AntMenuItem};
