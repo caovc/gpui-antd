@@ -225,6 +225,7 @@ export function themeDesignerHtml(){
     '</select></label>'+
     '<button id="theme-reset" type="button">Reset</button>'+
     '<button id="theme-export" type="button">Export JSON</button>'+
+    '<button id="theme-share" type="button" title="Share the actual GPUI/WASM preview with current tokens">Copy preview URL</button>'+
     '<label class="theme-import">Import JSON<input id="theme-import" type="file" accept="application/json,.json"></label>'+
     '</div>'+
     '<div class="theme-workspace">'+
@@ -408,6 +409,16 @@ export function initThemeDesigner(base){
   $('#theme-reset').addEventListener('click',()=>{
     state=emptyTheme();fillAll();drawPreview();
     $('#theme-message').textContent='Token overrides reset.';
+  });
+  $('#theme-share').addEventListener('click',async()=>{
+    // Share the real standalone GPUI/WASM scene, not a DOM screenshot.
+    // URL parameters include Seed, Map, Alias and Component values.
+    try{
+      await navigator.clipboard.writeText(frame.src);
+      $('#theme-message').textContent='WASM preview link copied.';
+    }catch{
+      $('#theme-message').textContent='Clipboard unavailable; open the preview frame to share its URL.';
+    }
   });
   $('#theme-export').addEventListener('click',()=>{
     const href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)+'\n'],
