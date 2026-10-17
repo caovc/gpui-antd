@@ -29,6 +29,7 @@ pub mod overlays;
 pub mod menu;
 pub mod navigation_extra;
 pub mod data_extra;
+pub mod list;
 pub mod feedback_extra;
 pub mod input_number;
 pub mod slider;
@@ -75,3 +76,5 @@ pub mod table;
 pub use feedback_actions::{AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone};
 pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, visible_tree_nodes, tree_focus_index};
 pub use table::{AntTable, AntTableColumn, AntTableRow, TableSort, sorted_table_indices};
+
+pub use list::{AntList, AntListItem, ListSize};
