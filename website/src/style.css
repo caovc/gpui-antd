@@ -412,3 +412,12 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
   .theme-live-panel { padding: 10px; }
   .theme-live-panel iframe { height: 540px; min-height: 450px; }
 }
+
+/* Native GPUI mobile Sheet scenario: constrain the iframe's real viewport. */
+.layout-drawer-stage { display: flex; justify-content: center; align-items: stretch;
+  padding: 18px; border-bottom: 1px solid var(--line); background: var(--soft); }
+.layout-drawer-stage iframe { display: block; box-sizing: border-box;
+  width: min(100%, 480px); height: 650px; max-width: 480px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface); box-shadow: var(--shadow); }
+@media(max-width:700px){.layout-drawer-stage{padding:9px}.layout-drawer-stage iframe{height:580px}}

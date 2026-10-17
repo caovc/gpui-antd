@@ -104,6 +104,8 @@ try {
     {name:'Icon:CiTwoTone',dark:true},
     {name:'IconPalette',dark:false},
     {name:'IconPalette',dark:true},
+    {name:'LayoutDrawer',dark:false},
+    {name:'LayoutDrawer',dark:true},
     {name:'ThemeLab|colorPrimary=9a44b2|colorInfo=114488|Card.padding=32|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=00aa88|Checkbox.colorPrimary=ff9900|Tag.colorBg=fff1cc|motion=0|compact=1',dark:false},
   ];
@@ -600,6 +602,58 @@ try {
     console.error('FAIL: narrow native GPUI Sider controlled state',String(error));
   } finally {
     await narrow.close();
+  }
+
+  // Mobile Drawer interaction: the actual Rust/GPUI Sheet must paint above
+  // app content, dismiss on Escape/mask, and restore the closed layout.
+  const sheetPage=await browser.newPage({viewport:{width:520,height:680}});
+  const sheetErrors=[];
+  sheetPage.on('pageerror',error=>sheetErrors.push(error.message));
+  try {
+    await sheetPage.goto(base+'demo.html?component=LayoutDrawer',{waitUntil:'domcontentloaded'});
+    await sheetPage.waitForFunction(()=>{
+      const canvas=document.querySelector('canvas');
+      return canvas&&canvas.width>0&&canvas.height>0&&!document.querySelector('#status');
+    },null,{timeout:60000});
+    await sheetPage.waitForTimeout(700);
+    const before=await sheetPage.screenshot({
+      path:join(screenshots,'layout-drawer-closed.png')
+    });
+    // The mobile Menu icon in AntHeader is painted by Rust GPUI at ~58,84.
+    await sheetPage.mouse.click(58,84);
+    await sheetPage.mouse.move(500,600);
+    await sheetPage.waitForTimeout(700);
+    const after=await sheetPage.screenshot({
+      path:join(screenshots,'layout-drawer-open.png')
+    });
+    const delta=await changedPixels(sheetPage,before,after,520);
+    if(delta.total<9000||delta.outside<6500)
+      throw new Error('Native GPUI Sheet did not open: '+JSON.stringify(delta));
+    await sheetPage.keyboard.press('Escape');
+    await sheetPage.waitForTimeout(450);
+    const closed=await sheetPage.screenshot({
+      path:join(screenshots,'layout-drawer-escape-closed.png')
+    });
+    const restored=await changedPixels(sheetPage,before,closed,520);
+    if(restored.total>delta.total*0.45+1000)
+      throw new Error('Native Drawer failed Escape dismissal: '+JSON.stringify(restored));
+    await sheetPage.mouse.click(58,84);
+    await sheetPage.waitForTimeout(500);
+    await sheetPage.mouse.click(488,335);
+    await sheetPage.waitForTimeout(450);
+    const dismissed=await sheetPage.screenshot({
+      path:join(screenshots,'layout-drawer-mask-closed.png')
+    });
+    const maskDelta=await changedPixels(sheetPage,before,dismissed,520);
+    if(maskDelta.total>delta.total*0.45+1000)
+      throw new Error('Native Drawer failed mask dismissal: '+JSON.stringify(maskDelta));
+    if(sheetErrors.length)throw new Error(sheetErrors.join('; '));
+    console.log('PASS: GPUI Layout Drawer opens Sheet, Escape/mask close and restore');
+  } catch(error) {
+    failures++;
+    console.error('FAIL: mobile Layout native Drawer interactions',String(error));
+  } finally {
+    await sheetPage.close();
   }
 
   // Regression: long official icon names are visible, and all 848 names
