@@ -5160,7 +5160,8 @@ impl AntIcon {
     pub fn color(mut self, color: Hsla) -> Self { self.color = Some(color); self }
 
     /// Override both colors of official TwoTone artwork without altering SVG files.
-    /// Ignored by non-TwoTone icons; explicit colors override theme defaults.
+    /// On Outlined/Filled icons, only the primary color is used as a tint.
+    /// Explicit TwoTone colors override theme defaults.
     pub fn two_tone_colors(mut self, primary: Hsla, secondary: Hsla) -> Self {
         self.color = Some(primary);
         self.two_tone_secondary = Some(secondary);

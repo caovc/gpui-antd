@@ -61,12 +61,22 @@ async function twoTonePixelCounts(page) {
     const data = context.getImageData(0, 0, surface.width, surface.height).data;
     let blue = 0;
     let pale = 0;
+    let darkBlue = 0;
+    let darkFill = 0;
+    let green = 0;
+    let greenFill = 0;
+    const within = (r,g,b,R,G,B,delta=7) =>
+      Math.abs(r-R)<=delta && Math.abs(g-G)<=delta && Math.abs(b-B)<=delta;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i], g = data[i + 1], b = data[i + 2];
       if (r < 90 && g > 75 && g < 180 && b > 195 && b - g > 50) blue++;
       if (r >= 207 && r < 247 && g >= 225 && g <= 254 && b >= 245 && b - r >= 10) pale++;
+      if (within(r,g,b,0x16,0x68,0xdc)) darkBlue++;
+      if (within(r,g,b,0x11,0x1d,0x2c,5)) darkFill++;
+      if (within(r,g,b,0x52,0xc4,0x1a)) green++;
+      if (within(r,g,b,0xf6,0xff,0xed,5)) greenFill++;
     }
-    return { blue, pale };
+    return { blue, pale, darkBlue, darkFill, green, greenFill };
   }, screenshot.toString('base64'));
 }
 
@@ -88,7 +98,14 @@ try {
 
   const twoToneCases = ['CarryOutTwoTone', 'CheckCircleTwoTone', 'CheckSquareTwoTone', 'CiCircleTwoTone', 'CiTwoTone'];
   const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Layout', 'Menu', 'Dropdown', 'Popover', 'Modal', 'Popconfirm', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Tabs', 'Tooltip', 'Icon:SearchOutlined', ...twoToneCases.map(name => 'Icon:' + name)];
-  for (const name of components) {
+  const previews = [
+    ...components.map(name => ({name, dark:false})),
+    {name:'Icon:CheckCircleTwoTone',dark:true},
+    {name:'Icon:CiTwoTone',dark:true},
+    {name:'IconPalette',dark:false},
+    {name:'IconPalette',dark:true},
+  ];
+  for (const {name, dark} of previews) {
     const page = await browser.newPage({ viewport: { width: 900, height: 550 } });
     const errors = [];
     page.on('pageerror', error => errors.push(String(error.message)));
@@ -103,7 +120,8 @@ try {
       errors.push(detail);
     });
     try {
-      const url = base + 'demo.html?component=' + encodeURIComponent(name);
+      const url = base + 'demo.html?component=' + encodeURIComponent(name) +
+        '&dark=' + (dark ? '1' : '0');
       const result = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       if (result?.status() !== 200) throw new Error('Unexpected response: ' + result?.status());
 
@@ -117,20 +135,30 @@ try {
       await page.waitForTimeout(500);
       const canvas = await page.locator('canvas').first();
       if (!await canvas.isVisible()) throw new Error('Canvas was not visible');
-      if (twoToneCases.some(icon => name === 'Icon:' + icon)) {
-        let colors = { blue: 0, pale: 0 };
+      if (twoToneCases.some(icon => name === 'Icon:' + icon) || name === 'IconPalette') {
+        let colors = { blue: 0, pale: 0, darkBlue: 0, darkFill: 0, green: 0, greenFill: 0 };
         for (let attempt = 0; attempt < 8; attempt++) {
           colors = await twoTonePixelCounts(page);
-          if (colors.blue >= 15 && colors.pale >= 15) break;
+          const good = name === 'IconPalette'
+            ? colors.green >= 15 && colors.greenFill >= 15
+            : dark
+              ? colors.darkBlue >= 15 && colors.darkFill >= 15
+              : colors.blue >= 15 && colors.pale >= 15;
+          if (good) break;
           await page.waitForTimeout(300); // Full-color img() loading is asynchronous.
         }
-        if (colors.blue < 15 || colors.pale < 15) {
-          throw new Error('TwoTone SVG lost blue/pale fills in GPUI screenshot: ' +
-            JSON.stringify(colors));
+        const good = name === 'IconPalette'
+          ? colors.green >= 15 && colors.greenFill >= 15
+          : dark
+            ? colors.darkBlue >= 15 && colors.darkFill >= 15
+            : colors.blue >= 15 && colors.pale >= 15;
+        if (!good) {
+          throw new Error('TwoTone SVG lost expected color layers in GPUI screenshot: ' +
+            JSON.stringify({name,dark,colors}));
         }
       }
       if (errors.length) throw new Error('JavaScript console errors: ' + errors.join('; '));
-      console.log('PASS: ' + name + ' rendered through GPUI/WASM');
+      console.log('PASS: ' + name + (dark ? ' dark' : '') + ' rendered through GPUI/WASM');
     } catch (error) {
       failures++;
       const text = await page.locator('#status').textContent({ timeout: 500 }).catch(() => '');
@@ -138,7 +166,9 @@ try {
       console.error('Startup overlay:', text);
       console.error('Browser errors:', errors.join('\n'));
     } finally {
-      await page.screenshot({ path: join(screenshots, name.toLowerCase().replace(/[^a-z0-9_-]/g, '-') + '.png'), fullPage: true })
+      await page.screenshot({ path: join(screenshots,
+        name.toLowerCase().replace(/[^a-z0-9_-]/g, '-') + (dark ? '-dark' : '') + '.png'
+      ), fullPage: true })
         .catch(() => {});
       await page.close();
     }
