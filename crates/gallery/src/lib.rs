@@ -1226,7 +1226,7 @@ impl Gallery {
                     .selected_key(self.tree_selected.clone())
                     .on_select(move|key,window,cx|selected(&key,window,cx))
                     .on_expand(move|key,value,window,cx|expanded(&(key,value),window,cx))
-                    .on_checked_keys_change(move|keys,window,cx|checked(keys,window,cx))))
+                    .on_checked_keys_change(move|keys,window,cx|checked(&keys,window,cx))))
             .child(div().text_size(px(13.)).text_color(t.text_secondary)
                 .child(format!("Selected: {} · Checked: {} · Partially checked: {}",
                     self.tree_selected,self.tree_checked.len(),half)))
