@@ -10,7 +10,7 @@ use std::rc::Rc;
 
 use gpui_kit::{
     AnyElement, App, ElementId, IntoElement, InteractiveElement as _, ParentElement as _,
-    RenderOnce, Styled as _, Window, div, px,
+    RenderOnce, StatefulInteractiveElement as _, Styled as _, Window, div, px,
 };
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
@@ -97,9 +97,11 @@ impl RenderOnce for AntHeader {
 /// Sidebar with controlled collapse, optional breakpoint-based auto-collapse,
 /// dark/light appearance and an accessible native collapse trigger.
 ///
-/// Auto-collapse is an effective *view* state while the viewport is narrower
-/// than `breakpoint`. It never mutates the application's `collapsed` value:
-/// `on_collapse` reports user-triggered toggles only.
+/// Automatically collapses below the named breakpoint without mutating the
+/// desktop collapsed state. A narrow viewport is independently controllable
+/// through `responsive_open`, allowing users to expand the sidebar even
+/// while the breakpoint is active. The on_collapse callback reports the NEXT
+/// effective collapsed state and application code owns both flags.
 #[derive(IntoElement)]
 pub struct AntSider {
     id: ElementId,
@@ -108,6 +110,7 @@ pub struct AntSider {
     width: f32,
     collapsed_width: f32,
     collapsed: bool,
+    responsive_open: bool,
     breakpoint: Option<GridBreakpoint>,
     dark: bool,
     collapsible: bool,
@@ -117,7 +120,7 @@ impl AntSider {
     pub fn new(id: impl Into<ElementId>) -> Self {
         Self {
             id:id.into(),children:Vec::new(),theme:AntTheme::default(),
-            width:200.,collapsed_width:80.,collapsed:false,breakpoint:None,
+            width:200.,collapsed_width:80.,collapsed:false,responsive_open:false,breakpoint:None,
             dark:true,collapsible:false,on_collapse:None,
         }
     }
@@ -125,6 +128,12 @@ impl AntSider {
     pub fn width(mut self, width: f32) -> Self {self.width=width.max(0.);self}
     pub fn collapsed_width(mut self, width: f32) -> Self {self.collapsed_width=width.max(0.);self}
     pub fn collapsed(mut self, collapsed: bool) -> Self {self.collapsed=collapsed;self}
+    /// Control whether the sidebar is expanded BELOW its responsive breakpoint.
+    /// Separate from the desktop `collapsed` state; defaults to false.
+    /// On user click, apply `responsive_open(!next_collapsed)` in narrow mode.
+    pub fn responsive_open(mut self, open: bool) -> Self {
+        self.responsive_open=open;self
+    }
     pub fn breakpoint(mut self, breakpoint: GridBreakpoint) -> Self {
         self.breakpoint=Some(breakpoint);self
     }
@@ -138,9 +147,18 @@ impl AntSider {
     pub fn child(mut self, child: impl IntoElement) -> Self {
         self.children.push(child.into_any_element());self
     }
-    /// Effective collapsed state including the optional viewport breakpoint.
+    /// Whether the current viewport is below the configured breakpoint.
+    pub fn is_responsive_at(&self, viewport: gpui_kit::Pixels) -> bool {
+        self.breakpoint.is_some_and(|b| viewport < px(b.min_width()))
+    }
+    /// Effective state: responsive and desktop toggles are independent.
+    /// The user can expand a collapsed narrow sidebar with `responsive_open`.
     pub fn is_collapsed_at(&self, viewport: gpui_kit::Pixels) -> bool {
-        self.collapsed || self.breakpoint.is_some_and(|b| viewport < px(b.min_width()))
+        if self.is_responsive_at(viewport) {
+            !self.responsive_open
+        } else {
+            self.collapsed
+        }
     }
     /// Effective sidebar width at the supplied logical viewport.
     pub fn width_at(&self, viewport: gpui_kit::Pixels) -> f32 {
@@ -159,9 +177,10 @@ impl RenderOnce for AntSider {
             .child(div().flex_1().min_h(px(0.)).flex().flex_col()
                 .children(self.children))
             .when(self.collapsible, |this| {
-                let requested=!self.collapsed;
+                let requested=!collapsed;
                 this.child(
                     BaseButton::new(self.id)
+                        .accessibility_label(if collapsed {"Expand sidebar"} else {"Collapse sidebar"})
                         .w_full().h(px(40.)).flex().items_center().justify_center()
                         .bg(bg).text_color(button_fg)
                         .hover(|this| this.bg(self.theme.layout_sider_hover))
@@ -189,25 +208,36 @@ pub struct AntContent {
     theme: AntTheme,
     padding: f32,
     surface: bool,
+    scrollable: bool,
+    scroll_id: ElementId,
 }
 impl Default for AntContent { fn default() -> Self { Self::new() } }
 impl AntContent {
     pub fn new() -> Self {
-        Self {children:Vec::new(),theme:AntTheme::default(),padding:24.,surface:false}
+        Self {children:Vec::new(),theme:AntTheme::default(),padding:24.,
+            surface:false,scrollable:false,scroll_id:"ant-content-scroll".into()}
     }
     pub fn theme(mut self, theme: AntTheme) -> Self {self.theme=theme;self}
     pub fn padding(mut self, padding: f32) -> Self {self.padding=padding.max(0.);self}
     pub fn surface(mut self, surface: bool) -> Self {self.surface=surface;self}
+    /// Scroll Content independently of Header/Footer/Sider in an explicit-height Layout.
+    /// Only content scrolls; use `scroll_id` if multiple scrollable bodies exist.
+    pub fn scrollable(mut self, enabled: bool) -> Self {self.scrollable=enabled;self}
+    /// Stable native GPUI scroll element identity, unique in the current view.
+    pub fn scroll_id(mut self, id: impl Into<ElementId>) -> Self {
+        self.scroll_id=id.into();self
+    }
     pub fn child(mut self, child: impl IntoElement) -> Self {
         self.children.push(child.into_any_element());self
     }
 }
 impl RenderOnce for AntContent {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        div().flex_1().min_h(px(0.)).min_w_0()
+        div().id(self.scroll_id).flex_1().min_h(px(0.)).min_w_0()
             .p(px(self.padding))
             .bg(if self.surface {self.theme.surface} else {self.theme.layout_body})
             .text_color(self.theme.text)
+            .when(self.scrollable, |this| this.overflow_y_scroll())
             .children(self.children)
     }
 }
@@ -258,6 +288,21 @@ mod tests {
         assert_eq!(forced.width_at(px(1000.)),64.);
     }
     #[test]
+    fn responsive_manual_expansion_is_separate_from_desktop_collapse() {
+        let sider=AntSider::new("sidebar").width(220.)
+            .collapsed_width(64.).collapsed(true)
+            .breakpoint(GridBreakpoint::Md);
+        assert!(sider.is_responsive_at(px(767.)));
+        assert!(!sider.is_responsive_at(px(768.)));
+        assert!(sider.is_collapsed_at(px(767.)));
+        assert!(sider.is_collapsed_at(px(768.)));
+        let mobile_open=sider.responsive_open(true);
+        assert_eq!(mobile_open.width_at(px(600.)),220.);
+        assert_eq!(mobile_open.width_at(px(992.)),64.);
+        assert!(!mobile_open.is_collapsed_at(px(600.)));
+        assert!(mobile_open.is_collapsed_at(px(992.)));
+    }
+    #[test]
     fn sider_width_and_header_height_clamp_to_nonnegative() {
         let sider=AntSider::new("sidebar").width(-20.).collapsed_width(-12.);
         assert_eq!(sider.width_at(px(1100.)),0.);
@@ -271,5 +316,7 @@ mod tests {
         assert!(layout.horizontal);
         assert_eq!(layout.height,Some(420.));
         assert_eq!(AntContent::new().padding(-3.).padding,0.);
+        let content=AntContent::new().scrollable(true).scroll_id("dashboard-content");
+        assert!(content.scrollable);
     }
 }

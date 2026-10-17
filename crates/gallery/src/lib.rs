@@ -108,6 +108,7 @@ pub struct Gallery {
     tabs_index: usize,
     tabs_card_index: usize,
     layout_collapsed: bool,
+    layout_mobile_open: bool,
     dropdown_selected: String,
     popover_open: bool,
     modal_result: String,
@@ -165,6 +166,7 @@ impl Gallery {
             form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
             paragraph_expanded: false,
             tabs_index: 0, tabs_card_index: 1, layout_collapsed: false,
+            layout_mobile_open: false,
             dropdown_selected: "None".into(), popover_open: false,
             modal_result: "No action".into(),
             popconfirm_result: "Awaiting confirmation".into(),
@@ -854,9 +856,17 @@ impl Gallery {
     }
 
     fn layout_demo(&self, t: AntTheme, window: &Window, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let compact=self.layout_collapsed || window.viewport_size().width < px(768.);
-        let on_collapse=cx.listener(|this, next: &bool, _, cx| {
-            this.layout_collapsed=*next;
+        let responsive=window.viewport_size().width < px(768.);
+        let compact=if responsive {!self.layout_mobile_open} else {self.layout_collapsed};
+        let on_collapse=cx.listener(|this, next: &bool, window, cx| {
+            // Apply the next EFFECTIVE collapse state in its own mode.
+            // Narrow expansion must not be immediately canceled by the
+            // breakpoint, and should not alter the desktop collapse choice.
+            if window.viewport_size().width < px(768.) {
+                this.layout_mobile_open=!*next;
+            } else {
+                this.layout_collapsed=*next;
+            }
             cx.notify();
         });
         let nav=|icon, title: &'static str| {
@@ -878,7 +888,9 @@ impl Gallery {
                 .child(AntLayout::new().horizontal(true).height(464.).theme(t)
                     .child(AntSider::new("demo-layout-sider")
                         .theme(t).dark(true).width(192.).collapsed_width(64.)
-                        .collapsed(self.layout_collapsed).breakpoint(GridBreakpoint::Md)
+                        .collapsed(self.layout_collapsed)
+                        .responsive_open(self.layout_mobile_open)
+                        .breakpoint(GridBreakpoint::Md)
                         .collapsible(true)
                         .on_collapse(move |next, win, cx| on_collapse(&next, win, cx))
                         .child(div().h(px(60.)).flex().items_center()
@@ -899,6 +911,7 @@ impl Gallery {
                             .child(div().ml(px(12.)).font_semibold()
                                 .text_color(t.text).child("Dashboard overview")))
                         .child(AntContent::new().theme(t).padding(18.)
+                            .scrollable(true).scroll_id("layout-demo-main-scroll")
                             .child(div().w_full().flex().flex_col().gap(px(15.))
                                 .child(AntTitle::new("Workspace overview").level(4).theme(t))
                                 .child(AntRow::new().gutter(12.).vertical_gutter(10.)
@@ -911,12 +924,19 @@ impl Gallery {
                                 .child(AntCard::new().theme(t).title("Recent activity")
                                     .child(div().flex().flex_col().gap(px(10.))
                                         .child(AntText::new("UI components compiled to WASM").theme(t))
-                                        .child(AntProgress::new(75.).theme(t).show_info(true)))))
+                                        .child(AntProgress::new(75.).theme(t).show_info(true))))
+                                .child(div().flex().flex_col().gap(px(9.))
+                                    .children((1..=10).map(|index|
+                                        div().text_size(px(12.))
+                                            .text_color(t.text_secondary)
+                                            .child(format!("Recent activity #{index}: GPUI native app shell update"))))))
                         .child(AntFooter::new().theme(t).padding(12.)
                             .child(AntText::new("GPUI Ant Design · native Rust layout")
                                 .theme(t).tone(TextTone::Secondary)))))))
             .child(div().text_size(px(12.)).text_color(t.text_secondary)
-                .child(format!("Sider: {} · auto-collapse below md (768px)", if compact { "collapsed" } else { "expanded" })))
+                .child(format!("Sider: {} · {} viewport · content scrolls independently",
+                    if compact {"collapsed"} else {"expanded"},
+                    if responsive {"responsive"} else {"desktop"})))
             .into_any_element()
     }
 

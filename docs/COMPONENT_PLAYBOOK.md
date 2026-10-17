@@ -115,6 +115,19 @@ Dropdown/Modal/Popconfirm:
   restoration primitives.
 - Constrain popovers to the viewport and avoid trapping inputs incorrectly.
 
+### Responsive Layout behavior
+
+- `AntSider::collapsed` controls the desktop sidebar independently of the
+  narrow-viewport `AntSider::responsive_open` value.
+- `on_collapse(next_collapsed)` requests the NEXT effective state. Below the
+  breakpoint, the application updates `responsive_open(!next_collapsed)`;
+  above it, update `collapsed(next_collapsed)`.
+- Use `AntContent::scrollable(true).scroll_id(stable_id)` for independent
+  Content scrolling in an explicit-height layout. Header/Footer/Sider are
+  normal GPUI siblings and remain in place.
+- This is not yet Ant Design's sliding mobile drawer/overlay or fixed-position
+  global Header/Sider implementation; do not claim those behaviors.
+
 ## 6. Live preview / regression requirements
 
 One component means **one Rust implementation**, compiled twice.

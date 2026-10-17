@@ -163,11 +163,16 @@ The native application shell is available as `AntLayout`, `AntHeader`,
 `AntSider`, `AntContent`, and `AntFooter`. Nested Layout elements form
 horizontal or vertical GPUI flex trees. The sidebar supports controlled
 collapse, light/dark surfaces, configured widths and automatic collapse
-below an optional viewport breakpoint. The Gallery shows an interactive
+below an optional viewport breakpoint. At small widths,
+`AntSider::responsive_open(bool)` overrides auto-collapse without altering
+the desktop `collapsed` state. `AntContent::scrollable(true)` independently
+scrolls the body while its sibling Header and Footer stay in place. The Gallery shows an interactive
 dashboard with a collapsible sidebar using real GPUI/WASM.
 
-`AntSider::breakpoint` is currently a viewport-based auto-collapse rule:
-it does not update application state or create a mobile drawer by itself.
+`AntSider::breakpoint` is currently a viewport-based auto-collapse rule;
+it does not create a mobile drawer. `on_collapse` returns the requested
+effective collapsed state; applications should update `responsive_open`
+in narrow mode and `collapsed` on desktop.
 Sider menu items and route navigation belong to the consuming app.
 
 ## Icons preview visibility
