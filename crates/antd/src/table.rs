@@ -90,7 +90,7 @@ pub fn sorted_table_indices(
     column:Option<&str>,
     direction:TableSort,
 )->Vec<usize>{
-    let mut out:(Vec<usize>)=(0..rows.len()).collect();
+    let mut out:Vec<usize>=(0..rows.len()).collect();
     if direction==TableSort::None{return out;}
     let Some(column_ix)=column.and_then(|key|
         columns.iter().position(|col|col.key.as_ref()==key&&col.sortable)
