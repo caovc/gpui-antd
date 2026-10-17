@@ -75,7 +75,7 @@ impl ThemeLabSpec {
                 },
                 _=>{
                     // One namespace per documented component. The registry
-                    // stores all 50; runtime consumers are rolled out
+                    // stores all 51; runtime consumers are rolled out
                     // incrementally and documented on the parity page.
                     if let Some((name,field))=key.split_once('.') {
                         if let Some(component)=AntComponent::from_name(name) {

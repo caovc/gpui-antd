@@ -59,7 +59,7 @@ Global themes are **copyable Rust values**, passed via each component's
 
 ## Component Token coverage
 
-`AntComponent::ALL` registers 50 independent namespaces. `AntComponentToken`
+`AntComponent::ALL` registers 51 independent namespaces. `AntComponentToken`
 has a shared typed shape, but not every field is consumed by every component.
 
 | Component | Live fields in native renderer |

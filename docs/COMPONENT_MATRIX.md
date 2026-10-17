@@ -14,10 +14,10 @@ Data Entry or Feedback's similarly named full component.
 | Layout (7) | Divider, Flex, Grid, Layout, Space | Masonry, Splitter |
 | Navigation (7) | Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | Anchor |
 | Data Entry (18) | AutoComplete, Checkbox, DatePicker, Form, Input, InputNumber, Radio, Rate, Select, Slider, Switch, TimePicker | Cascader, ColorPicker, Mentions, Transfer, TreeSelect, Upload |
-| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, Popover, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tree | Calendar, Carousel, Image, List (deprecated), Listy, QRCode, Tour |
+| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, List, Popover, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tree | Calendar, Carousel, Image, Listy, QRCode, Tour |
 | Feedback (11) | Alert, Drawer, Message, Modal, Notification, Popconfirm, Progress, Result, Skeleton, Spin | Watermark |
 | Other (5) | — | Affix, App, BorderBeam, ConfigProvider, Util |
-| **Total (73)** | **50 alpha** | **23 missing** |
+| **Total (73)** | **51 alpha** | **22 missing** |
 
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
 higher-level packages and do not count toward this 73-item core overview.

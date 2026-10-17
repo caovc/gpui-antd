@@ -71,7 +71,7 @@ test('theme import rejects untrusted values and clamps scalar limits',()=>{
 });
 
 
-test('all 50 components are valid, with scoped Tree/Table/Timeline tokens',()=>{
+test('all 51 components are valid, with scoped Tree/Table/Timeline tokens',()=>{
   const theme=emptyTheme();
   theme.components.Tree={colorBgSelected:'#d9e9ff',controlHeight:'36'};
   theme.components.Table={colorHeaderBg:'#101820',fontSize:'16'};

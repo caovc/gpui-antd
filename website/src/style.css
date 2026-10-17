@@ -421,3 +421,5 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
   border: 1px solid var(--border); border-radius: 9px;
   background: var(--surface); box-shadow: var(--shadow); }
 @media(max-width:700px){.layout-drawer-stage{padding:9px}.layout-drawer-stage iframe{height:580px}}
+
+.example-card iframe.wasm-iframe[src*="component=List"] { height: 900px; }

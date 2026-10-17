@@ -72,6 +72,7 @@ pub mod feedback_actions;
 pub mod tree;
 pub mod table;
 pub mod timeline;
+pub mod list;
 
 pub use feedback_actions::{AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone};
 pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, TreeCheckState,
@@ -79,3 +80,5 @@ pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, TreeCheckState,
 pub use table::{AntTable, AntTableColumn, AntTableRow, TableSort, sorted_table_indices,
     filtered_table_indices, table_view_indices, toggle_table_visible_selection};
 pub use timeline::{AntTimeline, AntTimelineItem, TimelineMode, TimelineTone};
+
+pub use list::{AntList, AntListItem, ListSize};

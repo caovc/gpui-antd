@@ -428,7 +428,7 @@ known Ant Design 6 API / accessibility / visual parity gaps.
 
 ## Wave 4: Tree cascade, Table filters and Timeline
 
-The library now exposes **50 alpha component pages**. AntTree derives
+The library now exposes **51 alpha component pages**. AntTree derives
 three checkbox states from controlled checked keys and cascades checks through
 enabled descendants; applications handle
 on_checked_keys_change(|keys, window, cx| ...), while
@@ -442,10 +442,14 @@ enabled visible records while preserving selections on hidden pages.
 AntTimeline adds left/right/alternate positions, reverse ordering,
 pending milestone, status colors and real GPUI child elements.
 Table, Tree and Timeline consume component-specific AntTheme overrides.
-The Theme Token Studio now registers all **50** component namespaces
+The Theme Token Studio now registers all **51** component namespaces
 (not all fields are wired; unsupported fields are labelled Planned).
 
 This does **not** implement virtualization, fully accessible Tree check-state
 semantics, advanced multi-select filter menus or exact React/Ant Design
 pixel parity. See [component matrix](docs/COMPONENT_MATRIX.md) and
 [Theme Token contract](docs/THEME_TOKENS.md).
+
+## Native List
+
+`AntList` / `AntListItem` implement density, icons, descriptive text, native action slots, optional header/footer, row separators, loading and empty states using the same Rust/GPUI implementation in desktop and WASM. Virtualization and responsive grid-style listing are still pending.

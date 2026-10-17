@@ -21,6 +21,7 @@ use gpui_antd::{
     AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone,
     AntTree, AntTreeNode, AntTable, AntTableColumn, AntTableRow, TableSort,
     AntTimeline, AntTimelineItem, TimelineMode, TimelineTone,
+    AntList, AntListItem, ListSize,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -83,7 +84,7 @@ impl GalleryAssets {
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
-    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
+    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "List", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
 ];
 
 /// Options in the browser icon inspector are only display parameters.
@@ -906,6 +907,36 @@ impl Gallery {
             .child(AntDescriptions::new().columns(2).theme(t)
                 .child(AntDescriptionItem::new("Owner","Application state"))
                 .child(AntDescriptionItem::new("Renderer","Native GPUI")))
+            .into_any_element()
+    }
+
+    fn list_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().w_full().flex().flex_col().gap(px(18.))
+            .child(label("Bordered list · native icons and actions",t))
+            .child(AntList::new().theme(t).bordered(true)
+                .header(AntText::new("Team activity").theme(t).strong(true))
+                .item(AntListItem::new("New deployment")
+                    .icon(AntIconName::CloudUploadOutlined)
+                    .description("Production build passed GPUI/WASM verification.")
+                    .action(AntButton::new("list-view-1","View").theme(t).size(ControlSize::Small)))
+                .item(AntListItem::new("Design tokens updated")
+                    .icon(AntIconName::BgColorsOutlined)
+                    .description("Semantic colors and component tokens were refreshed.")
+                    .action(AntButton::new("list-view-2","Details").theme(t).size(ControlSize::Small)))
+                .item(AntListItem::new("Archived workspace")
+                    .icon(AntIconName::FolderOutlined).disabled(true)
+                    .description("This entry is no longer active."))
+                .footer(AntText::new("3 recent activities").theme(t).tone(TextTone::Secondary)))
+            .child(label("Small list without borders",t))
+            .child(AntList::new().theme(t).size(ListSize::Small).split(true)
+                .item(AntListItem::new("Profile").description("Update your account"))
+                .item(AntListItem::new("Security").description("Manage access")))
+            .child(label("Loading and empty states",t))
+            .child(div().flex().flex_wrap().gap(px(18.))
+                .child(div().w(px(260.)).child(AntList::new().theme(t)
+                    .bordered(true).loading(true)))
+                .child(div().w(px(260.)).child(AntList::new().theme(t)
+                    .bordered(true))))
             .into_any_element()
     }
 
@@ -2230,6 +2261,7 @@ impl Render for Gallery {
             "Tree"=>self.tree_demo(t,cx),
             "Table"=>self.table_demo(t,cx),
             "Timeline"=>self.timeline_demo(t,cx),
+            "List"=>self.list_demo(t),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")

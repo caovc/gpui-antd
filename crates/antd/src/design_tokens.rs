@@ -159,9 +159,10 @@ pub enum AntComponent {
     Tree,
     Table,
     Timeline,
+    List,
 }
 impl AntComponent {
-    pub const ALL:[Self;50]=[Self::Button, Self::Input, Self::Select, Self::DatePicker, Self::Form, Self::Checkbox, Self::Radio, Self::Switch, Self::Tag, Self::Badge, Self::Alert, Self::Card, Self::Progress, Self::Divider, Self::Tabs, Self::Tooltip, Self::Icons, Self::Typography, Self::Space, Self::Flex, Self::Grid, Self::Layout, Self::Menu, Self::Dropdown, Self::Popover, Self::Modal, Self::Popconfirm, Self::Avatar, Self::Statistic, Self::Empty, Self::Breadcrumb, Self::Pagination, Self::Steps, Self::Rate, Self::Collapse, Self::Descriptions, Self::Result, Self::Skeleton, Self::Spin, Self::InputNumber, Self::Slider, Self::Segmented, Self::TimePicker, Self::AutoComplete, Self::Drawer, Self::Message, Self::Notification, Self::Tree, Self::Table, Self::Timeline];
+    pub const ALL:[Self;51]=[Self::Button, Self::Input, Self::Select, Self::DatePicker, Self::Form, Self::Checkbox, Self::Radio, Self::Switch, Self::Tag, Self::Badge, Self::Alert, Self::Card, Self::Progress, Self::Divider, Self::Tabs, Self::Tooltip, Self::Icons, Self::Typography, Self::Space, Self::Flex, Self::Grid, Self::Layout, Self::Menu, Self::Dropdown, Self::Popover, Self::Modal, Self::Popconfirm, Self::Avatar, Self::Statistic, Self::Empty, Self::Breadcrumb, Self::Pagination, Self::Steps, Self::Rate, Self::Collapse, Self::Descriptions, Self::Result, Self::Skeleton, Self::Spin, Self::InputNumber, Self::Slider, Self::Segmented, Self::TimePicker, Self::AutoComplete, Self::Drawer, Self::Message, Self::Notification, Self::Tree, Self::Table, Self::Timeline, Self::List];
     pub const fn name(self)->&'static str {
         match self {
             Self::Button => "Button",
@@ -214,6 +215,7 @@ impl AntComponent {
             Self::Tree => "Tree",
             Self::Table => "Table",
             Self::Timeline => "Timeline",
+            Self::List => "List",
         }
     }
     pub fn from_name(name:&str)->Option<Self> {
@@ -268,6 +270,7 @@ impl AntComponent {
             "Tree" => Some(Self::Tree),
             "Table" => Some(Self::Table),
             "Timeline" => Some(Self::Timeline),
+            "List" => Some(Self::List),
             _=>None,
         }
     }
@@ -277,11 +280,11 @@ impl AntComponent {
 /// separate slot; changing Card.padding does not affect Button.padding.
 #[derive(Clone,Copy,Debug)]
 pub struct AntComponentTokens {
-    entries:[AntComponentToken;50],
+    entries:[AntComponentToken;51],
 }
 impl Default for AntComponentTokens {
     fn default()->Self{
-        Self {entries:[AntComponentToken::default();50]}
+        Self {entries:[AntComponentToken::default();51]}
     }
 }
 impl AntComponentTokens {
@@ -525,7 +528,7 @@ mod tests {
     fn names_include_each_documented_component_without_collisions() {
         let keys:std::collections::HashSet<&str>=AntComponent::ALL.iter()
             .map(|kind|kind.name()).collect();
-        assert_eq!(keys.len(),50);
+        assert_eq!(keys.len(),51);
         for kind in AntComponent::ALL {
             assert_eq!(AntComponent::from_name(kind.name()),Some(kind));
         }
