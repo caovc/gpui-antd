@@ -7,10 +7,11 @@
 use std::{borrow::Cow, time::Duration};
 use gpui_kit::{
     Animation, AnimationExt as _, App, AssetSource, Hsla, IntoElement, RenderOnce, Result,
-    SharedString, Styled as _, Transformation, Window, percentage, px, svg,
+    SharedString, Styled as _, Transformation, Window, percentage, px,
     prelude::FluentBuilder as _,
 };
 use crate::tokens::AntTheme;
+use gpui_kit::component::{Icon as KitIcon, Size, Sizable as _};
 
 /// Ant Design outline, filled and two-tone icon variants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -455,18 +456,19 @@ impl AntIcon {
 }
 impl RenderOnce for AntIcon {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        svg()
+        let icon = KitIcon::default()
             .path(self.name.path())
-            .size(px(self.size))
-            .flex_shrink_0()
-            .text_color(self.color.unwrap_or(self.theme.text))
-            .when(self.spin, |this| {
-                this.with_animation(
-                    "ant-icon-spin",
-                    Animation::new(Duration::from_millis(900)).repeat(),
-                    |this, delta| this.transform(Transformation::rotate(percentage(delta))),
-                )
-            })
+            .with_size(Size::Size(px(self.size)))
+            .text_color(self.color.unwrap_or(self.theme.text));
+        if self.spin {
+            icon.with_animation(
+                "ant-icon-spin",
+                Animation::new(Duration::from_millis(900)).repeat(),
+                |this, delta| this.transform(Transformation::rotate(percentage(delta))),
+            ).into_any_element()
+        } else {
+            icon.into_any_element()
+        }
     }
 }
 
