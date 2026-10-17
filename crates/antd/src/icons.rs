@@ -86,14 +86,14 @@ pub enum AntIconName {
     LikeFilled,
     SmileFilled,
     PlusCircleFilled,
-    CheckCircleTwotone,
-    CloseCircleTwotone,
-    InfoCircleTwotone,
-    WarningTwotone,
-    HeartTwotone,
-    StarTwotone,
-    QuestionCircleTwotone,
-    SmileTwotone,
+    CheckCircleTwoTone,
+    CloseCircleTwoTone,
+    InfoCircleTwoTone,
+    WarningTwoTone,
+    HeartTwoTone,
+    StarTwoTone,
+    QuestionCircleTwoTone,
+    SmileTwoTone,
 }
 
 impl AntIconName {
@@ -170,14 +170,14 @@ impl AntIconName {
         Self::LikeFilled,
         Self::SmileFilled,
         Self::PlusCircleFilled,
-        Self::CheckCircleTwotone,
-        Self::CloseCircleTwotone,
-        Self::InfoCircleTwotone,
-        Self::WarningTwotone,
-        Self::HeartTwotone,
-        Self::StarTwotone,
-        Self::QuestionCircleTwotone,
-        Self::SmileTwotone,
+        Self::CheckCircleTwoTone,
+        Self::CloseCircleTwoTone,
+        Self::InfoCircleTwoTone,
+        Self::WarningTwoTone,
+        Self::HeartTwoTone,
+        Self::StarTwoTone,
+        Self::QuestionCircleTwoTone,
+        Self::SmileTwoTone,
     ];
 
     pub const fn path(self) -> &'static str {
@@ -252,14 +252,14 @@ impl AntIconName {
             Self::LikeFilled => "antd-icons/filled/like.svg",
             Self::SmileFilled => "antd-icons/filled/smile.svg",
             Self::PlusCircleFilled => "antd-icons/filled/plus-circle.svg",
-            Self::CheckCircleTwotone => "antd-icons/twotone/check-circle.svg",
-            Self::CloseCircleTwotone => "antd-icons/twotone/close-circle.svg",
-            Self::InfoCircleTwotone => "antd-icons/twotone/info-circle.svg",
-            Self::WarningTwotone => "antd-icons/twotone/warning.svg",
-            Self::HeartTwotone => "antd-icons/twotone/heart.svg",
-            Self::StarTwotone => "antd-icons/twotone/star.svg",
-            Self::QuestionCircleTwotone => "antd-icons/twotone/question-circle.svg",
-            Self::SmileTwotone => "antd-icons/twotone/smile.svg",
+            Self::CheckCircleTwoTone => "antd-icons/twotone/check-circle.svg",
+            Self::CloseCircleTwoTone => "antd-icons/twotone/close-circle.svg",
+            Self::InfoCircleTwoTone => "antd-icons/twotone/info-circle.svg",
+            Self::WarningTwoTone => "antd-icons/twotone/warning.svg",
+            Self::HeartTwoTone => "antd-icons/twotone/heart.svg",
+            Self::StarTwoTone => "antd-icons/twotone/star.svg",
+            Self::QuestionCircleTwoTone => "antd-icons/twotone/question-circle.svg",
+            Self::SmileTwoTone => "antd-icons/twotone/smile.svg",
         }
     }
 
@@ -335,14 +335,14 @@ impl AntIconName {
             Self::LikeFilled => "LikeFilled",
             Self::SmileFilled => "SmileFilled",
             Self::PlusCircleFilled => "PlusCircleFilled",
-            Self::CheckCircleTwotone => "CheckCircleTwotone",
-            Self::CloseCircleTwotone => "CloseCircleTwotone",
-            Self::InfoCircleTwotone => "InfoCircleTwotone",
-            Self::WarningTwotone => "WarningTwotone",
-            Self::HeartTwotone => "HeartTwotone",
-            Self::StarTwotone => "StarTwotone",
-            Self::QuestionCircleTwotone => "QuestionCircleTwotone",
-            Self::SmileTwotone => "SmileTwotone",
+            Self::CheckCircleTwoTone => "CheckCircleTwoTone",
+            Self::CloseCircleTwoTone => "CloseCircleTwoTone",
+            Self::InfoCircleTwoTone => "InfoCircleTwoTone",
+            Self::WarningTwoTone => "WarningTwoTone",
+            Self::HeartTwoTone => "HeartTwoTone",
+            Self::StarTwoTone => "StarTwoTone",
+            Self::QuestionCircleTwoTone => "QuestionCircleTwoTone",
+            Self::SmileTwoTone => "SmileTwoTone",
         }
     }
 
@@ -418,14 +418,14 @@ impl AntIconName {
             | Self::LikeFilled
             | Self::SmileFilled
             | Self::PlusCircleFilled => "filled",
-            Self::CheckCircleTwotone
-            | Self::CloseCircleTwotone
-            | Self::InfoCircleTwotone
-            | Self::WarningTwotone
-            | Self::HeartTwotone
-            | Self::StarTwotone
-            | Self::QuestionCircleTwotone
-            | Self::SmileTwotone => "twotone",
+            Self::CheckCircleTwoTone
+            | Self::CloseCircleTwoTone
+            | Self::InfoCircleTwoTone
+            | Self::WarningTwoTone
+            | Self::HeartTwoTone
+            | Self::StarTwoTone
+            | Self::QuestionCircleTwoTone
+            | Self::SmileTwoTone => "twotone",
         }
     }
 }
@@ -594,7 +594,7 @@ mod tests {
     fn filled_twotone_and_outlined_present() {
         assert!(AntIconName::CheckOutlined.path().contains("/outlined/"));
         assert!(AntIconName::CheckCircleFilled.path().contains("/filled/"));
-        assert!(AntIconName::CheckCircleTwotone.path().contains("/twotone/"));
+        assert!(AntIconName::CheckCircleTwoTone.path().contains("/twotone/"));
         assert_eq!(AntIcon::loading().name(), AntIconName::LoadingOutlined);
     }
 }
