@@ -12,6 +12,7 @@ use gpui_antd::{
     AntTabs, AntTab, TabsVariant, AntTooltip,
     AntLayout, AntSider, AntHeader, AntContent, AntFooter, GridBreakpoint,
     AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm,
+    AntMenu, AntMenuItem,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -71,7 +72,7 @@ impl GalleryAssets {
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider", "Tabs", "Tooltip", "Icons", "Layout",
-    "Dropdown", "Popover", "Modal", "Popconfirm", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
+    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
 ];
 
 pub struct Gallery {
@@ -109,6 +110,8 @@ pub struct Gallery {
     tabs_card_index: usize,
     layout_collapsed: bool,
     layout_mobile_open: bool,
+    layout_selected: String,
+    menu_selected: String,
     dropdown_selected: String,
     popover_open: bool,
     modal_result: String,
@@ -167,6 +170,7 @@ impl Gallery {
             paragraph_expanded: false,
             tabs_index: 0, tabs_card_index: 1, layout_collapsed: false,
             layout_mobile_open: false,
+            layout_selected: "dashboard".into(), menu_selected:"dashboard".into(),
             dropdown_selected: "None".into(), popover_open: false,
             modal_result: "No action".into(),
             popconfirm_result: "Awaiting confirmation".into(),
@@ -855,6 +859,54 @@ impl Gallery {
             .into_any_element()
     }
 
+    fn menu_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_light=cx.listener(|this, key:&SharedString, _, cx|{
+            this.menu_selected=key.to_string();
+            cx.notify();
+        });
+        let on_dark=cx.listener(|this, key:&SharedString, _, cx|{
+            this.menu_selected=key.to_string();
+            cx.notify();
+        });
+        let on_collapsed=cx.listener(|this, key:&SharedString, _, cx|{
+            this.menu_selected=key.to_string();
+            cx.notify();
+        });
+        div().w_full().flex().flex_col().gap(px(20.))
+            .child(label("GPUI Base-backed controlled navigation · click to select",theme))
+            .child(div().flex().flex_wrap().gap(px(16.))
+                .child(div().w(px(240.)).border_1().border_color(theme.border)
+                    .rounded(px(7.))
+                    .child(AntMenu::new("menu-light").theme(theme)
+                        .selected_key(self.menu_selected.clone())
+                        .on_select(move |key,window,cx| on_light(&key,window,cx))
+                        .item(AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined))
+                        .item(AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined))
+                        .item(AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined))
+                        .item(AntMenuItem::new("locked","Restricted").icon(AntIconName::LockOutlined).disabled(true))
+                        .item(AntMenuItem::new("delete","Delete").icon(AntIconName::DeleteOutlined).danger(true))))
+                .child(div().w(px(240.))
+                    .child(AntMenu::new("menu-dark").theme(theme).dark(true)
+                        .selected_key(self.menu_selected.clone())
+                        .on_select(move |key,window,cx| on_dark(&key,window,cx))
+                        .item(AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined))
+                        .item(AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined))
+                        .item(AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined))))
+                .child(div().w(px(66.))
+                    .child(AntMenu::new("menu-collapsed").theme(theme).dark(true)
+                        .inline_collapsed(true)
+                        .selected_key(self.menu_selected.clone())
+                        .on_select(move |key,window,cx| on_collapsed(&key,window,cx))
+                        .item(AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined))
+                        .item(AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined))
+                        .item(AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined)))))
+            .child(div().text_size(px(13.)).text_color(theme.text_secondary)
+                .child(format!("Selected menu key: {}",self.menu_selected)))
+            .child(AntAlert::new("Menu items use native keyboard-accessible buttons; nested SubMenu and arrow-key roving focus remain future work.")
+                .tone(Tone::Blue).theme(theme))
+            .into_any_element()
+    }
+
     fn layout_demo(&self, t: AntTheme, window: &Window, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
         let responsive=window.viewport_size().width < px(768.);
         let compact=if responsive {!self.layout_mobile_open} else {self.layout_collapsed};
@@ -869,13 +921,10 @@ impl Gallery {
             }
             cx.notify();
         });
-        let nav=|icon, title: &'static str| {
-            div().w_full().h(px(42.)).px(px(17.))
-                .flex().items_center().gap(px(12.))
-                .text_color(t.layout_dark_text)
-                .child(AntIcon::new(icon).theme(t).size(17.).color(t.layout_dark_text))
-                .when(!compact, |this| this.child(title))
-        };
+        let on_nav=cx.listener(|this, key: &SharedString, _, cx| {
+            this.layout_selected=key.to_string();
+            cx.notify();
+        });
         let metric=|title: &'static str, value: f64, tone: TextTone| {
             div().p(px(12.)).border_1().border_color(t.border)
                 .rounded(px(7.)).bg(t.surface)
@@ -899,10 +948,18 @@ impl Gallery {
                                 .theme(t).size(21.).color(t.layout_dark_text))
                             .when(!compact, |this| this.child(div().font_semibold()
                                 .text_color(t.layout_dark_text).child("GPUI Admin"))))
-                        .child(nav(AntIconName::DashboardOutlined, "Dashboard"))
-                        .child(nav(AntIconName::BarChartOutlined, "Analytics"))
-                        .child(nav(AntIconName::FileTextOutlined, "Documents"))
-                        .child(nav(AntIconName::SettingOutlined, "Settings")))
+                        .child(AntMenu::new("layout-sidebar-menu")
+                            .theme(t).dark(true).inline_collapsed(compact)
+                            .selected_key(self.layout_selected.clone())
+                            .on_select(move |key,window,cx| on_nav(&key,window,cx))
+                            .item(AntMenuItem::new("dashboard","Dashboard")
+                                .icon(AntIconName::DashboardOutlined))
+                            .item(AntMenuItem::new("analytics","Analytics")
+                                .icon(AntIconName::BarChartOutlined))
+                            .item(AntMenuItem::new("documents","Documents")
+                                .icon(AntIconName::FileTextOutlined))
+                            .item(AntMenuItem::new("settings","Settings")
+                                .icon(AntIconName::SettingOutlined))))
                     .child(AntLayout::new().theme(t)
                         .child(AntHeader::new().theme(t).dark(false)
                             .height(56.).padding(20.)
@@ -1126,6 +1183,7 @@ impl Render for Gallery {
             "Flex"=>self.flex_demo(t),
             "Grid"=>self.grid_demo(t),
             "Layout"=>self.layout_demo(t,window,cx),
+            "Menu"=>self.menu_demo(t,cx),
             "Dropdown"=>self.dropdown_demo(t,cx),
             "Popover"=>self.popover_demo(t,cx),
             "Modal"=>self.modal_demo(t,cx),

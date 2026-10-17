@@ -115,6 +115,17 @@ Dropdown/Modal/Popconfirm:
   restoration primitives.
 - Constrain popovers to the viewport and avoid trapping inputs incorrectly.
 
+### Native Menu behavior
+
+- `AntMenu` is a controlled flat menu backed by GPUI Base Button semantics.
+  Owner Entities update `selected_key` after `on_select(SharedString,...)`.
+- Each item must have a unique, stable key. Disabled items stay inert.
+  Collapsed icon-only items retain accessible names.
+- Use `AntMenu` in Sider and in standalone navigation; do not substitute
+  decorative `div` rows with no interaction.
+- Nested SubMenu, horizontal menu modes and keyboard roving focus have not
+  yet been implemented and must not be claimed.
+
 ### Responsive Layout behavior
 
 - `AntSider::collapsed` controls the desktop sidebar independently of the

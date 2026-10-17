@@ -35,7 +35,7 @@ before implementing components or changing the WASM gallery. See
 ## First milestone component set
 
 Button, Input, Select, DatePicker, Form, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress, Divider, Icons, Typography, Space, Flex, Grid, Avatar, Statistic,
-Empty, Breadcrumb, Tabs, Tooltip, application Layout, Dropdown, Popover, Modal and Popconfirm.
+Empty, Breadcrumb, Tabs, Tooltip, application Layout, Menu, Dropdown, Popover, Modal and Popconfirm.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -183,6 +183,17 @@ rather than truncating them to ellipses. Load more results to browse all 848
 icons or search for a specific name. The standalone preview renders the
 chosen icon with real Rust/GPUI.
 
+
+## Navigation Menu
+
+`AntMenu` and `AntMenuItem` are GPUI-native controlled flat navigation
+components. They provide light/dark styles, selected route keys, SVG icons,
+disabled/danger states and icon-only collapsed Sider rendering with accessible
+labels. GPUI Base Button handles Tab, Enter/Space, focus and activation. The
+Layout gallery uses a **real AntMenu** in its sidebar; no inert icon/text rows.
+
+Nested SubMenu, full roving arrow-key navigation and horizontal menu modes
+remain future Ant Design parity work.
 
 ## Dropdown, Popover, Modal and Popconfirm (alpha)
 

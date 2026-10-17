@@ -299,3 +299,5 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 .example-card iframe.wasm-iframe[src*="component=Popover"] { height: 500px; }
 .example-card iframe.wasm-iframe[src*="component=Modal"] { height: 600px; }
 .example-card iframe.wasm-iframe[src*="component=Popconfirm"] { height: 500px; }
+
+.example-card iframe.wasm-iframe[src*="component=Menu"] { height: 560px; }

@@ -7,7 +7,7 @@
 
 use std::rc::Rc;
 use gpui_kit::{
-    App, ElementId, IntoElement, ParentElement as _, RenderOnce, SharedString,
+    App, ElementId, InteractiveElement as _, IntoElement, ParentElement as _, RenderOnce, SharedString,
     Styled as _, Window, div, px,
 };
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
