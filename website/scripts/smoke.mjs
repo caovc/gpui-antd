@@ -99,7 +99,7 @@ try {
       console.error('Startup overlay:', text);
       console.error('Browser errors:', errors.join('\n'));
     } finally {
-      await page.screenshot({ path: join(screenshots, name.toLowerCase() + '.png'), fullPage: true })
+      await page.screenshot({ path: join(screenshots, name.toLowerCase().replace(/[^a-z0-9_-]/g, '-') + '.png'), fullPage: true })
         .catch(() => {});
       await page.close();
     }
