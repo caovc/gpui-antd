@@ -104,6 +104,55 @@ impl AntComponentToken {
     }
 }
 
+/// Optional overrides for a supported subset of derived Map Tokens.
+///
+/// Apply after `AntTheme::from_seed`; unspecified tokens retain algorithmic
+/// values. This is not the complete Ant Design MapToken schema.
+#[derive(Clone,Copy,Debug,Default,PartialEq)]
+pub struct AntMapTokenOverrides {
+    pub color_primary_hover:Option<Hsla>,
+    pub color_primary_active:Option<Hsla>,
+    pub color_primary_bg:Option<Hsla>,
+    pub color_primary_border:Option<Hsla>,
+    pub color_bg_elevated:Option<Hsla>,
+    pub color_bg_layout:Option<Hsla>,
+    pub control_height_sm:Option<f32>,
+    pub control_height_lg:Option<f32>,
+}
+impl AntMapTokenOverrides {
+    pub fn color_primary_hover(mut self,v:Hsla)->Self{self.color_primary_hover=Some(v);self}
+    pub fn color_primary_active(mut self,v:Hsla)->Self{self.color_primary_active=Some(v);self}
+    pub fn color_primary_bg(mut self,v:Hsla)->Self{self.color_primary_bg=Some(v);self}
+    pub fn color_primary_border(mut self,v:Hsla)->Self{self.color_primary_border=Some(v);self}
+    pub fn color_bg_elevated(mut self,v:Hsla)->Self{self.color_bg_elevated=Some(v);self}
+    pub fn color_bg_layout(mut self,v:Hsla)->Self{self.color_bg_layout=Some(v);self}
+    pub fn control_height_sm(mut self,v:f32)->Self{
+        if v.is_finite(){self.control_height_sm=Some(v.clamp(18.,64.));}self
+    }
+    pub fn control_height_lg(mut self,v:f32)->Self{
+        if v.is_finite(){self.control_height_lg=Some(v.clamp(20.,72.));}self
+    }
+}
+
+/// Optional Alias Token overrides. Alias values are applied *after* the
+/// Map layer and before per-component overrides. Consumers use the resolved
+/// `AntTheme` fields so the same colors reach native and WASM components.
+#[derive(Clone,Copy,Debug,Default,PartialEq)]
+pub struct AntAliasTokenOverrides {
+    pub color_link:Option<Hsla>,
+    pub color_text_disabled:Option<Hsla>,
+    pub color_success:Option<Hsla>,
+    pub color_warning:Option<Hsla>,
+    pub color_error:Option<Hsla>,
+}
+impl AntAliasTokenOverrides {
+    pub fn color_link(mut self,v:Hsla)->Self{self.color_link=Some(v);self}
+    pub fn color_text_disabled(mut self,v:Hsla)->Self{self.color_text_disabled=Some(v);self}
+    pub fn color_success(mut self,v:Hsla)->Self{self.color_success=Some(v);self}
+    pub fn color_warning(mut self,v:Hsla)->Self{self.color_warning=Some(v);self}
+    pub fn color_error(mut self,v:Hsla)->Self{self.color_error=Some(v);self}
+}
+
 /// Public, stable Ant Design component token namespaces. Not all component
 /// overrides have connected styling yet; see the per-component parity map.
 #[derive(Clone,Copy,Debug,PartialEq,Eq,Hash)]
@@ -451,6 +500,34 @@ impl AntTheme {
             item(Alias,"motion",Boolean(a.motion)),
         ]
     }
+    /// Override selected derived Map Tokens without re-running seed derivation.
+    /// Color states/geometry are written to the same resolved fields used by
+    /// actual GPUI components and by the token inspector.
+    pub fn with_map_overrides(mut self,overrides:AntMapTokenOverrides)->Self {
+        if let Some(v)=overrides.color_primary_hover {self.primary_hover=v;}
+        if let Some(v)=overrides.color_primary_active {self.primary_active=v;}
+        if let Some(v)=overrides.color_primary_bg {self.primary_bg=v;}
+        if let Some(v)=overrides.color_primary_border {self.primary_border=v;}
+        if let Some(v)=overrides.color_bg_elevated {self.bg_elevated=v;}
+        if let Some(v)=overrides.color_bg_layout {self.layout_body=v;}
+        if let Some(v)=overrides.control_height_sm.filter(|v|v.is_finite()) {
+            self.control_height_sm=v.clamp(18.,64.);
+        }
+        if let Some(v)=overrides.control_height_lg.filter(|v|v.is_finite()) {
+            self.control_height_lg=v.clamp(20.,72.);
+        }
+        self
+    }
+    /// Override shared semantic Alias Tokens after the derived Map layer.
+    /// Component Tokens remain the final, independently scoped layer.
+    pub fn with_alias_overrides(mut self,overrides:AntAliasTokenOverrides)->Self {
+        if let Some(v)=overrides.color_link {self.color_link=v;}
+        if let Some(v)=overrides.color_text_disabled {self.disabled_text=v;}
+        if let Some(v)=overrides.color_success {self.success=v;}
+        if let Some(v)=overrides.color_warning {self.warning=v;}
+        if let Some(v)=overrides.color_error {self.error=v;}
+        self
+    }
     pub fn component(self,name:AntComponent)->AntComponentToken {
         self.components.get(name)
     }
@@ -523,6 +600,46 @@ mod tests {
         assert!(tokens.iter().any(|v|v.layer==AntTokenLayer::Alias && v.name=="colorTextDisabled"));
         assert_ne!(t.primary_bg,AntTheme::light().primary_bg);
         assert_ne!(t.layout_body,AntTheme::light().layout_body);
+    }
+    #[test]
+    fn explicit_map_and_alias_layers_preserve_independent_component_overrides() {
+        let mut seed=AntSeedTokens::default();
+        seed.color_primary=0x744acc;
+        let theme=AntTheme::from_seed(seed,AntThemeAlgorithm::Compact)
+            .with_map_overrides(AntMapTokenOverrides::default()
+                .color_primary_bg(color(0x010203))
+                .color_primary_hover(color(0x223344))
+                .control_height_sm(22.))
+            .with_alias_overrides(AntAliasTokenOverrides::default()
+                .color_link(color(0xaabbcc))
+                .color_text_disabled(color(0x778899)))
+            .with_component(AntComponent::Button,
+                AntComponentToken::default().color_primary(color(0x123456)));
+        assert_eq!(theme.primary,color(0x744acc));
+        assert_eq!(theme.map_tokens().color_primary_bg,color(0x010203));
+        assert_eq!(theme.map_tokens().color_primary_hover,color(0x223344));
+        assert_eq!(theme.map_tokens().control_height_sm,22.);
+        assert_eq!(theme.alias_tokens().color_link,color(0xaabbcc));
+        assert_eq!(theme.alias_tokens().color_text_disabled,color(0x778899));
+        assert_eq!(theme.component(AntComponent::Button).color_primary,Some(color(0x123456)));
+        assert_eq!(theme.component(AntComponent::Card).color_primary,None);
+        let resolved=theme.resolved_tokens();
+        assert!(resolved.iter().any(|t|t.layer==AntTokenLayer::Map &&
+            t.name=="colorPrimaryBg" && t.value==AntTokenValue::Color(color(0x010203))));
+        assert!(resolved.iter().any(|t|t.layer==AntTokenLayer::Alias &&
+            t.name=="colorLink" && t.value==AntTokenValue::Color(color(0xaabbcc))));
+    }
+    #[test]
+    fn map_geometry_overrides_reject_nonfinite_values_and_clamp_bounds() {
+        let t=AntTheme::light().with_map_overrides(
+            AntMapTokenOverrides::default()
+                .control_height_sm(f32::NAN).control_height_lg(f32::INFINITY));
+        assert_eq!(t.control_height_sm,24.);
+        assert_eq!(t.control_height_lg,40.);
+        let t=t.with_map_overrides(AntMapTokenOverrides::default()
+            .control_height_sm(-500.).control_height_lg(900.));
+        assert_eq!(t.control_height_sm,18.);
+        assert_eq!(t.control_height_lg,72.);
     }
     #[test]
     fn invalid_scalar_values_are_clamped() {
