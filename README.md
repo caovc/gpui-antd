@@ -386,3 +386,31 @@ They bring the documented alpha component count to **44**.
 
 These are alpha variants, not claims of React API compatibility or pixel parity.
 See [coverage and gap matrix](docs/COMPONENT_MATRIX.md).
+
+## Native feedback and data display — wave 3
+
+Drawer, Message, Notification, Tree and Table bring the component Gallery to
+**49 alpha pages**. All real previews share the Rust/GPUI renderer and native
+GPU APIs; the documentation website does not fake them with HTML controls.
+
+- **Drawer:** AntDrawer opens a real GPUI Kit Root Sheet with four placements,
+  optional backdrop, overlay dismissal, width/height and resize. Sheet owns
+  Escape, focus trap, close and focus return. The alpha API uses a trigger;
+  externally controlled open, nested push, rich actions and exact Ant motion
+  remain a later milestone.
+- **Message:** AntMessage is an imperative top-center Kit notification queue:
+  info/success/warning/error, persistent status, keyed replacement, and native
+  Kit auto-hide/stacking. Loading state, duration seconds and thenable handles
+  are not included yet.
+- **Notification:** AntNotification adds title/description, severity, placement,
+  persistent status and keyed update. Toast focus and auto-dismiss use Kit Root.
+- **Tree:** AntTree/AntTreeNode have application-controlled expansion, single
+  selected key, independent checked keys and native keyboard navigation.
+  Drag/drop, cascade checks, lazy loading and virtualization remain parity work.
+- **Table:** AntTable/AntTableColumn/AntTableRow use the semantic GPUI Kit Table
+  infrastructure plus app-controlled sorting, checkbox row selection,
+  Pagination, stripes and themed headers. It is nonvirtualized and intentionally
+  **not a replacement for gpui-grid** on large datasets or full Ant Design Table.
+
+See [component matrix](docs/COMPONENT_MATRIX.md) for the remaining catalog and
+known Ant Design 6 API / accessibility / visual parity gaps.
