@@ -7,7 +7,7 @@
 
 use std::rc::Rc;
 use gpui_kit::{
-    AnyElement, App, ElementId, IntoElement, RenderOnce, SharedString,
+    AnyElement, App, ElementId, IntoElement, ParentElement as _, RenderOnce, SharedString,
     Styled as _, Window, div, px,
 };
 use gpui_kit::component::{

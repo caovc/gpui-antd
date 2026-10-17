@@ -6,7 +6,7 @@
 //! verify keyboard focus and placement before claiming full Ant parity.
 
 use gpui_kit::{
-    AnyElement, App, ElementId, IntoElement, RenderOnce, SharedString,
+    AnyElement, App, ElementId, IntoElement, ParentElement as _, RenderOnce, SharedString,
     StatefulInteractiveElement as _, Styled as _, Window, div, px,
 };
 use gpui_kit::component::tooltip::Tooltip as KitTooltip;
