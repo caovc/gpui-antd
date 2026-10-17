@@ -360,7 +360,7 @@ They bring the documented alpha component count to **44**.
   not render tabs or content panels.
 - AntAutoComplete uses a real InputState (free text) plus filtered suggestion
   actions. Owner state controls open, highlight and selected value; suggestions
-  render as an anchored native GPUI panel, not DOM. Outside click collision
+  render as an in-flow native GPUI panel, not DOM. Outside click collision
   handling and complete combobox ARIA behavior remain for follow-up.
 
 These are alpha variants, not claims of React API compatibility or pixel parity.
