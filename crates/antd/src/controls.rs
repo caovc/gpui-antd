@@ -9,6 +9,7 @@ use gpui_kit::{
 use gpui_kit::base::{Button as BaseButton, Checkbox as BaseCheckbox, CheckboxState, Switch as BaseSwitch};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::base::StyledExt as _;
+use gpui_kit::component::{Sizable as _, Size, spinner::Spinner};
 use crate::tokens::{AntTheme, color};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -83,10 +84,13 @@ impl RenderOnce for AntButton {
         let disabled = self.disabled || self.loading;
         let is_primary = self.variant == ButtonVariant::Primary;
         let borderless = matches!(self.variant, ButtonVariant::Text | ButtonVariant::Link);
+        let transparent = color(0x000000).opacity(0.);
         let bg = if disabled {
             t.disabled_bg
         } else if is_primary && !self.ghost {
             accent
+        } else if self.ghost || borderless {
+            transparent
         } else {
             t.surface
         };
@@ -99,17 +103,37 @@ impl RenderOnce for AntButton {
         } else {
             t.text
         };
-        let border = if borderless { bg } else if is_primary && self.ghost { accent } else { t.border };
-        let hover_bg = if is_primary && !self.ghost { if self.danger { t.error } else { t.primary_hover } }
-            else if self.variant == ButtonVariant::Text { t.surface_secondary } else { bg };
-        let hover_fg = if is_primary && !self.ghost { color(0xffffff) } else { accent };
-        let hover_border = if borderless { hover_bg } else { accent };
-        let text = if self.loading { format!("◌ {}", self.label) } else { self.label.to_string() };
+        let border = if borderless {
+            transparent
+        } else if self.ghost || self.danger {
+            accent
+        } else {
+            t.border
+        };
+        let hover_bg = if is_primary && !self.ghost {
+            if self.danger { t.error } else { t.primary_hover }
+        } else if self.variant == ButtonVariant::Text {
+            t.surface_secondary
+        } else {
+            bg
+        };
+        let hover_fg = if is_primary && !self.ghost {
+            color(0xffffff)
+        } else if self.variant == ButtonVariant::Text {
+            t.text
+        } else {
+            accent
+        };
+        let hover_border = if borderless { transparent } else { accent };
+        let active_bg = if is_primary && !self.ghost { t.primary_active } else { hover_bg };
+
         BaseButton::new(self.id)
             .h(px(self.size.height()))
             .px(px(self.size.horizontal_padding()))
+            .gap(px(8.))
             .rounded(px(t.border_radius))
             .border_1()
+            .when(self.variant == ButtonVariant::Dashed, |this| this.border_dashed())
             .border_color(border)
             .bg(bg)
             .text_color(fg)
@@ -119,11 +143,16 @@ impl RenderOnce for AntButton {
             .when(!disabled, |this| {
                 this.cursor_pointer()
                     .hover(|this| this.bg(hover_bg).text_color(hover_fg).border_color(hover_border))
-                    .active(|this| this.bg(t.primary_active))
+                    .active(|this| this.bg(active_bg))
             })
             .disabled(disabled)
-            .child(text)
-            .when_some(self.on_click, |this, handler| this.on_click(move |event, window, cx| handler(event, window, cx)))
+            .when(self.loading, |this| {
+                this.child(Spinner::new().with_size(Size::Small).color(fg))
+            })
+            .child(self.label)
+            .when_some(self.on_click, |this, handler| {
+                this.on_click(move |event, window, cx| handler(event, window, cx))
+            })
     }
 }
 
