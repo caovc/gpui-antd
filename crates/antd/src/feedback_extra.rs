@@ -3,6 +3,7 @@ use gpui_kit::{
     AnyElement, App, IntoElement, ParentElement as _, RenderOnce,
     SharedString, Styled as _, Window, div, px, relative,
 };
+use gpui_kit::base::StyledExt as _;
 use gpui_kit::component::{Sizable as _, Size, spinner::Spinner};
 use gpui_kit::prelude::FluentBuilder as _;
 use crate::{AntIcon, AntIconName, AntTheme};
