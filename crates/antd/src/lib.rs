@@ -13,6 +13,7 @@ pub mod display;
 pub mod input;
 pub mod radio;
 pub mod select;
+pub mod date_picker;
 pub mod tokens;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
@@ -20,4 +21,5 @@ pub use display::{AntAlert, AntBadge, AntCard, AntDivider, AntProgress, AntTag, 
 pub use input::{AntInput, InputStatus, InputVariant};
 pub use radio::{AntRadio, AntRadioGroup};
 pub use select::AntSelect;
+pub use date_picker::AntDatePicker;
 pub use tokens::{AntTheme, Appearance, color};
