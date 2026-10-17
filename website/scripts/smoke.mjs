@@ -62,7 +62,14 @@ try {
     const errors = [];
     page.on('pageerror', error => errors.push(String(error.message)));
     page.on('console', message => {
-      if (message.type() === 'error') errors.push(message.text());
+      if (message.type() !== 'error') return;
+      const detail = message.text().trim();
+      // GPUI Kit WASM Assets.load deliberately returns this recoverable
+      // error while its SVG request is pending. The renderer retries after
+      // loading; this is not a JavaScript exception or a failed resource.
+      // Do not filter ANY other console error.
+      if (detail === 'Wasm assets loading, will be available soon...') return;
+      errors.push(detail);
     });
     try {
       const url = base + 'demo.html?component=' + encodeURIComponent(name);
@@ -83,7 +90,7 @@ try {
       console.log('PASS: ' + name + ' rendered through GPUI/WASM');
     } catch (error) {
       failures++;
-      const text = await page.locator('#status').textContent().catch(() => '');
+      const text = await page.locator('#status').textContent({ timeout: 500 }).catch(() => '');
       console.error('FAIL: ' + name + ':', String(error));
       console.error('Startup overlay:', text);
       console.error('Browser errors:', errors.join('\n'));
