@@ -44,12 +44,32 @@ const FIELDS=[
   ['controlHeight','Height','number'],['fontSize','Font size','number'],
   ['padding','Padding','number'],
 ];
+// These are intentionally bounded, independently editable subsets of Ant Design's
+// Map and Alias layers. Only include values consumed by native Rust today.
+const MAP_FIELDS=[
+  ['colorPrimaryHover','Primary hover','color'],
+  ['colorPrimaryActive','Primary active','color'],
+  ['colorPrimaryBg','Primary background','color'],
+  ['colorPrimaryBorder','Primary border','color'],
+  ['colorBgElevated','Elevated surface','color'],
+  ['colorBgLayout','Layout surface','color'],
+  ['controlHeightSM','Small control height','number'],
+  ['controlHeightLG','Large control height','number'],
+];
+const ALIAS_FIELDS=[
+  ['colorLink','Link color','color'],
+  ['colorTextDisabled','Disabled text','color'],
+  ['colorSuccess','Success color','color'],
+  ['colorWarning','Warning color','color'],
+  ['colorError','Error color','color'],
+];
+const LAYER_FIELDS={map:MAP_FIELDS,alias:ALIAS_FIELDS};
 const PRESETS={'Ant Blue':'#1677ff','Emerald':'#12a676','Indigo':'#635bdf','Sunset':'#fa7048'};
 const escapeHtml=x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;')
   .replaceAll('>','&gt;').replaceAll('"','&quot;');
 const isColor=v=>/^#[0-9a-f]{6}$/i.test(String(v));
 const LIMITS={radius:[0,32],height:[20,64],fontSize:[10,28],
-  spacing:[1,16],borderRadius:[0,32],controlHeight:[20,64],padding:[0,64]};
+  spacing:[1,16],borderRadius:[0,32],controlHeight:[20,64],padding:[0,64],controlHeightSM:[18,64],controlHeightLG:[20,72]};
 const validateValue=(v,type,key)=>{
   if(type==='color')return isColor(v)?String(v).toLowerCase():null;
   if(v==null||String(v).trim()==='')return null;
@@ -59,7 +79,7 @@ const validateValue=(v,type,key)=>{
 };
 function emptyTheme(){
   return {format:'gpui-antd-theme-v1',algorithm:'default',motion:true,
-    seed:Object.fromEntries(SEEDS.map(([k,,v])=>[k,v])),components:{}};
+    seed:Object.fromEntries(SEEDS.map(([k,,v])=>[k,v])),map:{},alias:{},components:{}};
 }
 function validated(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Expected theme object');
@@ -67,10 +87,21 @@ function validated(raw){
   if(['default','dark','compact','dark-compact'].includes(raw.algorithm))
     state.algorithm=raw.algorithm;
   state.motion=raw.motion!==false;
+  // Partial dark-theme imports must resolve dark seed defaults, rather than
+  // accidentally rendering light surfaces inside a dark shell.
+  if(state.algorithm.includes('dark'))
+    for(const [key,,,darkValue] of SEEDS)state.seed[key]=darkValue;
   for(const [key,,, ,kind] of SEEDS) {
     const value=raw.seed?.[key];
     const valid=value==null?null:validateValue(value,kind,key);
     if(valid!==null)state.seed[key]=valid;
+  }
+  for(const [layer,fields] of Object.entries(LAYER_FIELDS)) {
+    for(const [key,,kind] of fields) {
+      const v=raw[layer]?.[key];
+      const valid=v==null?null:validateValue(v,kind,key);
+      if(valid!==null)state[layer][key]=valid;
+    }
   }
   for(const component of COMPONENTS) {
     if(!raw.components?.[component]||typeof raw.components[component]!=='object')continue;
@@ -92,11 +123,18 @@ function previewParam(state,scene='components'){
   if(state.algorithm.includes('compact'))parts.push('compact=1');
   if(!state.motion)parts.push('motion=0');
   if(scene==='tokens')parts.push('scene=tokens');
+  for(const [layer,values] of [['map',state.map],['alias',state.alias]])
+    for(const [key,value] of Object.entries(values))
+      parts.push((layer==='map'?'Map':'Alias')+'.'+key+'='+rgbParam(value));
   for(const [component,values] of Object.entries(state.components))
     for(const [key,value] of Object.entries(values))
       parts.push(component+'.'+key+'='+rgbParam(value));
   return parts.join('|');
 }
+const rustNumber=value=>{
+  const n=Number(value);
+  return String(n)+(Number.isInteger(n)?'.':'');
+};
 function rustCode(state){
   const algorithm={
     default:'Default',dark:'Dark',compact:'Compact','dark-compact':'DarkCompact'
@@ -114,22 +152,55 @@ function rustCode(state){
     borderRadius:'border_radius',controlHeight:'control_height',
     fontSize:'font_size',padding:'padding',
   };
+  const mapMethods={
+    colorPrimaryHover:'color_primary_hover',colorPrimaryActive:'color_primary_active',
+    colorPrimaryBg:'color_primary_bg',colorPrimaryBorder:'color_primary_border',
+    colorBgElevated:'color_bg_elevated',colorBgLayout:'color_bg_layout',
+    controlHeightSM:'control_height_sm',controlHeightLG:'control_height_lg',
+  };
+  const aliasMethods={
+    colorLink:'color_link',colorTextDisabled:'color_text_disabled',
+    colorSuccess:'color_success',colorWarning:'color_warning',colorError:'color_error',
+  };
   const lines=['use gpui_antd::*;','',
     'let mut seed = '+(modeDark(state)?'AntSeedTokens::dark()':'AntSeedTokens::default()')+';'];
   for(const [key,,, ,type] of SEEDS) {
     const value=state.seed[key];
-    lines.push('seed.'+rustNames[key]+' = '+(type==='color'?'0x'+rgbParam(value):value+'.')+';');
+    lines.push('seed.'+rustNames[key]+' = '+(type==='color'?'0x'+rgbParam(value):rustNumber(value))+';');
   }
   lines.push('seed.motion = '+state.motion+';',
     'let theme = AntTheme::from_seed(seed, AntThemeAlgorithm::'+algorithm+')');
+  for(const [layer,methodNames,kind] of [
+    ['map',mapMethods,'AntMapTokenOverrides'],
+    ['alias',aliasMethods,'AntAliasTokenOverrides'],
+  ]) {
+    const chain=Object.entries(state[layer]).map(([key,value])=>
+      '.'+methodNames[key]+'('+
+      (isColor(value)?'color(0x'+rgbParam(value)+')':rustNumber(value))+')').join('');
+    if(chain)lines.push('    .with_'+layer+'_overrides('+kind+'::default()'+chain+')');
+  }
   for(const [component,values] of Object.entries(state.components)){
     const chain=Object.entries(values).map(([key,value])=>'.'+methods[key]+'('+
-      (isColor(value)?'color(0x'+rgbParam(value)+')':value+'.')+')').join('');
+      (isColor(value)?'color(0x'+rgbParam(value)+')':rustNumber(value))+')').join('');
     if(chain)lines.push('    .with_component(AntComponent::'+component+
       ', AntComponentToken::default()'+chain+')');
   }
   lines.push('    ;');
   return lines.join('\n');
+}
+function renderLayerFields(layer,fields,values){
+  return fields.map(([key,label,kind])=>{
+    const enabled=Object.hasOwn(values,key);
+    const value=enabled?values[key]:
+      (kind==='color'?'#1677ff':key==='controlHeightLG'?'40':'24');
+    return '<label class="token-field"><span><input data-token-toggle="'+key+
+      '" type="checkbox" '+(enabled?'checked ':'')+'/> '+
+      escapeHtml(label)+' <em>'+layer.toUpperCase()+'</em></span>'+
+      '<input data-token-value="'+key+'" type="'+kind+'" value="'+escapeHtml(value)+
+      '" '+(enabled?'':'disabled ')+(kind==='number'?'min="0" max="72" step="1" ':'')+
+      'aria-label="'+layer+' '+escapeHtml(label)+'" />'+
+      '<small>'+layer+'.'+key+'</small></label>';
+  }).join('');
 }
 function renderSeed([key,label,light,,kind]){
   return '<label class="token-field"><span>'+escapeHtml(label)+'</span>'+
@@ -142,7 +213,7 @@ export function themeDesignerHtml(){
     '<div class="breadcrumbs"><a href="#/">GPUI Ant Design</a><span>›</span><b>Token Studio</b></div>'+
     '<span class="section-eyebrow">DESIGN TOKENS / NATIVE RUST / WEBASSEMBLY</span>'+
     '<div class="component-heading"><div><h1>Design Token Studio</h1>'+
-    '<p>Design a theme with Seed and component tokens and preview real Rust/GPUI components.</p></div></div>'+
+    '<p>Design Seed, Map, Alias and Component tokens with real Rust/GPUI previews.</p></div></div>'+
     '<div class="theme-toolbar">'+
     '<label>Algorithm<select id="theme-mode"><option value="default">Light</option>'+
     '<option value="dark">Dark</option><option value="compact">Compact</option>'+
@@ -162,6 +233,12 @@ export function themeDesignerHtml(){
     '<div class="token-form-grid">'+SEEDS.map(renderSeed).join('')+'</div>'+
     '<label class="token-motion"><input id="theme-motion" type="checkbox" checked /> Enable motion</label>'+
     '</details>'+
+    '<details><summary>Map Token · derived state colors and geometry</summary>'+
+    '<p class="theme-caption">Optional overrides of derived Map values. Unchecked fields continue to follow the Seed algorithm; the native GPUI token inspector shows the resolved values.</p>'+
+    '<div id="theme-map-fields" class="token-form-grid"></div></details>'+
+    '<details><summary>Alias Token · global semantic overrides</summary>'+
+    '<p class="theme-caption">Alias overrides apply after Map derivation and before component-specific values.</p>'+
+    '<div id="theme-alias-fields" class="token-form-grid"></div></details>'+
     '<details open><summary>Component Token · independent overrides</summary>'+
     '<p class="theme-caption">All 31 namespaces can be exported. Only fields marked Live are connected to the Rust renderer; unimplemented fields cannot be edited here.</p>'+
     '<label>Component<select id="theme-component">'+COMPONENTS.map(x=>
@@ -202,6 +279,11 @@ export function initThemeDesigner(base){
     $('#theme-motion').checked=state.motion;
     for(const [key] of SEEDS)$('[data-seed="'+key+'"]').value=state.seed[key];
     drawFields();
+    drawLayerFields();
+  }
+  function drawLayerFields(){
+    for(const [layer,defs] of Object.entries(LAYER_FIELDS))
+      $('#theme-'+layer+'-fields').innerHTML=renderLayerFields(layer,defs,state[layer]);
   }
   function drawFields(){
     const component=$('#theme-component').value;
@@ -275,6 +357,30 @@ export function initThemeDesigner(base){
     state.motion=$('#theme-motion').checked;schedule();
   });
   $('#theme-component').addEventListener('change',drawFields);
+  for(const [layer,defs] of Object.entries(LAYER_FIELDS)){
+    const container=$('#theme-'+layer+'-fields');
+    container.addEventListener('change',e=>{
+      const toggle=e.target.closest('[data-token-toggle]');
+      if(!toggle)return;
+      const key=toggle.dataset.tokenToggle;
+      const field=container.querySelector('[data-token-value="'+key+'"]');
+      if(toggle.checked){
+        const kind=defs.find(([k])=>k===key)[2];
+        const value=validateValue(field.value,kind,key);
+        if(value!==null)state[layer][key]=value;
+      }else delete state[layer][key];
+      drawLayerFields();schedule();
+    });
+    container.addEventListener('input',e=>{
+      const field=e.target.closest('[data-token-value]');
+      if(!field||field.disabled)return;
+      const key=field.dataset.tokenValue;
+      const kind=defs.find(([k])=>k===key)[2];
+      const value=validateValue(field.value,kind,key);
+      if(value===null)return;
+      state[layer][key]=value;schedule();
+    });
+  }
   fields.addEventListener('change',e=>{
     const input=e.target.closest('[data-enable]');
     if(!input)return;
@@ -341,4 +447,6 @@ export function initThemeDesigner(base){
 }
 
 // Pure functions are exported for node:test without mounting a DOM or a fake GPUI preview.
-export const tokenStudioLogic={emptyTheme,validated,previewParam,rustCode,validateValue};
+export const tokenStudioLogic={
+  emptyTheme,validated,previewParam,rustCode,validateValue,renderLayerFields,
+};
