@@ -291,3 +291,5 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
   background: var(--surface); cursor: pointer; }
 .icon-explorer-load:hover { background: var(--soft-blue); border-color: var(--blue); }
 .icon-explorer-load:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.icon-explorer-load[hidden] { display: none; }

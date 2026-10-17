@@ -763,7 +763,7 @@ impl Gallery {
                                         .child(AntProgress::new(75.).theme(t).show_info(true)))))
                         .child(AntFooter::new().theme(t).padding(12.)
                             .child(AntText::new("GPUI Ant Design · native Rust layout")
-                                .theme(t).tone(TextTone::Secondary)))))
+                                .theme(t).tone(TextTone::Secondary)))))))
             .child(div().text_size(px(12.)).text_color(t.text_secondary)
                 .child(format!("Sider: {} · auto-collapse below md (768px)", if compact { "collapsed" } else { "expanded" })))
             .into_any_element()

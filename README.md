@@ -151,14 +151,14 @@ primitives. Responsive xs/sm/md/lg/xl/xxl breakpoints now follow Ant Design's vi
 
 ## Application Layout
 
-The native application shell is available as \`AntLayout\`, \`AntHeader\`,
-\`AntSider\`, \`AntContent\`, and \`AntFooter\`. Nested Layout elements form
+The native application shell is available as `AntLayout`, `AntHeader`,
+`AntSider`, `AntContent`, and `AntFooter`. Nested Layout elements form
 horizontal or vertical GPUI flex trees. The sidebar supports controlled
 collapse, light/dark surfaces, configured widths and automatic collapse
 below an optional viewport breakpoint. The Gallery shows an interactive
 dashboard with a collapsible sidebar using real GPUI/WASM.
 
-\`AntSider::breakpoint\` is currently a viewport-based auto-collapse rule:
+`AntSider::breakpoint` is currently a viewport-based auto-collapse rule:
 it does not update application state or create a mobile drawer by itself.
 Sider menu items and route navigation belong to the consuming app.
 
