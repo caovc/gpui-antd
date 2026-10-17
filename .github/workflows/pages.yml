@@ -13,7 +13,9 @@ permissions:
   id-token: write
 
 concurrency:
-  group: gpui-antd-pages-v2
+  # PR checks cannot cancel in-flight production builds or Pages deploys.
+  # Subsequent pushes to main still supersede older main deployments.
+  group: gpui-antd-pages-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'production' }}
   cancel-in-progress: true
 
 jobs:
