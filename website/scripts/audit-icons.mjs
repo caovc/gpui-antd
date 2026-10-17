@@ -39,9 +39,14 @@ async function ready(){
   throw new Error('Vite preview did not start: '+logs);
 }
 
-// The geometry corresponds to Gallery::icon_audit_demo: root padding 24px,
-// 6 columns x 4 rows of 136x112px cards, with 60px icons at x+38,y+12.
-// Only the icon rectangle is sampled, not its text caption or card border.
+// Geometry corresponds to Gallery::icon_audit_demo: 24px root padding,
+// six columns x four rows of 136x112px cards and 60px icons at x+38,y+12.
+// The pinned GPUI/Web backend applies the device scale to its logical pixel
+// layout, while the Chromium screenshot applies DPR again. At DPR=2, adjacent
+// 136px cards are 136 * 2 * 2 = 544 PNG pixels apart, *not* 272.
+// Scale the screenshot viewport as well so every one of the 24 glyphs remains
+// in view. The geometry assertion fails closed if that ever changes.
+// Only the glyph rectangle is sampled (never captions or card borders).
 async function paintedIcons(page,png,entries){
   return page.evaluate(async ({base64,entries})=>{
     const image = new Image();
@@ -52,7 +57,9 @@ async function paintedIcons(page,png,entries){
     const ctx=cv.getContext('2d',{willReadFrequently:true});
     ctx.drawImage(image,0,0);
     const data=ctx.getImageData(0,0,cv.width,cv.height).data;
-    const ratio=window.devicePixelRatio||1;
+    // One factor from GPUI layout and one from Chromium PNG rasterization.
+    const deviceScale=window.devicePixelRatio||1;
+    const ratio=deviceScale*deviceScale;
     const counts=[];
     for(let i=0;i<entries.length;i++){
       const icon=entries[i];
@@ -61,6 +68,12 @@ async function paintedIcons(page,png,entries){
       const x1=Math.round((24+136*col+97)*ratio);
       const y0=Math.round((24+112*row+13)*ratio);
       const y1=Math.round((24+112*row+71)*ratio);
+      if(x0<0 || y0<0 || x1>cv.width || y1>cv.height){
+        counts.push({name:icon.name,style:icon.style,pixels:0,
+          secondaryPixels:0,coverage:0,offscreen:true,
+          bounds:{x0,y0,x1,y1},screenshot:{width:cv.width,height:cv.height}});
+        continue;
+      }
       let painted=0,secondary=0;
       for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){
         if(x>=cv.width||y>=cv.height)continue;
@@ -105,7 +118,12 @@ try{
   const pages=sample?samplePages:Array.from({length:report.pages},(_,i)=>i);
   for(const index of pages){
     const entries=catalog.icons.slice(index*24,(index+1)*24);
-    const page=await browser.newPage({viewport:{width:930,height:545},deviceScaleFactor:dpr});
+    // GPUI logical layout is already DPR-scaled. A larger CSS viewport at
+    // Retina resolution keeps all 6x4 cells visible in the PNG screenshot.
+    // At DPR=2 the screenshot will be 3720 x 2180 physical pixels.
+    const page=await browser.newPage({
+      viewport:{width:930*dpr,height:545*dpr},deviceScaleFactor:dpr,
+    });
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     page.on('console',message=>{
