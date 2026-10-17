@@ -31,8 +31,8 @@ prefix/suffix decorations, password reveal, sizes and read-only/disabled
 states by wrapping GPUI Kit's native editing engine.
 
 The visible appearance of these controls is implemented, but some Ant Design
-edge cases (loading spinner animation, dashed borders, icons, advanced form
-validation and full hover/focus parity) are not yet implemented.
+edge cases (icon-only button modes, advanced form validation and full
+hover/focus/a11y parity) are not yet implemented.
 
 ## Repository layout
 
