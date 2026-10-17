@@ -245,10 +245,12 @@ impl RenderOnce for AntRadioGroup {
 
         let radios = self.radios.into_iter().enumerate().map(|(index, radio)| {
             let listener = group_handler.clone();
+            let item_disabled = radio.disabled;
+            let item_button = radio.button;
             let mut radio = radio
                 .checked(selected == Some(index))
-                .disabled(disabled || radio.disabled)
-                .button_style(self.button_style || radio.button)
+                .disabled(disabled || item_disabled)
+                .button_style(self.button_style || item_button)
                 .size(self.size)
                 .theme(self.theme)
                 .tab_stop(tab_index == Some(index))

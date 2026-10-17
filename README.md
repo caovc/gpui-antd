@@ -16,7 +16,7 @@
 - **Rust-native:** components are GPUI elements. They run on desktop GPUs.
 - **One source of truth:** the documentation gallery compiles the **same Rust
   controls** to WASM through GPUI Kit Web. No imitation HTML UI.
-- **Behavior before paint:** Button, Checkbox and Switch reuse GPUI Base
+- **Behavior before paint:** Button, Checkbox, Radio and Switch reuse GPUI Base
   keyboard, focus, semantic accessibility and controlled-state behavior.
 - **Design tokens:** Ant Design-inspired light/dark colors and 24/32/40 px
   control sizes, with a 6 px base radius.
@@ -24,7 +24,7 @@
 
 ## First milestone component set
 
-Button, Input, Checkbox, Switch, Tag, Badge, Alert, Card, Progress and Divider.
+Button, Input, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress and Divider.
 
 The visible appearance of these controls is implemented, but some Ant Design
 edge cases (loading spinner animation, dashed borders, icons, advanced form
@@ -70,6 +70,10 @@ let save = AntButton::new("save", "Save")
 ```
 
 Initialize GPUI Kit (`gpui_kit::init(cx)`) before creating component views.
+
+The new RadioGroup supports a controlled selected index, roving Tab stops,
+arrows, Home/End navigation and disabled-item skipping. Both layouts and the
+radio-button style have examples in the interactive docs.
 
 ## Browser gallery (real GPUI → WASM)
 

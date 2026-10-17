@@ -3,7 +3,7 @@ extern crate gpui_kit as gpui;
 
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
-    AntInput, AntProgress, AntSwitch, AntTag, AntTheme, ControlSize, Tone,
+    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSwitch, AntTag, AntTheme, ControlSize, Tone,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -16,7 +16,7 @@ use gpui_kit::base::StyledExt as _;
 use gpui_kit::App;
 
 pub const COMPONENTS: &[&str] = &[
-    "Button", "Input", "Checkbox", "Switch", "Tag", "Badge",
+    "Button", "Input", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider",
 ];
 
@@ -25,6 +25,8 @@ pub struct Gallery {
     dark: bool,
     button_clicks: usize,
     checked: bool,
+    radio_selected: Option<usize>,
+    radio_button_selected: Option<usize>,
     switch_on: bool,
     input: Entity<InputState>,
 }
@@ -33,7 +35,7 @@ impl Gallery {
     pub fn new(component: String, dark: bool, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let input = cx.new(|cx| InputState::new(window, cx)
             .placeholder("Type your message..."));
-        Self {component, dark, button_clicks: 0, checked: true, switch_on: true, input}
+        Self {component, dark, button_clicks: 0, checked: true, radio_selected: Some(0), radio_button_selected: Some(1), switch_on: true, input}
     }
     fn theme(&self) -> AntTheme {
         if self.dark {AntTheme::dark()} else {AntTheme::light()}
@@ -85,6 +87,53 @@ impl Gallery {
                 .child(AntCheckbox::new("checkbox-empty","Unchecked").theme(t))
                 .child(AntCheckbox::new("checkbox-disabled","Disabled").disabled(true).theme(t)))
             .child(div().text_size(px(13.)).text_color(t.text_secondary).child(format!("Controlled value: {}",self.checked)))
+            .into_any_element()
+    }
+    fn radio_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_delivery = cx.listener(|this, index: &usize, _, cx| {
+            this.radio_selected = Some(*index);
+            cx.notify();
+        });
+        let on_buttons = cx.listener(|this, index: &usize, _, cx| {
+            this.radio_button_selected = Some(*index);
+            cx.notify();
+        });
+        div().flex().flex_col().gap(px(22.))
+            .child(label("Basic RadioGroup: Arrow keys move selection; Tab enters the group", t))
+            .child(
+                AntRadioGroup::horizontal("delivery-group")
+                    .label("Delivery method")
+                    .theme(t)
+                    .selected_index(self.radio_selected)
+                    .child(AntRadio::new("delivery-standard", "Standard"))
+                    .child(AntRadio::new("delivery-express", "Express"))
+                    .child(AntRadio::new("delivery-unavailable", "Unavailable").disabled(true))
+                    .on_change(move |index, window, cx| on_delivery(&index, window, cx))
+            )
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Selected delivery option: {:?}", self.radio_selected)))
+            .child(label("Radio button style", t))
+            .child(
+                AntRadioGroup::horizontal("layout-group")
+                    .label("Layout")
+                    .button_style(true)
+                    .theme(t)
+                    .selected_index(self.radio_button_selected)
+                    .child(AntRadio::new("layout-left", "Left"))
+                    .child(AntRadio::new("layout-center", "Center"))
+                    .child(AntRadio::new("layout-right", "Right"))
+                    .on_change(move |index, window, cx| on_buttons(&index, window, cx))
+            )
+            .child(label("Vertical group and disabled controls", t))
+            .child(
+                AntRadioGroup::vertical("pricing-group")
+                    .label("Billing cycle")
+                    .theme(t)
+                    .selected_index(Some(1))
+                    .disabled(true)
+                    .child(AntRadio::new("pricing-monthly", "Monthly"))
+                    .child(AntRadio::new("pricing-yearly", "Yearly"))
+            )
             .into_any_element()
     }
     fn switch_demo(&self, t:AntTheme, cx:&mut Context<Self>) -> gpui_kit::AnyElement {
@@ -182,6 +231,7 @@ impl Render for Gallery {
             "Button"=>self.button_demo(t,cx),
             "Input"=>self.input_demo(t),
             "Checkbox"=>self.checkbox_demo(t,cx),
+            "Radio"=>self.radio_demo(t,cx),
             "Switch"=>self.switch_demo(t,cx),
             "Tag"=>self.tag_demo(t),
             "Badge"=>self.badge_demo(t),
