@@ -7,6 +7,7 @@ const {emptyTheme,validated,previewParam,rustCode,validateValue}=tokenStudioLogi
 test('studio exposes the real GPU preview and two independent scenes',()=>{
   const html=themeDesignerHtml();
   assert.match(html,/theme-preview-frame/);
+  assert.match(html,/id="theme-share"/);
   assert.match(html,/value="tokens"/);
   assert.match(html,/LIVE GPU/);
   assert.match(html,/data-seed="colorPrimary"/);
