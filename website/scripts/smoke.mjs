@@ -157,7 +157,7 @@ try {
     { name: 'Layout', x: 98, y: 500, minChanged: 12000, minOutside: 8000 },
   ];
 
-  const changedPixels = async (page, beforePng, afterPng) => page.evaluate(async ({before,after}) => {
+  const changedPixels = async (page, beforePng, afterPng, viewportWidth=900) => page.evaluate(async ({before,after,viewportWidth}) => {
     async function decode(base64) {
       const binary = atob(base64);
       const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
@@ -173,7 +173,6 @@ try {
     const a=await decode(before), b=await decode(after);
     if (a.length !== b.length) throw new Error('Screenshot dimensions changed');
     let total=0,outside=0;
-    const viewportWidth=900;
     for (let i=0;i<a.length;i+=4) {
       if (Math.abs(a[i]-b[i])>35 || Math.abs(a[i+1]-b[i+1])>35 ||
           Math.abs(a[i+2]-b[i+2])>35) {
@@ -185,7 +184,7 @@ try {
       }
     }
     return {total,outside};
-  }, {before:beforePng.toString('base64'),after:afterPng.toString('base64')});
+  }, {before:beforePng.toString('base64'),after:afterPng.toString('base64'),viewportWidth});
 
   for (const spec of interactions) {
     const page=await browser.newPage({viewport:{width:900,height:550}});
@@ -222,6 +221,25 @@ try {
       if(errors.length) throw new Error('Browser errors: '+errors.join('; '));
       console.log('PASS: '+spec.name+' real GPUI click changed '+diff.total+
         ' pixels ('+diff.outside+' outside trigger)');
+
+      if (spec.name !== 'Layout') {
+        // Native Escape dismissal is a required interaction, not just a
+        // startup/canvas check. Compare against the pre-popup frame;
+        // the trigger can retain its focus ring, but the popup must vanish.
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(550);
+        const closed=await page.screenshot({
+          path:join(screenshots,spec.name.toLowerCase()+'-escape.png')
+        });
+        const residual=await changedPixels(page,baseline,closed);
+        const tolerance=diff.total*0.62+500;
+        if(residual.total>tolerance) {
+          throw new Error(spec.name+' did not visually dismiss on Escape: '+
+            JSON.stringify(residual)+' pixels remain vs '+diff.total+' when open');
+        }
+        console.log('PASS: '+spec.name+' Escape closed the native GPUI overlay ('+
+          residual.total+' changed pixels after close)');
+      }
     } catch(error) {
       failures++;
       console.error('FAIL: '+spec.name+' native GPUI pointer interaction',String(error));
@@ -229,6 +247,52 @@ try {
     } finally {
       await page.close();
     }
+  }
+
+  // Responsive Layout regression: in a narrow GPUI Web viewport the
+  // breakpoint initially collapses Sider, and a click must expand it.
+  // A second click returns the panel to its initial narrow state.
+  const narrow=await browser.newPage({viewport:{width:600,height:650}});
+  const narrowErrors=[];
+  narrow.on('pageerror', error=>narrowErrors.push(error.message));
+  try {
+    await narrow.goto(base+'demo.html?component=Layout',{waitUntil:'domcontentloaded'});
+    await narrow.waitForFunction(() => {
+      const canvas=document.querySelector('canvas');
+      return canvas && canvas.width>0 && canvas.height>0 && !document.querySelector('#status');
+    },null,{timeout:60000});
+    await narrow.waitForTimeout(750);
+    const compact=await narrow.screenshot({
+      path:join(screenshots,'layout-mobile-collapsed.png')
+    });
+    await narrow.mouse.click(50,500);
+    await narrow.mouse.move(570,620);
+    await narrow.waitForTimeout(650);
+    const expanded=await narrow.screenshot({
+      path:join(screenshots,'layout-mobile-expanded.png')
+    });
+    const opened=await changedPixels(narrow,compact,expanded,600);
+    if(opened.total<9000 || opened.outside<6500) {
+      throw new Error('Narrow Sider did not expand: '+JSON.stringify(opened));
+    }
+    await narrow.mouse.click(50,500);
+    await narrow.mouse.move(570,620);
+    await narrow.waitForTimeout(650);
+    const collapsedAgain=await narrow.screenshot({
+      path:join(screenshots,'layout-mobile-collapsed-again.png')
+    });
+    const residual=await changedPixels(narrow,compact,collapsedAgain,600);
+    if(residual.total>opened.total*0.42+1000) {
+      throw new Error('Narrow Sider could not collapse after expansion: '+
+        JSON.stringify(residual)+' vs '+JSON.stringify(opened));
+    }
+    if(narrowErrors.length) throw new Error(narrowErrors.join('; '));
+    console.log('PASS: responsive Sider can expand and collapse while below md breakpoint');
+  } catch(error) {
+    failures++;
+    console.error('FAIL: narrow native GPUI Sider controlled state',String(error));
+  } finally {
+    await narrow.close();
   }
 
   // Regression: long official icon names are visible, and all 848 names
