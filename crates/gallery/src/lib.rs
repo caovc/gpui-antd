@@ -6,12 +6,14 @@ use gpui_antd::{
     AntInput, AntProgress, AntSwitch, AntTag, AntTheme, ControlSize, Tone,
 };
 use gpui_kit::{
-    App, AppContext as _, Context, Entity, IntoElement, ParentElement as _, Render,
+    AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     Styled as _, Window, WindowOptions, div, px,
 };
 use gpui_kit::component::input::InputState;
 use gpui_kit::assets::Assets;
 use gpui_kit::base::StyledExt as _;
+#[cfg(target_family = "wasm")]
+use gpui_kit::App;
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Checkbox", "Switch", "Tag", "Badge",
