@@ -3,7 +3,7 @@
 //! URL config is a transport envelope for a Rust/WASM preview. It is NOT
 //! equivalent to React ConfigProvider and it is not persisted by GPUI.
 use gpui_antd::{
-    AntSeedTokens, AntTheme, AntThemeAlgorithm, AntComponent, AntComponentToken, color,
+    AntSeedTokens, AntTheme, AntThemeAlgorithm, AntComponent, AntComponentToken, AntComponentTokens, color,
 };
 
 pub struct ThemeLabSpec {
@@ -31,7 +31,8 @@ impl ThemeLabSpec {
         let mut input_style=AntComponentToken::default();
         let mut menu=AntComponentToken::default();
         let mut layout=AntComponentToken::default();
-        for raw in input.trim_start_matches('|').split('|').take(32) {
+        let mut component_tokens=AntComponentTokens::default();
+        for raw in input.trim_start_matches('|').split('|').take(128) {
             let Some((key,value))=raw.split_once('=') else {continue};
             if value.len()>64 {continue;}
             match key {
@@ -70,7 +71,53 @@ impl ThemeLabSpec {
                 "layoutBg"=>if let Some(hex)=hex24(value){
                     layout.color_bg=Some(color(hex));
                 },
-                _=>(),
+                _=>{
+                    // One namespace per documented component. The registry
+                    // stores all 31; runtime consumers are rolled out
+                    // incrementally and documented on the parity page.
+                    if let Some((name,field))=key.split_once('.') {
+                        if let Some(component)=AntComponent::from_name(name) {
+                            let mut tokens=component_tokens.get(component);
+                            match field {
+                                "colorPrimary"=>if let Some(v)=hex24(value){
+                                    tokens.color_primary=Some(color(v))
+                                },
+                                "colorBg"=>if let Some(v)=hex24(value){
+                                    tokens.color_bg=Some(color(v))
+                                },
+                                "colorText"=>if let Some(v)=hex24(value){
+                                    tokens.color_text=Some(color(v))
+                                },
+                                "colorBorder"=>if let Some(v)=hex24(value){
+                                    tokens.color_border=Some(color(v))
+                                },
+                                "colorBgHover"=>if let Some(v)=hex24(value){
+                                    tokens.color_bg_hover=Some(color(v))
+                                },
+                                "colorBgSelected"=>if let Some(v)=hex24(value){
+                                    tokens.color_bg_selected=Some(color(v))
+                                },
+                                "colorHeaderBg"=>if let Some(v)=hex24(value){
+                                    tokens.color_header_bg=Some(color(v))
+                                },
+                                "borderRadius"=>if let Some(v)=scalar(value,0.,32.){
+                                    tokens.border_radius=Some(v)
+                                },
+                                "controlHeight"=>if let Some(v)=scalar(value,20.,64.){
+                                    tokens.control_height=Some(v)
+                                },
+                                "fontSize"=>if let Some(v)=scalar(value,8.,32.){
+                                    tokens.font_size=Some(v)
+                                },
+                                "padding"=>if let Some(v)=scalar(value,0.,64.){
+                                    tokens.padding=Some(v)
+                                },
+                                _=>(),
+                            }
+                            component_tokens.set(component,tokens);
+                        }
+                    }
+                },
             }
         }
         let algorithm=match (dark,compact) {
@@ -79,12 +126,31 @@ impl ThemeLabSpec {
             (false,true)=>AntThemeAlgorithm::Compact,
             (true,true)=>AntThemeAlgorithm::DarkCompact,
         };
-        let theme=AntTheme::from_seed(seed,algorithm)
+        let mut theme=AntTheme::from_seed(seed,algorithm)
             .with_component(AntComponent::Button,button)
             .with_component(AntComponent::Card,card)
             .with_component(AntComponent::Input,input_style)
             .with_component(AntComponent::Menu,menu)
             .with_component(AntComponent::Layout,layout);
+        for component in AntComponent::ALL {
+            let patch=component_tokens.get(component);
+            let current=theme.component(component);
+            // URL-delivered per-component overrides win over legacy
+            // design-lab demo flags, without cross-component bleeding.
+            theme=theme.with_component(component,AntComponentToken {
+                color_primary:patch.color_primary.or(current.color_primary),
+                color_bg:patch.color_bg.or(current.color_bg),
+                color_text:patch.color_text.or(current.color_text),
+                color_border:patch.color_border.or(current.color_border),
+                color_bg_hover:patch.color_bg_hover.or(current.color_bg_hover),
+                color_bg_selected:patch.color_bg_selected.or(current.color_bg_selected),
+                color_header_bg:patch.color_header_bg.or(current.color_header_bg),
+                border_radius:patch.border_radius.or(current.border_radius),
+                control_height:patch.control_height.or(current.control_height),
+                font_size:patch.font_size.or(current.font_size),
+                padding:patch.padding.or(current.padding),
+            });
+        }
         Some(Self{theme})
     }
 }
@@ -104,6 +170,17 @@ mod tests {
         assert_eq!(theme.component(AntComponent::Card).padding,Some(35.));
         assert_eq!(theme.component(AntComponent::Input).color_bg,Some(color(0xfffcee)));
         assert_eq!(theme.component(AntComponent::Menu).color_bg_selected,Some(color(0x114488)));
+    }
+    #[test]
+    fn generic_component_namespace_supports_every_catalog_entry() {
+        let t=ThemeLabSpec::parse(
+            "ThemeLab|Button.colorPrimary=ff7711|Card.padding=33|Menu.colorBgSelected=007755|Badge.colorBg=abcdef",
+            false).unwrap().theme;
+        assert_eq!(t.component(AntComponent::Button).color_primary,Some(color(0xff7711)));
+        assert_eq!(t.component(AntComponent::Card).padding,Some(33.));
+        assert_eq!(t.component(AntComponent::Menu).color_bg_selected,Some(color(0x007755)));
+        assert_eq!(t.component(AntComponent::Badge).color_bg,Some(color(0xabcdef)));
+        assert_eq!(t.component(AntComponent::Alert).color_bg,None);
     }
     #[test]
     fn parse_rejects_injection_and_nonfinite_inputs() {
