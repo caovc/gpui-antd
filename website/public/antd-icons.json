@@ -1,0 +1,4247 @@
+{
+  "source": "ant-design/ant-design-icons",
+  "revision": "7f2516ac91226d2b41f93b35cb5197c8d94f7189",
+  "count": 848,
+  "icons": [
+    {
+      "name": "AccountBookOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/account-book.svg"
+    },
+    {
+      "name": "AimOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/aim.svg"
+    },
+    {
+      "name": "AlertOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/alert.svg"
+    },
+    {
+      "name": "AlibabaOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/alibaba.svg"
+    },
+    {
+      "name": "AlignCenterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/align-center.svg"
+    },
+    {
+      "name": "AlignLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/align-left.svg"
+    },
+    {
+      "name": "AlignRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/align-right.svg"
+    },
+    {
+      "name": "AlipayCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/alipay-circle.svg"
+    },
+    {
+      "name": "AlipayOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/alipay.svg"
+    },
+    {
+      "name": "AliwangwangOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/aliwangwang.svg"
+    },
+    {
+      "name": "AliyunOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/aliyun.svg"
+    },
+    {
+      "name": "AmazonOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/amazon.svg"
+    },
+    {
+      "name": "AndroidOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/android.svg"
+    },
+    {
+      "name": "AntCloudOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ant-cloud.svg"
+    },
+    {
+      "name": "AntDesignOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ant-design.svg"
+    },
+    {
+      "name": "ApartmentOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/apartment.svg"
+    },
+    {
+      "name": "ApiOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/api.svg"
+    },
+    {
+      "name": "AppleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/apple.svg"
+    },
+    {
+      "name": "AppstoreAddOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/appstore-add.svg"
+    },
+    {
+      "name": "AppstoreOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/appstore.svg"
+    },
+    {
+      "name": "AreaChartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/area-chart.svg"
+    },
+    {
+      "name": "ArrowDownOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/arrow-down.svg"
+    },
+    {
+      "name": "ArrowLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/arrow-left.svg"
+    },
+    {
+      "name": "ArrowRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/arrow-right.svg"
+    },
+    {
+      "name": "ArrowUpOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/arrow-up.svg"
+    },
+    {
+      "name": "ArrowsAltOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/arrows-alt.svg"
+    },
+    {
+      "name": "AudioMutedOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/audio-muted.svg"
+    },
+    {
+      "name": "AudioOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/audio.svg"
+    },
+    {
+      "name": "AuditOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/audit.svg"
+    },
+    {
+      "name": "BackwardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/backward.svg"
+    },
+    {
+      "name": "BaiduOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/baidu.svg"
+    },
+    {
+      "name": "BankOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bank.svg"
+    },
+    {
+      "name": "BarChartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bar-chart.svg"
+    },
+    {
+      "name": "BarcodeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/barcode.svg"
+    },
+    {
+      "name": "BarsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bars.svg"
+    },
+    {
+      "name": "BehanceSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/behance-square.svg"
+    },
+    {
+      "name": "BehanceOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/behance.svg"
+    },
+    {
+      "name": "BellOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bell.svg"
+    },
+    {
+      "name": "BgColorsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bg-colors.svg"
+    },
+    {
+      "name": "BilibiliOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bilibili.svg"
+    },
+    {
+      "name": "BlockOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/block.svg"
+    },
+    {
+      "name": "BoldOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bold.svg"
+    },
+    {
+      "name": "BookOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/book.svg"
+    },
+    {
+      "name": "BorderBottomOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-bottom.svg"
+    },
+    {
+      "name": "BorderHorizontalOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-horizontal.svg"
+    },
+    {
+      "name": "BorderInnerOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-inner.svg"
+    },
+    {
+      "name": "BorderLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-left.svg"
+    },
+    {
+      "name": "BorderOuterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-outer.svg"
+    },
+    {
+      "name": "BorderRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-right.svg"
+    },
+    {
+      "name": "BorderTopOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-top.svg"
+    },
+    {
+      "name": "BorderVerticleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border-verticle.svg"
+    },
+    {
+      "name": "BorderOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/border.svg"
+    },
+    {
+      "name": "BorderlessTableOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/borderless-table.svg"
+    },
+    {
+      "name": "BoxPlotOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/box-plot.svg"
+    },
+    {
+      "name": "BranchesOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/branches.svg"
+    },
+    {
+      "name": "BugOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bug.svg"
+    },
+    {
+      "name": "BuildOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/build.svg"
+    },
+    {
+      "name": "BulbOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/bulb.svg"
+    },
+    {
+      "name": "CalculatorOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/calculator.svg"
+    },
+    {
+      "name": "CalendarOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/calendar.svg"
+    },
+    {
+      "name": "CameraOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/camera.svg"
+    },
+    {
+      "name": "CarOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/car.svg"
+    },
+    {
+      "name": "CaretDownOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/caret-down.svg"
+    },
+    {
+      "name": "CaretLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/caret-left.svg"
+    },
+    {
+      "name": "CaretRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/caret-right.svg"
+    },
+    {
+      "name": "CaretUpOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/caret-up.svg"
+    },
+    {
+      "name": "CarryOutOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/carry-out.svg"
+    },
+    {
+      "name": "CheckCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/check-circle.svg"
+    },
+    {
+      "name": "CheckSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/check-square.svg"
+    },
+    {
+      "name": "CheckOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/check.svg"
+    },
+    {
+      "name": "ChromeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/chrome.svg"
+    },
+    {
+      "name": "CiCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ci-circle.svg"
+    },
+    {
+      "name": "CiOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ci.svg"
+    },
+    {
+      "name": "ClearOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/clear.svg"
+    },
+    {
+      "name": "ClockCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/clock-circle.svg"
+    },
+    {
+      "name": "CloseCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/close-circle.svg"
+    },
+    {
+      "name": "CloseSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/close-square.svg"
+    },
+    {
+      "name": "CloseOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/close.svg"
+    },
+    {
+      "name": "CloudDownloadOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/cloud-download.svg"
+    },
+    {
+      "name": "CloudServerOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/cloud-server.svg"
+    },
+    {
+      "name": "CloudSyncOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/cloud-sync.svg"
+    },
+    {
+      "name": "CloudUploadOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/cloud-upload.svg"
+    },
+    {
+      "name": "CloudOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/cloud.svg"
+    },
+    {
+      "name": "ClusterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/cluster.svg"
+    },
+    {
+      "name": "CodeSandboxOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/code-sandbox.svg"
+    },
+    {
+      "name": "CodeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/code.svg"
+    },
+    {
+      "name": "CodepenCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/codepen-circle.svg"
+    },
+    {
+      "name": "CodepenOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/codepen.svg"
+    },
+    {
+      "name": "CoffeeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/coffee.svg"
+    },
+    {
+      "name": "ColumnHeightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/column-height.svg"
+    },
+    {
+      "name": "ColumnWidthOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/column-width.svg"
+    },
+    {
+      "name": "CommentOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/comment.svg"
+    },
+    {
+      "name": "CompassOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/compass.svg"
+    },
+    {
+      "name": "CompressOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/compress.svg"
+    },
+    {
+      "name": "ConsoleSqlOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/console-sql.svg"
+    },
+    {
+      "name": "ContactsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/contacts.svg"
+    },
+    {
+      "name": "ContainerOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/container.svg"
+    },
+    {
+      "name": "ControlOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/control.svg"
+    },
+    {
+      "name": "CopyOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/copy.svg"
+    },
+    {
+      "name": "CopyrightCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/copyright-circle.svg"
+    },
+    {
+      "name": "CopyrightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/copyright.svg"
+    },
+    {
+      "name": "CreditCardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/credit-card.svg"
+    },
+    {
+      "name": "CrownOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/crown.svg"
+    },
+    {
+      "name": "CustomerServiceOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/customer-service.svg"
+    },
+    {
+      "name": "DashOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dash.svg"
+    },
+    {
+      "name": "DashboardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dashboard.svg"
+    },
+    {
+      "name": "DatabaseOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/database.svg"
+    },
+    {
+      "name": "DeleteColumnOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/delete-column.svg"
+    },
+    {
+      "name": "DeleteRowOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/delete-row.svg"
+    },
+    {
+      "name": "DeleteOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/delete.svg"
+    },
+    {
+      "name": "DeliveredProcedureOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/delivered-procedure.svg"
+    },
+    {
+      "name": "DeploymentUnitOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/deployment-unit.svg"
+    },
+    {
+      "name": "DesktopOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/desktop.svg"
+    },
+    {
+      "name": "DiffOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/diff.svg"
+    },
+    {
+      "name": "DingdingOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dingding.svg"
+    },
+    {
+      "name": "DingtalkOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dingtalk.svg"
+    },
+    {
+      "name": "DisconnectOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/disconnect.svg"
+    },
+    {
+      "name": "DiscordOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/discord.svg"
+    },
+    {
+      "name": "DislikeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dislike.svg"
+    },
+    {
+      "name": "DockerOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/docker.svg"
+    },
+    {
+      "name": "DollarCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dollar-circle.svg"
+    },
+    {
+      "name": "DollarOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dollar.svg"
+    },
+    {
+      "name": "DotChartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dot-chart.svg"
+    },
+    {
+      "name": "DotNetOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dot-net.svg"
+    },
+    {
+      "name": "DoubleLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/double-left.svg"
+    },
+    {
+      "name": "DoubleRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/double-right.svg"
+    },
+    {
+      "name": "DownCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/down-circle.svg"
+    },
+    {
+      "name": "DownSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/down-square.svg"
+    },
+    {
+      "name": "DownOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/down.svg"
+    },
+    {
+      "name": "DownloadOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/download.svg"
+    },
+    {
+      "name": "DragOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/drag.svg"
+    },
+    {
+      "name": "DribbbleSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dribbble-square.svg"
+    },
+    {
+      "name": "DribbbleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dribbble.svg"
+    },
+    {
+      "name": "DropboxOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/dropbox.svg"
+    },
+    {
+      "name": "EditOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/edit.svg"
+    },
+    {
+      "name": "EllipsisOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ellipsis.svg"
+    },
+    {
+      "name": "EnterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/enter.svg"
+    },
+    {
+      "name": "EnvironmentOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/environment.svg"
+    },
+    {
+      "name": "EuroCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/euro-circle.svg"
+    },
+    {
+      "name": "EuroOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/euro.svg"
+    },
+    {
+      "name": "ExceptionOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/exception.svg"
+    },
+    {
+      "name": "ExclamationCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/exclamation-circle.svg"
+    },
+    {
+      "name": "ExclamationOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/exclamation.svg"
+    },
+    {
+      "name": "ExpandAltOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/expand-alt.svg"
+    },
+    {
+      "name": "ExpandOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/expand.svg"
+    },
+    {
+      "name": "ExperimentOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/experiment.svg"
+    },
+    {
+      "name": "ExportOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/export.svg"
+    },
+    {
+      "name": "EyeInvisibleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/eye-invisible.svg"
+    },
+    {
+      "name": "EyeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/eye.svg"
+    },
+    {
+      "name": "FacebookOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/facebook.svg"
+    },
+    {
+      "name": "FallOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fall.svg"
+    },
+    {
+      "name": "FastBackwardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fast-backward.svg"
+    },
+    {
+      "name": "FastForwardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fast-forward.svg"
+    },
+    {
+      "name": "FieldBinaryOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/field-binary.svg"
+    },
+    {
+      "name": "FieldNumberOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/field-number.svg"
+    },
+    {
+      "name": "FieldStringOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/field-string.svg"
+    },
+    {
+      "name": "FieldTimeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/field-time.svg"
+    },
+    {
+      "name": "FileAddOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-add.svg"
+    },
+    {
+      "name": "FileDoneOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-done.svg"
+    },
+    {
+      "name": "FileExcelOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-excel.svg"
+    },
+    {
+      "name": "FileExclamationOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-exclamation.svg"
+    },
+    {
+      "name": "FileGifOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-gif.svg"
+    },
+    {
+      "name": "FileImageOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-image.svg"
+    },
+    {
+      "name": "FileJpgOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-jpg.svg"
+    },
+    {
+      "name": "FileMarkdownOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-markdown.svg"
+    },
+    {
+      "name": "FilePdfOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-pdf.svg"
+    },
+    {
+      "name": "FilePptOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-ppt.svg"
+    },
+    {
+      "name": "FileProtectOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-protect.svg"
+    },
+    {
+      "name": "FileSearchOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-search.svg"
+    },
+    {
+      "name": "FileSyncOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-sync.svg"
+    },
+    {
+      "name": "FileTextOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-text.svg"
+    },
+    {
+      "name": "FileUnknownOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-unknown.svg"
+    },
+    {
+      "name": "FileWordOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-word.svg"
+    },
+    {
+      "name": "FileZipOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file-zip.svg"
+    },
+    {
+      "name": "FileOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/file.svg"
+    },
+    {
+      "name": "FilterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/filter.svg"
+    },
+    {
+      "name": "FireOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fire.svg"
+    },
+    {
+      "name": "FlagOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/flag.svg"
+    },
+    {
+      "name": "FolderAddOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/folder-add.svg"
+    },
+    {
+      "name": "FolderOpenOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/folder-open.svg"
+    },
+    {
+      "name": "FolderViewOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/folder-view.svg"
+    },
+    {
+      "name": "FolderOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/folder.svg"
+    },
+    {
+      "name": "FontColorsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/font-colors.svg"
+    },
+    {
+      "name": "FontSizeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/font-size.svg"
+    },
+    {
+      "name": "ForkOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fork.svg"
+    },
+    {
+      "name": "FormOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/form.svg"
+    },
+    {
+      "name": "FormatPainterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/format-painter.svg"
+    },
+    {
+      "name": "ForwardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/forward.svg"
+    },
+    {
+      "name": "FrownOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/frown.svg"
+    },
+    {
+      "name": "FullscreenExitOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fullscreen-exit.svg"
+    },
+    {
+      "name": "FullscreenOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fullscreen.svg"
+    },
+    {
+      "name": "FunctionOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/function.svg"
+    },
+    {
+      "name": "FundProjectionScreenOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fund-projection-screen.svg"
+    },
+    {
+      "name": "FundViewOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fund-view.svg"
+    },
+    {
+      "name": "FundOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/fund.svg"
+    },
+    {
+      "name": "FunnelPlotOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/funnel-plot.svg"
+    },
+    {
+      "name": "GatewayOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/gateway.svg"
+    },
+    {
+      "name": "GifOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/gif.svg"
+    },
+    {
+      "name": "GiftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/gift.svg"
+    },
+    {
+      "name": "GithubOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/github.svg"
+    },
+    {
+      "name": "GitlabOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/gitlab.svg"
+    },
+    {
+      "name": "GlobalOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/global.svg"
+    },
+    {
+      "name": "GoldOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/gold.svg"
+    },
+    {
+      "name": "GooglePlusOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/google-plus.svg"
+    },
+    {
+      "name": "GoogleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/google.svg"
+    },
+    {
+      "name": "GroupOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/group.svg"
+    },
+    {
+      "name": "HarmonyOSOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/harmony-o-s.svg"
+    },
+    {
+      "name": "HddOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/hdd.svg"
+    },
+    {
+      "name": "HeartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/heart.svg"
+    },
+    {
+      "name": "HeatMapOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/heat-map.svg"
+    },
+    {
+      "name": "HighlightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/highlight.svg"
+    },
+    {
+      "name": "HistoryOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/history.svg"
+    },
+    {
+      "name": "HolderOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/holder.svg"
+    },
+    {
+      "name": "HomeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/home.svg"
+    },
+    {
+      "name": "HourglassOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/hourglass.svg"
+    },
+    {
+      "name": "Html5Outlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/html5.svg"
+    },
+    {
+      "name": "IdcardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/idcard.svg"
+    },
+    {
+      "name": "IeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ie.svg"
+    },
+    {
+      "name": "ImportOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/import.svg"
+    },
+    {
+      "name": "InboxOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/inbox.svg"
+    },
+    {
+      "name": "InfoCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/info-circle.svg"
+    },
+    {
+      "name": "InfoOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/info.svg"
+    },
+    {
+      "name": "InsertRowAboveOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/insert-row-above.svg"
+    },
+    {
+      "name": "InsertRowBelowOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/insert-row-below.svg"
+    },
+    {
+      "name": "InsertRowLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/insert-row-left.svg"
+    },
+    {
+      "name": "InsertRowRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/insert-row-right.svg"
+    },
+    {
+      "name": "InstagramOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/instagram.svg"
+    },
+    {
+      "name": "InsuranceOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/insurance.svg"
+    },
+    {
+      "name": "InteractionOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/interaction.svg"
+    },
+    {
+      "name": "IssuesCloseOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/issues-close.svg"
+    },
+    {
+      "name": "ItalicOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/italic.svg"
+    },
+    {
+      "name": "JavaScriptOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/java-script.svg"
+    },
+    {
+      "name": "JavaOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/java.svg"
+    },
+    {
+      "name": "KeyOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/key.svg"
+    },
+    {
+      "name": "KubernetesOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/kubernetes.svg"
+    },
+    {
+      "name": "LaptopOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/laptop.svg"
+    },
+    {
+      "name": "LayoutOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/layout.svg"
+    },
+    {
+      "name": "LeftCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/left-circle.svg"
+    },
+    {
+      "name": "LeftSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/left-square.svg"
+    },
+    {
+      "name": "LeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/left.svg"
+    },
+    {
+      "name": "LikeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/like.svg"
+    },
+    {
+      "name": "LineChartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/line-chart.svg"
+    },
+    {
+      "name": "LineHeightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/line-height.svg"
+    },
+    {
+      "name": "LineOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/line.svg"
+    },
+    {
+      "name": "LinkOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/link.svg"
+    },
+    {
+      "name": "LinkedinOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/linkedin.svg"
+    },
+    {
+      "name": "LinuxOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/linux.svg"
+    },
+    {
+      "name": "Loading3QuartersOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/loading-3-quarters.svg"
+    },
+    {
+      "name": "LoadingOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/loading.svg"
+    },
+    {
+      "name": "LockOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/lock.svg"
+    },
+    {
+      "name": "LoginOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/login.svg"
+    },
+    {
+      "name": "LogoutOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/logout.svg"
+    },
+    {
+      "name": "MacCommandOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/mac-command.svg"
+    },
+    {
+      "name": "MailOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/mail.svg"
+    },
+    {
+      "name": "ManOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/man.svg"
+    },
+    {
+      "name": "MedicineBoxOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/medicine-box.svg"
+    },
+    {
+      "name": "MediumWorkmarkOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/medium-workmark.svg"
+    },
+    {
+      "name": "MediumOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/medium.svg"
+    },
+    {
+      "name": "MehOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/meh.svg"
+    },
+    {
+      "name": "MenuFoldOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/menu-fold.svg"
+    },
+    {
+      "name": "MenuUnfoldOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/menu-unfold.svg"
+    },
+    {
+      "name": "MenuOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/menu.svg"
+    },
+    {
+      "name": "MergeCellsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/merge-cells.svg"
+    },
+    {
+      "name": "MergeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/merge.svg"
+    },
+    {
+      "name": "MessageOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/message.svg"
+    },
+    {
+      "name": "MinusCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/minus-circle.svg"
+    },
+    {
+      "name": "MinusSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/minus-square.svg"
+    },
+    {
+      "name": "MinusOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/minus.svg"
+    },
+    {
+      "name": "MobileOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/mobile.svg"
+    },
+    {
+      "name": "MoneyCollectOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/money-collect.svg"
+    },
+    {
+      "name": "MonitorOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/monitor.svg"
+    },
+    {
+      "name": "MoonOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/moon.svg"
+    },
+    {
+      "name": "MoreOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/more.svg"
+    },
+    {
+      "name": "MutedOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/muted.svg"
+    },
+    {
+      "name": "NodeCollapseOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/node-collapse.svg"
+    },
+    {
+      "name": "NodeExpandOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/node-expand.svg"
+    },
+    {
+      "name": "NodeIndexOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/node-index.svg"
+    },
+    {
+      "name": "NotificationOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/notification.svg"
+    },
+    {
+      "name": "NumberOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/number.svg"
+    },
+    {
+      "name": "OneToOneOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/one-to-one.svg"
+    },
+    {
+      "name": "OpenAIOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/open-a-i.svg"
+    },
+    {
+      "name": "OrderedListOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ordered-list.svg"
+    },
+    {
+      "name": "PaperClipOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/paper-clip.svg"
+    },
+    {
+      "name": "PartitionOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/partition.svg"
+    },
+    {
+      "name": "PauseCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pause-circle.svg"
+    },
+    {
+      "name": "PauseOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pause.svg"
+    },
+    {
+      "name": "PayCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pay-circle.svg"
+    },
+    {
+      "name": "PercentageOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/percentage.svg"
+    },
+    {
+      "name": "PhoneOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/phone.svg"
+    },
+    {
+      "name": "PicCenterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pic-center.svg"
+    },
+    {
+      "name": "PicLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pic-left.svg"
+    },
+    {
+      "name": "PicRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pic-right.svg"
+    },
+    {
+      "name": "PictureOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/picture.svg"
+    },
+    {
+      "name": "PieChartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pie-chart.svg"
+    },
+    {
+      "name": "PinterestOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pinterest.svg"
+    },
+    {
+      "name": "PlayCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/play-circle.svg"
+    },
+    {
+      "name": "PlaySquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/play-square.svg"
+    },
+    {
+      "name": "PlusCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/plus-circle.svg"
+    },
+    {
+      "name": "PlusSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/plus-square.svg"
+    },
+    {
+      "name": "PlusOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/plus.svg"
+    },
+    {
+      "name": "PoundCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pound-circle.svg"
+    },
+    {
+      "name": "PoundOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pound.svg"
+    },
+    {
+      "name": "PoweroffOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/poweroff.svg"
+    },
+    {
+      "name": "PrinterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/printer.svg"
+    },
+    {
+      "name": "ProductOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/product.svg"
+    },
+    {
+      "name": "ProfileOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/profile.svg"
+    },
+    {
+      "name": "ProjectOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/project.svg"
+    },
+    {
+      "name": "PropertySafetyOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/property-safety.svg"
+    },
+    {
+      "name": "PullRequestOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pull-request.svg"
+    },
+    {
+      "name": "PushpinOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/pushpin.svg"
+    },
+    {
+      "name": "PythonOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/python.svg"
+    },
+    {
+      "name": "QqOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/qq.svg"
+    },
+    {
+      "name": "QrcodeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/qrcode.svg"
+    },
+    {
+      "name": "QuestionCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/question-circle.svg"
+    },
+    {
+      "name": "QuestionOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/question.svg"
+    },
+    {
+      "name": "RadarChartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/radar-chart.svg"
+    },
+    {
+      "name": "RadiusBottomleftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/radius-bottomleft.svg"
+    },
+    {
+      "name": "RadiusBottomrightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/radius-bottomright.svg"
+    },
+    {
+      "name": "RadiusSettingOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/radius-setting.svg"
+    },
+    {
+      "name": "RadiusUpleftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/radius-upleft.svg"
+    },
+    {
+      "name": "RadiusUprightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/radius-upright.svg"
+    },
+    {
+      "name": "ReadOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/read.svg"
+    },
+    {
+      "name": "ReconciliationOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/reconciliation.svg"
+    },
+    {
+      "name": "RedEnvelopeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/red-envelope.svg"
+    },
+    {
+      "name": "RedditOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/reddit.svg"
+    },
+    {
+      "name": "RedoOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/redo.svg"
+    },
+    {
+      "name": "ReloadOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/reload.svg"
+    },
+    {
+      "name": "RestOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/rest.svg"
+    },
+    {
+      "name": "RetweetOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/retweet.svg"
+    },
+    {
+      "name": "RightCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/right-circle.svg"
+    },
+    {
+      "name": "RightSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/right-square.svg"
+    },
+    {
+      "name": "RightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/right.svg"
+    },
+    {
+      "name": "RiseOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/rise.svg"
+    },
+    {
+      "name": "RobotOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/robot.svg"
+    },
+    {
+      "name": "RocketOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/rocket.svg"
+    },
+    {
+      "name": "RollbackOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/rollback.svg"
+    },
+    {
+      "name": "RotateLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/rotate-left.svg"
+    },
+    {
+      "name": "RotateRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/rotate-right.svg"
+    },
+    {
+      "name": "RubyOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ruby.svg"
+    },
+    {
+      "name": "SafetyCertificateOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/safety-certificate.svg"
+    },
+    {
+      "name": "SafetyOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/safety.svg"
+    },
+    {
+      "name": "SaveOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/save.svg"
+    },
+    {
+      "name": "ScanOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/scan.svg"
+    },
+    {
+      "name": "ScheduleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/schedule.svg"
+    },
+    {
+      "name": "ScissorOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/scissor.svg"
+    },
+    {
+      "name": "SearchOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/search.svg"
+    },
+    {
+      "name": "SecurityScanOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/security-scan.svg"
+    },
+    {
+      "name": "SelectOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/select.svg"
+    },
+    {
+      "name": "SendOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/send.svg"
+    },
+    {
+      "name": "SettingOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/setting.svg"
+    },
+    {
+      "name": "ShakeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/shake.svg"
+    },
+    {
+      "name": "ShareAltOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/share-alt.svg"
+    },
+    {
+      "name": "ShopOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/shop.svg"
+    },
+    {
+      "name": "ShoppingCartOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/shopping-cart.svg"
+    },
+    {
+      "name": "ShoppingOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/shopping.svg"
+    },
+    {
+      "name": "ShrinkOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/shrink.svg"
+    },
+    {
+      "name": "SignatureOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/signature.svg"
+    },
+    {
+      "name": "SisternodeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sisternode.svg"
+    },
+    {
+      "name": "SketchOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sketch.svg"
+    },
+    {
+      "name": "SkinOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/skin.svg"
+    },
+    {
+      "name": "SkypeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/skype.svg"
+    },
+    {
+      "name": "SlackSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/slack-square.svg"
+    },
+    {
+      "name": "SlackOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/slack.svg"
+    },
+    {
+      "name": "SlidersOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sliders.svg"
+    },
+    {
+      "name": "SmallDashOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/small-dash.svg"
+    },
+    {
+      "name": "SmileOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/smile.svg"
+    },
+    {
+      "name": "SnippetsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/snippets.svg"
+    },
+    {
+      "name": "SolutionOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/solution.svg"
+    },
+    {
+      "name": "SortAscendingOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sort-ascending.svg"
+    },
+    {
+      "name": "SortDescendingOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sort-descending.svg"
+    },
+    {
+      "name": "SoundOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sound.svg"
+    },
+    {
+      "name": "SplitCellsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/split-cells.svg"
+    },
+    {
+      "name": "SpotifyOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/spotify.svg"
+    },
+    {
+      "name": "StarOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/star.svg"
+    },
+    {
+      "name": "StepBackwardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/step-backward.svg"
+    },
+    {
+      "name": "StepForwardOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/step-forward.svg"
+    },
+    {
+      "name": "StockOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/stock.svg"
+    },
+    {
+      "name": "StopOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/stop.svg"
+    },
+    {
+      "name": "StrikethroughOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/strikethrough.svg"
+    },
+    {
+      "name": "SubnodeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/subnode.svg"
+    },
+    {
+      "name": "SunOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sun.svg"
+    },
+    {
+      "name": "SwapLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/swap-left.svg"
+    },
+    {
+      "name": "SwapRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/swap-right.svg"
+    },
+    {
+      "name": "SwapOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/swap.svg"
+    },
+    {
+      "name": "SwitcherOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/switcher.svg"
+    },
+    {
+      "name": "SyncOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/sync.svg"
+    },
+    {
+      "name": "TableOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/table.svg"
+    },
+    {
+      "name": "TabletOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/tablet.svg"
+    },
+    {
+      "name": "TagOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/tag.svg"
+    },
+    {
+      "name": "TagsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/tags.svg"
+    },
+    {
+      "name": "TaobaoCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/taobao-circle.svg"
+    },
+    {
+      "name": "TaobaoOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/taobao.svg"
+    },
+    {
+      "name": "TeamOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/team.svg"
+    },
+    {
+      "name": "ThunderboltOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/thunderbolt.svg"
+    },
+    {
+      "name": "TikTokOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/tik-tok.svg"
+    },
+    {
+      "name": "ToTopOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/to-top.svg"
+    },
+    {
+      "name": "ToolOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/tool.svg"
+    },
+    {
+      "name": "TrademarkCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/trademark-circle.svg"
+    },
+    {
+      "name": "TrademarkOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/trademark.svg"
+    },
+    {
+      "name": "TransactionOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/transaction.svg"
+    },
+    {
+      "name": "TranslationOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/translation.svg"
+    },
+    {
+      "name": "TrophyOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/trophy.svg"
+    },
+    {
+      "name": "TruckOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/truck.svg"
+    },
+    {
+      "name": "TwitchOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/twitch.svg"
+    },
+    {
+      "name": "TwitterOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/twitter.svg"
+    },
+    {
+      "name": "UnderlineOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/underline.svg"
+    },
+    {
+      "name": "UndoOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/undo.svg"
+    },
+    {
+      "name": "UngroupOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/ungroup.svg"
+    },
+    {
+      "name": "UnlockOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/unlock.svg"
+    },
+    {
+      "name": "UnorderedListOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/unordered-list.svg"
+    },
+    {
+      "name": "UpCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/up-circle.svg"
+    },
+    {
+      "name": "UpSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/up-square.svg"
+    },
+    {
+      "name": "UpOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/up.svg"
+    },
+    {
+      "name": "UploadOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/upload.svg"
+    },
+    {
+      "name": "UsbOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/usb.svg"
+    },
+    {
+      "name": "UserAddOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/user-add.svg"
+    },
+    {
+      "name": "UserDeleteOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/user-delete.svg"
+    },
+    {
+      "name": "UserSwitchOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/user-switch.svg"
+    },
+    {
+      "name": "UserOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/user.svg"
+    },
+    {
+      "name": "UsergroupAddOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/usergroup-add.svg"
+    },
+    {
+      "name": "UsergroupDeleteOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/usergroup-delete.svg"
+    },
+    {
+      "name": "VerifiedOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/verified.svg"
+    },
+    {
+      "name": "VerticalAlignBottomOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/vertical-align-bottom.svg"
+    },
+    {
+      "name": "VerticalAlignMiddleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/vertical-align-middle.svg"
+    },
+    {
+      "name": "VerticalAlignTopOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/vertical-align-top.svg"
+    },
+    {
+      "name": "VerticalLeftOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/vertical-left.svg"
+    },
+    {
+      "name": "VerticalRightOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/vertical-right.svg"
+    },
+    {
+      "name": "VideoCameraAddOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/video-camera-add.svg"
+    },
+    {
+      "name": "VideoCameraOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/video-camera.svg"
+    },
+    {
+      "name": "WalletOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/wallet.svg"
+    },
+    {
+      "name": "WarningOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/warning.svg"
+    },
+    {
+      "name": "WechatWorkOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/wechat-work.svg"
+    },
+    {
+      "name": "WechatOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/wechat.svg"
+    },
+    {
+      "name": "WeiboCircleOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/weibo-circle.svg"
+    },
+    {
+      "name": "WeiboSquareOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/weibo-square.svg"
+    },
+    {
+      "name": "WeiboOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/weibo.svg"
+    },
+    {
+      "name": "WhatsAppOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/whats-app.svg"
+    },
+    {
+      "name": "WifiOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/wifi.svg"
+    },
+    {
+      "name": "WindowsOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/windows.svg"
+    },
+    {
+      "name": "WomanOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/woman.svg"
+    },
+    {
+      "name": "XOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/x.svg"
+    },
+    {
+      "name": "YahooOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/yahoo.svg"
+    },
+    {
+      "name": "YoutubeOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/youtube.svg"
+    },
+    {
+      "name": "YuqueOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/yuque.svg"
+    },
+    {
+      "name": "ZhihuOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/zhihu.svg"
+    },
+    {
+      "name": "ZoomInOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/zoom-in.svg"
+    },
+    {
+      "name": "ZoomOutOutlined",
+      "style": "outlined",
+      "path": "antd-icons/outlined/zoom-out.svg"
+    },
+    {
+      "name": "AccountBookFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/account-book.svg"
+    },
+    {
+      "name": "AlertFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/alert.svg"
+    },
+    {
+      "name": "AlipayCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/alipay-circle.svg"
+    },
+    {
+      "name": "AlipaySquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/alipay-square.svg"
+    },
+    {
+      "name": "AliwangwangFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/aliwangwang.svg"
+    },
+    {
+      "name": "AmazonCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/amazon-circle.svg"
+    },
+    {
+      "name": "AmazonSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/amazon-square.svg"
+    },
+    {
+      "name": "AndroidFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/android.svg"
+    },
+    {
+      "name": "AnthropicFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/anthropic.svg"
+    },
+    {
+      "name": "ApiFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/api.svg"
+    },
+    {
+      "name": "AppleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/apple.svg"
+    },
+    {
+      "name": "AppstoreFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/appstore.svg"
+    },
+    {
+      "name": "AudioFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/audio.svg"
+    },
+    {
+      "name": "BackwardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/backward.svg"
+    },
+    {
+      "name": "BankFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/bank.svg"
+    },
+    {
+      "name": "BehanceCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/behance-circle.svg"
+    },
+    {
+      "name": "BehanceSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/behance-square.svg"
+    },
+    {
+      "name": "BellFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/bell.svg"
+    },
+    {
+      "name": "BilibiliFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/bilibili.svg"
+    },
+    {
+      "name": "BookFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/book.svg"
+    },
+    {
+      "name": "BoxPlotFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/box-plot.svg"
+    },
+    {
+      "name": "BugFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/bug.svg"
+    },
+    {
+      "name": "BuildFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/build.svg"
+    },
+    {
+      "name": "BulbFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/bulb.svg"
+    },
+    {
+      "name": "CalculatorFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/calculator.svg"
+    },
+    {
+      "name": "CalendarFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/calendar.svg"
+    },
+    {
+      "name": "CameraFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/camera.svg"
+    },
+    {
+      "name": "CarFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/car.svg"
+    },
+    {
+      "name": "CaretDownFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/caret-down.svg"
+    },
+    {
+      "name": "CaretLeftFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/caret-left.svg"
+    },
+    {
+      "name": "CaretRightFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/caret-right.svg"
+    },
+    {
+      "name": "CaretUpFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/caret-up.svg"
+    },
+    {
+      "name": "CarryOutFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/carry-out.svg"
+    },
+    {
+      "name": "CheckCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/check-circle.svg"
+    },
+    {
+      "name": "CheckSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/check-square.svg"
+    },
+    {
+      "name": "ChromeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/chrome.svg"
+    },
+    {
+      "name": "CiCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/ci-circle.svg"
+    },
+    {
+      "name": "ClaudeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/claude.svg"
+    },
+    {
+      "name": "ClockCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/clock-circle.svg"
+    },
+    {
+      "name": "CloseCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/close-circle.svg"
+    },
+    {
+      "name": "CloseSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/close-square.svg"
+    },
+    {
+      "name": "CloudFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/cloud.svg"
+    },
+    {
+      "name": "CodeSandboxCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/code-sandbox-circle.svg"
+    },
+    {
+      "name": "CodeSandboxSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/code-sandbox-square.svg"
+    },
+    {
+      "name": "CodeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/code.svg"
+    },
+    {
+      "name": "CodepenCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/codepen-circle.svg"
+    },
+    {
+      "name": "CodepenSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/codepen-square.svg"
+    },
+    {
+      "name": "CompassFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/compass.svg"
+    },
+    {
+      "name": "ContactsFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/contacts.svg"
+    },
+    {
+      "name": "ContainerFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/container.svg"
+    },
+    {
+      "name": "ControlFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/control.svg"
+    },
+    {
+      "name": "CopyFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/copy.svg"
+    },
+    {
+      "name": "CopyrightCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/copyright-circle.svg"
+    },
+    {
+      "name": "CreditCardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/credit-card.svg"
+    },
+    {
+      "name": "CrownFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/crown.svg"
+    },
+    {
+      "name": "CustomerServiceFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/customer-service.svg"
+    },
+    {
+      "name": "DashboardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dashboard.svg"
+    },
+    {
+      "name": "DatabaseFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/database.svg"
+    },
+    {
+      "name": "DeepSeekFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/deep-seek.svg"
+    },
+    {
+      "name": "DeleteFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/delete.svg"
+    },
+    {
+      "name": "DiffFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/diff.svg"
+    },
+    {
+      "name": "DingtalkCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dingtalk-circle.svg"
+    },
+    {
+      "name": "DingtalkSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dingtalk-square.svg"
+    },
+    {
+      "name": "DiscordFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/discord.svg"
+    },
+    {
+      "name": "DislikeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dislike.svg"
+    },
+    {
+      "name": "DollarCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dollar-circle.svg"
+    },
+    {
+      "name": "DownCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/down-circle.svg"
+    },
+    {
+      "name": "DownSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/down-square.svg"
+    },
+    {
+      "name": "DribbbleCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dribbble-circle.svg"
+    },
+    {
+      "name": "DribbbleSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dribbble-square.svg"
+    },
+    {
+      "name": "DropboxCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dropbox-circle.svg"
+    },
+    {
+      "name": "DropboxSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/dropbox-square.svg"
+    },
+    {
+      "name": "EditFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/edit.svg"
+    },
+    {
+      "name": "ElevenLabsFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/eleven-labs.svg"
+    },
+    {
+      "name": "EnvironmentFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/environment.svg"
+    },
+    {
+      "name": "EuroCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/euro-circle.svg"
+    },
+    {
+      "name": "ExclamationCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/exclamation-circle.svg"
+    },
+    {
+      "name": "ExperimentFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/experiment.svg"
+    },
+    {
+      "name": "EyeInvisibleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/eye-invisible.svg"
+    },
+    {
+      "name": "EyeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/eye.svg"
+    },
+    {
+      "name": "FacebookFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/facebook.svg"
+    },
+    {
+      "name": "FastBackwardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/fast-backward.svg"
+    },
+    {
+      "name": "FastForwardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/fast-forward.svg"
+    },
+    {
+      "name": "FileAddFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-add.svg"
+    },
+    {
+      "name": "FileExcelFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-excel.svg"
+    },
+    {
+      "name": "FileExclamationFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-exclamation.svg"
+    },
+    {
+      "name": "FileImageFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-image.svg"
+    },
+    {
+      "name": "FileMarkdownFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-markdown.svg"
+    },
+    {
+      "name": "FilePdfFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-pdf.svg"
+    },
+    {
+      "name": "FilePptFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-ppt.svg"
+    },
+    {
+      "name": "FileTextFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-text.svg"
+    },
+    {
+      "name": "FileUnknownFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-unknown.svg"
+    },
+    {
+      "name": "FileWordFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-word.svg"
+    },
+    {
+      "name": "FileZipFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file-zip.svg"
+    },
+    {
+      "name": "FileFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/file.svg"
+    },
+    {
+      "name": "FilterFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/filter.svg"
+    },
+    {
+      "name": "FireFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/fire.svg"
+    },
+    {
+      "name": "FlagFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/flag.svg"
+    },
+    {
+      "name": "FolderAddFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/folder-add.svg"
+    },
+    {
+      "name": "FolderOpenFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/folder-open.svg"
+    },
+    {
+      "name": "FolderFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/folder.svg"
+    },
+    {
+      "name": "FormatPainterFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/format-painter.svg"
+    },
+    {
+      "name": "ForwardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/forward.svg"
+    },
+    {
+      "name": "FrownFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/frown.svg"
+    },
+    {
+      "name": "FundFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/fund.svg"
+    },
+    {
+      "name": "FunnelPlotFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/funnel-plot.svg"
+    },
+    {
+      "name": "GeminiFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/gemini.svg"
+    },
+    {
+      "name": "GiftFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/gift.svg"
+    },
+    {
+      "name": "GithubFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/github.svg"
+    },
+    {
+      "name": "GitlabFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/gitlab.svg"
+    },
+    {
+      "name": "GoldFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/gold.svg"
+    },
+    {
+      "name": "GoldenFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/golden.svg"
+    },
+    {
+      "name": "GoogleCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/google-circle.svg"
+    },
+    {
+      "name": "GooglePlusCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/google-plus-circle.svg"
+    },
+    {
+      "name": "GooglePlusSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/google-plus-square.svg"
+    },
+    {
+      "name": "GoogleSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/google-square.svg"
+    },
+    {
+      "name": "HddFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/hdd.svg"
+    },
+    {
+      "name": "HeartFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/heart.svg"
+    },
+    {
+      "name": "HighlightFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/highlight.svg"
+    },
+    {
+      "name": "HomeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/home.svg"
+    },
+    {
+      "name": "HourglassFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/hourglass.svg"
+    },
+    {
+      "name": "Html5Filled",
+      "style": "filled",
+      "path": "antd-icons/filled/html5.svg"
+    },
+    {
+      "name": "HuggingFaceFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/hugging-face.svg"
+    },
+    {
+      "name": "IdcardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/idcard.svg"
+    },
+    {
+      "name": "IeCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/ie-circle.svg"
+    },
+    {
+      "name": "IeSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/ie-square.svg"
+    },
+    {
+      "name": "InfoCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/info-circle.svg"
+    },
+    {
+      "name": "InstagramFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/instagram.svg"
+    },
+    {
+      "name": "InsuranceFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/insurance.svg"
+    },
+    {
+      "name": "InteractionFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/interaction.svg"
+    },
+    {
+      "name": "LayoutFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/layout.svg"
+    },
+    {
+      "name": "LeftCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/left-circle.svg"
+    },
+    {
+      "name": "LeftSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/left-square.svg"
+    },
+    {
+      "name": "LikeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/like.svg"
+    },
+    {
+      "name": "LinkedinFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/linkedin.svg"
+    },
+    {
+      "name": "LockFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/lock.svg"
+    },
+    {
+      "name": "MacCommandFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/mac-command.svg"
+    },
+    {
+      "name": "MailFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/mail.svg"
+    },
+    {
+      "name": "MastodonFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/mastodon.svg"
+    },
+    {
+      "name": "MedicineBoxFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/medicine-box.svg"
+    },
+    {
+      "name": "MediumCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/medium-circle.svg"
+    },
+    {
+      "name": "MediumSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/medium-square.svg"
+    },
+    {
+      "name": "MehFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/meh.svg"
+    },
+    {
+      "name": "MergeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/merge.svg"
+    },
+    {
+      "name": "MessageFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/message.svg"
+    },
+    {
+      "name": "MetaFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/meta.svg"
+    },
+    {
+      "name": "MinusCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/minus-circle.svg"
+    },
+    {
+      "name": "MinusSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/minus-square.svg"
+    },
+    {
+      "name": "MistralFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/mistral.svg"
+    },
+    {
+      "name": "MobileFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/mobile.svg"
+    },
+    {
+      "name": "MoneyCollectFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/money-collect.svg"
+    },
+    {
+      "name": "MoonFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/moon.svg"
+    },
+    {
+      "name": "MutedFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/muted.svg"
+    },
+    {
+      "name": "NetflixFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/netflix.svg"
+    },
+    {
+      "name": "NotificationFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/notification.svg"
+    },
+    {
+      "name": "OllamaFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/ollama.svg"
+    },
+    {
+      "name": "OpenAIFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/open-a-i.svg"
+    },
+    {
+      "name": "PauseCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/pause-circle.svg"
+    },
+    {
+      "name": "PayCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/pay-circle.svg"
+    },
+    {
+      "name": "PerplexityFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/perplexity.svg"
+    },
+    {
+      "name": "PhoneFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/phone.svg"
+    },
+    {
+      "name": "PictureFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/picture.svg"
+    },
+    {
+      "name": "PieChartFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/pie-chart.svg"
+    },
+    {
+      "name": "PinterestFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/pinterest.svg"
+    },
+    {
+      "name": "PlayCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/play-circle.svg"
+    },
+    {
+      "name": "PlaySquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/play-square.svg"
+    },
+    {
+      "name": "PlusCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/plus-circle.svg"
+    },
+    {
+      "name": "PlusSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/plus-square.svg"
+    },
+    {
+      "name": "PoundCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/pound-circle.svg"
+    },
+    {
+      "name": "PrinterFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/printer.svg"
+    },
+    {
+      "name": "ProductFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/product.svg"
+    },
+    {
+      "name": "ProfileFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/profile.svg"
+    },
+    {
+      "name": "ProjectFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/project.svg"
+    },
+    {
+      "name": "PropertySafetyFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/property-safety.svg"
+    },
+    {
+      "name": "PushpinFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/pushpin.svg"
+    },
+    {
+      "name": "QqCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/qq-circle.svg"
+    },
+    {
+      "name": "QqSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/qq-square.svg"
+    },
+    {
+      "name": "QuestionCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/question-circle.svg"
+    },
+    {
+      "name": "QwenFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/qwen.svg"
+    },
+    {
+      "name": "ReadFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/read.svg"
+    },
+    {
+      "name": "ReconciliationFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/reconciliation.svg"
+    },
+    {
+      "name": "RedEnvelopeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/red-envelope.svg"
+    },
+    {
+      "name": "RedditCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/reddit-circle.svg"
+    },
+    {
+      "name": "RedditSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/reddit-square.svg"
+    },
+    {
+      "name": "ReplicateFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/replicate.svg"
+    },
+    {
+      "name": "RestFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/rest.svg"
+    },
+    {
+      "name": "RightCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/right-circle.svg"
+    },
+    {
+      "name": "RightSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/right-square.svg"
+    },
+    {
+      "name": "RobotFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/robot.svg"
+    },
+    {
+      "name": "RocketFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/rocket.svg"
+    },
+    {
+      "name": "SafetyCertificateFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/safety-certificate.svg"
+    },
+    {
+      "name": "SaveFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/save.svg"
+    },
+    {
+      "name": "ScheduleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/schedule.svg"
+    },
+    {
+      "name": "SecurityScanFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/security-scan.svg"
+    },
+    {
+      "name": "SettingFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/setting.svg"
+    },
+    {
+      "name": "ShopFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/shop.svg"
+    },
+    {
+      "name": "ShoppingFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/shopping.svg"
+    },
+    {
+      "name": "SignalFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/signal.svg"
+    },
+    {
+      "name": "SignatureFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/signature.svg"
+    },
+    {
+      "name": "SketchCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/sketch-circle.svg"
+    },
+    {
+      "name": "SketchSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/sketch-square.svg"
+    },
+    {
+      "name": "SkinFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/skin.svg"
+    },
+    {
+      "name": "SkypeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/skype.svg"
+    },
+    {
+      "name": "SlackCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/slack-circle.svg"
+    },
+    {
+      "name": "SlackSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/slack-square.svg"
+    },
+    {
+      "name": "SlidersFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/sliders.svg"
+    },
+    {
+      "name": "SmileFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/smile.svg"
+    },
+    {
+      "name": "SnapchatFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/snapchat.svg"
+    },
+    {
+      "name": "SnippetsFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/snippets.svg"
+    },
+    {
+      "name": "SoundFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/sound.svg"
+    },
+    {
+      "name": "SpotifyFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/spotify.svg"
+    },
+    {
+      "name": "StarFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/star.svg"
+    },
+    {
+      "name": "StepBackwardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/step-backward.svg"
+    },
+    {
+      "name": "StepForwardFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/step-forward.svg"
+    },
+    {
+      "name": "StopFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/stop.svg"
+    },
+    {
+      "name": "SunFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/sun.svg"
+    },
+    {
+      "name": "SwitcherFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/switcher.svg"
+    },
+    {
+      "name": "TabletFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/tablet.svg"
+    },
+    {
+      "name": "TagFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/tag.svg"
+    },
+    {
+      "name": "TagsFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/tags.svg"
+    },
+    {
+      "name": "TaobaoCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/taobao-circle.svg"
+    },
+    {
+      "name": "TaobaoSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/taobao-square.svg"
+    },
+    {
+      "name": "TelegramFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/telegram.svg"
+    },
+    {
+      "name": "ThreadsFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/threads.svg"
+    },
+    {
+      "name": "ThunderboltFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/thunderbolt.svg"
+    },
+    {
+      "name": "TikTokFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/tik-tok.svg"
+    },
+    {
+      "name": "ToolFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/tool.svg"
+    },
+    {
+      "name": "TrademarkCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/trademark-circle.svg"
+    },
+    {
+      "name": "TrophyFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/trophy.svg"
+    },
+    {
+      "name": "TruckFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/truck.svg"
+    },
+    {
+      "name": "TwitchFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/twitch.svg"
+    },
+    {
+      "name": "TwitterCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/twitter-circle.svg"
+    },
+    {
+      "name": "TwitterSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/twitter-square.svg"
+    },
+    {
+      "name": "UnlockFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/unlock.svg"
+    },
+    {
+      "name": "UpCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/up-circle.svg"
+    },
+    {
+      "name": "UpSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/up-square.svg"
+    },
+    {
+      "name": "UsbFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/usb.svg"
+    },
+    {
+      "name": "VideoCameraFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/video-camera.svg"
+    },
+    {
+      "name": "WalletFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/wallet.svg"
+    },
+    {
+      "name": "WarningFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/warning.svg"
+    },
+    {
+      "name": "WechatWorkFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/wechat-work.svg"
+    },
+    {
+      "name": "WechatFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/wechat.svg"
+    },
+    {
+      "name": "WeiboCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/weibo-circle.svg"
+    },
+    {
+      "name": "WeiboSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/weibo-square.svg"
+    },
+    {
+      "name": "WindowsFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/windows.svg"
+    },
+    {
+      "name": "XFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/x.svg"
+    },
+    {
+      "name": "YahooFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/yahoo.svg"
+    },
+    {
+      "name": "YoutubeFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/youtube.svg"
+    },
+    {
+      "name": "YuqueFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/yuque.svg"
+    },
+    {
+      "name": "ZhihuCircleFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/zhihu-circle.svg"
+    },
+    {
+      "name": "ZhihuSquareFilled",
+      "style": "filled",
+      "path": "antd-icons/filled/zhihu-square.svg"
+    },
+    {
+      "name": "AccountBookTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/account-book.svg"
+    },
+    {
+      "name": "AlertTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/alert.svg"
+    },
+    {
+      "name": "ApiTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/api.svg"
+    },
+    {
+      "name": "AppstoreTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/appstore.svg"
+    },
+    {
+      "name": "AudioTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/audio.svg"
+    },
+    {
+      "name": "BankTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/bank.svg"
+    },
+    {
+      "name": "BellTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/bell.svg"
+    },
+    {
+      "name": "BookTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/book.svg"
+    },
+    {
+      "name": "BoxPlotTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/box-plot.svg"
+    },
+    {
+      "name": "BugTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/bug.svg"
+    },
+    {
+      "name": "BuildTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/build.svg"
+    },
+    {
+      "name": "BulbTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/bulb.svg"
+    },
+    {
+      "name": "CalculatorTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/calculator.svg"
+    },
+    {
+      "name": "CalendarTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/calendar.svg"
+    },
+    {
+      "name": "CameraTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/camera.svg"
+    },
+    {
+      "name": "CarTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/car.svg"
+    },
+    {
+      "name": "CarryOutTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/carry-out.svg"
+    },
+    {
+      "name": "CheckCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/check-circle.svg"
+    },
+    {
+      "name": "CheckSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/check-square.svg"
+    },
+    {
+      "name": "CiCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/ci-circle.svg"
+    },
+    {
+      "name": "CiTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/ci.svg"
+    },
+    {
+      "name": "ClockCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/clock-circle.svg"
+    },
+    {
+      "name": "CloseCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/close-circle.svg"
+    },
+    {
+      "name": "CloseSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/close-square.svg"
+    },
+    {
+      "name": "CloudTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/cloud.svg"
+    },
+    {
+      "name": "CodeTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/code.svg"
+    },
+    {
+      "name": "CompassTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/compass.svg"
+    },
+    {
+      "name": "ContactsTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/contacts.svg"
+    },
+    {
+      "name": "ContainerTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/container.svg"
+    },
+    {
+      "name": "ControlTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/control.svg"
+    },
+    {
+      "name": "CopyTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/copy.svg"
+    },
+    {
+      "name": "CopyrightCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/copyright-circle.svg"
+    },
+    {
+      "name": "CopyrightTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/copyright.svg"
+    },
+    {
+      "name": "CreditCardTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/credit-card.svg"
+    },
+    {
+      "name": "CrownTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/crown.svg"
+    },
+    {
+      "name": "CustomerServiceTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/customer-service.svg"
+    },
+    {
+      "name": "DashboardTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/dashboard.svg"
+    },
+    {
+      "name": "DatabaseTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/database.svg"
+    },
+    {
+      "name": "DeleteTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/delete.svg"
+    },
+    {
+      "name": "DiffTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/diff.svg"
+    },
+    {
+      "name": "DislikeTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/dislike.svg"
+    },
+    {
+      "name": "DollarCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/dollar-circle.svg"
+    },
+    {
+      "name": "DollarTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/dollar.svg"
+    },
+    {
+      "name": "DownCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/down-circle.svg"
+    },
+    {
+      "name": "DownSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/down-square.svg"
+    },
+    {
+      "name": "EditTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/edit.svg"
+    },
+    {
+      "name": "EnvironmentTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/environment.svg"
+    },
+    {
+      "name": "EuroCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/euro-circle.svg"
+    },
+    {
+      "name": "EuroTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/euro.svg"
+    },
+    {
+      "name": "ExclamationCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/exclamation-circle.svg"
+    },
+    {
+      "name": "ExperimentTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/experiment.svg"
+    },
+    {
+      "name": "EyeInvisibleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/eye-invisible.svg"
+    },
+    {
+      "name": "EyeTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/eye.svg"
+    },
+    {
+      "name": "FileAddTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-add.svg"
+    },
+    {
+      "name": "FileExcelTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-excel.svg"
+    },
+    {
+      "name": "FileExclamationTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-exclamation.svg"
+    },
+    {
+      "name": "FileImageTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-image.svg"
+    },
+    {
+      "name": "FileMarkdownTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-markdown.svg"
+    },
+    {
+      "name": "FilePdfTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-pdf.svg"
+    },
+    {
+      "name": "FilePptTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-ppt.svg"
+    },
+    {
+      "name": "FileTextTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-text.svg"
+    },
+    {
+      "name": "FileUnknownTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-unknown.svg"
+    },
+    {
+      "name": "FileWordTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-word.svg"
+    },
+    {
+      "name": "FileZipTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file-zip.svg"
+    },
+    {
+      "name": "FileTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/file.svg"
+    },
+    {
+      "name": "FilterTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/filter.svg"
+    },
+    {
+      "name": "FireTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/fire.svg"
+    },
+    {
+      "name": "FlagTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/flag.svg"
+    },
+    {
+      "name": "FolderAddTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/folder-add.svg"
+    },
+    {
+      "name": "FolderOpenTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/folder-open.svg"
+    },
+    {
+      "name": "FolderTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/folder.svg"
+    },
+    {
+      "name": "FrownTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/frown.svg"
+    },
+    {
+      "name": "FundTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/fund.svg"
+    },
+    {
+      "name": "FunnelPlotTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/funnel-plot.svg"
+    },
+    {
+      "name": "GiftTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/gift.svg"
+    },
+    {
+      "name": "GoldTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/gold.svg"
+    },
+    {
+      "name": "HddTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/hdd.svg"
+    },
+    {
+      "name": "HeartTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/heart.svg"
+    },
+    {
+      "name": "HighlightTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/highlight.svg"
+    },
+    {
+      "name": "HomeTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/home.svg"
+    },
+    {
+      "name": "HourglassTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/hourglass.svg"
+    },
+    {
+      "name": "Html5TwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/html5.svg"
+    },
+    {
+      "name": "IdcardTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/idcard.svg"
+    },
+    {
+      "name": "InfoCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/info-circle.svg"
+    },
+    {
+      "name": "InsuranceTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/insurance.svg"
+    },
+    {
+      "name": "InteractionTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/interaction.svg"
+    },
+    {
+      "name": "LayoutTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/layout.svg"
+    },
+    {
+      "name": "LeftCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/left-circle.svg"
+    },
+    {
+      "name": "LeftSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/left-square.svg"
+    },
+    {
+      "name": "LikeTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/like.svg"
+    },
+    {
+      "name": "LockTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/lock.svg"
+    },
+    {
+      "name": "MailTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/mail.svg"
+    },
+    {
+      "name": "MedicineBoxTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/medicine-box.svg"
+    },
+    {
+      "name": "MehTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/meh.svg"
+    },
+    {
+      "name": "MessageTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/message.svg"
+    },
+    {
+      "name": "MinusCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/minus-circle.svg"
+    },
+    {
+      "name": "MinusSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/minus-square.svg"
+    },
+    {
+      "name": "MobileTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/mobile.svg"
+    },
+    {
+      "name": "MoneyCollectTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/money-collect.svg"
+    },
+    {
+      "name": "NotificationTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/notification.svg"
+    },
+    {
+      "name": "PauseCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/pause-circle.svg"
+    },
+    {
+      "name": "PhoneTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/phone.svg"
+    },
+    {
+      "name": "PictureTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/picture.svg"
+    },
+    {
+      "name": "PieChartTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/pie-chart.svg"
+    },
+    {
+      "name": "PlayCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/play-circle.svg"
+    },
+    {
+      "name": "PlaySquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/play-square.svg"
+    },
+    {
+      "name": "PlusCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/plus-circle.svg"
+    },
+    {
+      "name": "PlusSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/plus-square.svg"
+    },
+    {
+      "name": "PoundCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/pound-circle.svg"
+    },
+    {
+      "name": "PrinterTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/printer.svg"
+    },
+    {
+      "name": "ProfileTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/profile.svg"
+    },
+    {
+      "name": "ProjectTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/project.svg"
+    },
+    {
+      "name": "PropertySafetyTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/property-safety.svg"
+    },
+    {
+      "name": "PushpinTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/pushpin.svg"
+    },
+    {
+      "name": "QuestionCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/question-circle.svg"
+    },
+    {
+      "name": "ReconciliationTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/reconciliation.svg"
+    },
+    {
+      "name": "RedEnvelopeTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/red-envelope.svg"
+    },
+    {
+      "name": "RestTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/rest.svg"
+    },
+    {
+      "name": "RightCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/right-circle.svg"
+    },
+    {
+      "name": "RightSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/right-square.svg"
+    },
+    {
+      "name": "RocketTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/rocket.svg"
+    },
+    {
+      "name": "SafetyCertificateTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/safety-certificate.svg"
+    },
+    {
+      "name": "SaveTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/save.svg"
+    },
+    {
+      "name": "ScheduleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/schedule.svg"
+    },
+    {
+      "name": "SecurityScanTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/security-scan.svg"
+    },
+    {
+      "name": "SettingTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/setting.svg"
+    },
+    {
+      "name": "ShopTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/shop.svg"
+    },
+    {
+      "name": "ShoppingTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/shopping.svg"
+    },
+    {
+      "name": "SkinTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/skin.svg"
+    },
+    {
+      "name": "SlidersTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/sliders.svg"
+    },
+    {
+      "name": "SmileTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/smile.svg"
+    },
+    {
+      "name": "SnippetsTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/snippets.svg"
+    },
+    {
+      "name": "SoundTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/sound.svg"
+    },
+    {
+      "name": "StarTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/star.svg"
+    },
+    {
+      "name": "StopTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/stop.svg"
+    },
+    {
+      "name": "SwitcherTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/switcher.svg"
+    },
+    {
+      "name": "TabletTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/tablet.svg"
+    },
+    {
+      "name": "TagTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/tag.svg"
+    },
+    {
+      "name": "TagsTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/tags.svg"
+    },
+    {
+      "name": "ThunderboltTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/thunderbolt.svg"
+    },
+    {
+      "name": "ToolTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/tool.svg"
+    },
+    {
+      "name": "TrademarkCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/trademark-circle.svg"
+    },
+    {
+      "name": "TrophyTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/trophy.svg"
+    },
+    {
+      "name": "UnlockTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/unlock.svg"
+    },
+    {
+      "name": "UpCircleTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/up-circle.svg"
+    },
+    {
+      "name": "UpSquareTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/up-square.svg"
+    },
+    {
+      "name": "UsbTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/usb.svg"
+    },
+    {
+      "name": "VideoCameraTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/video-camera.svg"
+    },
+    {
+      "name": "WalletTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/wallet.svg"
+    },
+    {
+      "name": "WarningTwoTone",
+      "style": "twotone",
+      "path": "antd-icons/twotone/warning.svg"
+    }
+  ]
+}
