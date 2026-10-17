@@ -299,6 +299,68 @@ try {
     }
   }
 
+  // Interactive nested GPUI Menu regression. Unlike DOM navigation,
+  // these operations act on pixels in the Rust/WebAssembly canvas.
+  const nested=await browser.newPage({viewport:{width:900,height:550}});
+  const nestedErrors=[];
+  nested.on('pageerror',error=>nestedErrors.push(error.message));
+  nested.on('console',message=>{
+    if (message.type()!=='error') return;
+    const msg=message.text().trim();
+    if (msg!=='Wasm assets loading, will be available soon...') nestedErrors.push(msg);
+  });
+  try {
+    await nested.goto(base+'demo.html?component=MenuTree',{waitUntil:'domcontentloaded'});
+    await nested.waitForFunction(()=>{
+      const canvas=document.querySelector('canvas');
+      return canvas&&canvas.width>0&&canvas.height>0&&!document.querySelector('#status');
+    },null,{timeout:60000});
+    await nested.waitForTimeout(700);
+    const initial=await nested.screenshot({
+      path:join(screenshots,'menu-tree-closed.png')
+    });
+    // The first visible row is the Reports submenu title.
+    await nested.mouse.click(110,82);
+    await nested.mouse.move(870,520);
+    await nested.waitForTimeout(650);
+    const open=await nested.screenshot({
+      path:join(screenshots,'menu-tree-open.png')
+    });
+    const opening=await changedPixels(nested,initial,open);
+    if(opening.total<1500||opening.outside<900) {
+      throw new Error('GPUI nested submenu did not visibly expand: '+JSON.stringify(opening));
+    }
+    console.log('PASS: nested GPUI SubMenu expands from real canvas pointer activation');
+    await nested.keyboard.press('ArrowDown');
+    await nested.keyboard.press('Enter');
+    await nested.waitForTimeout(550);
+    const selected=await nested.screenshot({
+      path:join(screenshots,'menu-tree-keyboard-selected.png')
+    });
+    const changed=await changedPixels(nested,open,selected);
+    if(changed.total<850) {
+      throw new Error('ArrowDown + Enter did not select native child: '+JSON.stringify(changed));
+    }
+    console.log('PASS: GPUI Menu roving ArrowDown + Enter activates a child');
+    await nested.keyboard.press('Escape');
+    await nested.waitForTimeout(600);
+    const closed=await nested.screenshot({
+      path:join(screenshots,'menu-tree-escape-closed.png')
+    });
+    const closing=await changedPixels(nested,selected,closed);
+    if(closing.total<1200) {
+      throw new Error('Escape did not close nested submenu: '+JSON.stringify(closing));
+    }
+    console.log('PASS: GPUI Menu Escape closes SubMenu and restores parent focus');
+    if(nestedErrors.length) throw new Error('Browser errors: '+nestedErrors.join('; '));
+  } catch(error) {
+    failures++;
+    console.error('FAIL: native Menu nested pointer/keyboard cycle',String(error));
+    console.error('Browser errors:',nestedErrors.join('; '));
+  } finally {
+    await nested.close();
+  }
+
   // Responsive Layout regression: in a narrow GPUI Web viewport the
   // breakpoint initially collapses Sider, and a click must expand it.
   // A second click returns the panel to its initial narrow state.
