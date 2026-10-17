@@ -47,6 +47,50 @@ test('component scoped overrides remain independent in generated Rust',()=>{
   assert.match(code,/color_primary\(color\(0x12aa77\)\)/);
 });
 
+test('Map and Alias layers roundtrip through JSON, preview URL and Rust API',()=>{
+  const state=emptyTheme();
+  state.seed.colorPrimary='#635bdf';
+  state.map={colorPrimaryHover:'#776ce9',colorPrimaryBg:'#f2eeff',
+    controlHeightSM:'22.5'};
+  state.alias={colorLink:'#cc5500',colorTextDisabled:'#919191'};
+  state.components.Button={colorPrimary:'#228866'};
+  const imported=validated(JSON.parse(JSON.stringify(state)));
+  assert.deepEqual(imported.map,state.map);
+  assert.deepEqual(imported.alias,state.alias);
+  const route=previewParam(imported,'tokens');
+  assert.match(route,/Map\.colorPrimaryHover=776ce9/);
+  assert.match(route,/Map\.controlHeightSM=22\.5/);
+  assert.match(route,/Alias\.colorLink=cc5500/);
+  assert.match(route,/Button\.colorPrimary=228866/);
+  const code=rustCode(imported);
+  assert.match(code,/with_map_overrides\(AntMapTokenOverrides::default\(\)/);
+  assert.match(code,/color_primary_bg\(color\(0xf2eeff\)\)/);
+  assert.match(code,/control_height_sm\(22\.5\)/);
+  assert.match(code,/with_alias_overrides\(AntAliasTokenOverrides::default\(\)/);
+  assert.match(code,/color_link\(color\(0xcc5500\)\)/);
+  assert.doesNotMatch(code,/22\.5\./);
+  assert.match(code,/with_component\(AntComponent::Button/);
+});
+
+test('studio layers are editable and partial dark imports get dark defaults',()=>{
+  const html=themeDesignerHtml();
+  assert.match(html,/theme-map-fields/);
+  assert.match(html,/theme-alias-fields/);
+  assert.match(html,/Seed Token/);
+  assert.match(html,/Component Token/);
+  const partial=validated({algorithm:'dark',map:{controlHeightLG:'1000'},
+    alias:{colorLink:'not a color',colorError:'#bb4411'}});
+  assert.equal(partial.seed.colorBgBase,'#141414');
+  assert.equal(partial.seed.colorTextBase,'#f3f3f3');
+  assert.equal(partial.map.controlHeightLG,'72');
+  assert.equal(partial.alias.colorLink,undefined);
+  assert.equal(partial.alias.colorError,'#bb4411');
+  assert.equal(validateValue('Infinity','number','controlHeightSM'),null);
+  assert.equal(validateValue('1','number','controlHeightSM'),'18');
+  const code=rustCode(partial);
+  assert.match(code,/seed\.control_height = 32\.;/);
+});
+
 test('theme import rejects untrusted values and clamps scalar limits',()=>{
   assert.throws(()=>validated(null),/Expected theme object/);
   assert.throws(()=>validated([]),/Expected theme object/);
