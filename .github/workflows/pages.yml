@@ -16,7 +16,9 @@ concurrency:
   # PR checks cannot cancel in-flight production builds or Pages deploys.
   # Subsequent pushes to main still supersede older main deployments.
   group: gpui-antd-pages-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'production' }}
-  cancel-in-progress: true
+  # A newer main push must not abort the full 848-icon audit or Pages deploy.
+  # Serialize production deployments; only a superseded PR run is cancelled.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   wasm-and-docs:
