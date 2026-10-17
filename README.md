@@ -24,7 +24,7 @@
 
 ## First milestone component set
 
-Button, Input, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress and Divider.
+Button, Input, Select, Checkbox, Radio/RadioGroup, Switch, Tag, Badge, Alert, Card, Progress and Divider.
 
 Input now supports outlined, filled and borderless variants, warning/error status,
 prefix/suffix decorations, password reveal, sizes and read-only/disabled
@@ -74,6 +74,10 @@ let save = AntButton::new("save", "Save")
 ```
 
 Initialize GPUI Kit (`gpui_kit::init(cx)`) before creating component views.
+
+Select is a typed single-value wrapper around GPUI Kit's searchable SelectState.
+It supports filtering, clearable values, popup width, placeholders and disabled
+states; multiple selection remains a future milestone.
 
 The new RadioGroup supports a controlled selected index, roving Tab stops,
 arrows, Home/End navigation and disabled-item skipping. Both layouts and the

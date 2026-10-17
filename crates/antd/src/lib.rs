@@ -12,10 +12,12 @@ pub mod controls;
 pub mod display;
 pub mod input;
 pub mod radio;
+pub mod select;
 pub mod tokens;
 
 pub use controls::{AntButton, AntCheckbox, AntSwitch, ButtonVariant, ControlSize};
 pub use display::{AntAlert, AntBadge, AntCard, AntDivider, AntProgress, AntTag, Tone};
 pub use input::{AntInput, InputStatus, InputVariant};
 pub use radio::{AntRadio, AntRadioGroup};
+pub use select::AntSelect;
 pub use tokens::{AntTheme, Appearance, color};

@@ -3,20 +3,22 @@ extern crate gpui_kit as gpui;
 
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
-    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
+    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     StatefulInteractiveElement as _, Styled as _, Window, WindowOptions, div, px,
 };
 use gpui_kit::component::input::InputState;
+use gpui_kit::component::select::{SelectState, SearchableVec};
+use gpui_kit::component::IndexPath;
 use gpui_kit::assets::Assets;
 use gpui_kit::base::StyledExt as _;
 #[cfg(target_family = "wasm")]
 use gpui_kit::App;
 
 pub const COMPONENTS: &[&str] = &[
-    "Button", "Input", "Checkbox", "Radio", "Switch", "Tag", "Badge",
+    "Button", "Input", "Select", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider",
 ];
 
@@ -36,6 +38,9 @@ pub struct Gallery {
     input_error: Entity<InputState>,
     input_password: Entity<InputState>,
     input_disabled: Entity<InputState>,
+    select_basic: Entity<SelectState<Vec<&'static str>>>,
+    select_search: Entity<SelectState<SearchableVec<&'static str>>>,
+    select_disabled: Entity<SelectState<Vec<&'static str>>>,
 }
 
 impl Gallery {
@@ -56,11 +61,21 @@ impl Gallery {
             .masked(true).placeholder("Password"));
         let input_disabled = cx.new(|cx| InputState::new(window, cx)
             .placeholder("Disabled input").default_value("Cannot edit"));
+        let select_basic = cx.new(|cx| SelectState::new(
+            vec!["Apple", "Orange", "Banana", "Pineapple"],
+            Some(IndexPath::default()), window, cx));
+        let select_search = cx.new(|cx| SelectState::new(
+            SearchableVec::new(vec!["Rust", "TypeScript", "Go", "Python", "Java"]),
+            None, window, cx).searchable(true));
+        let select_disabled = cx.new(|cx| SelectState::new(
+            vec!["Enabled", "Disabled"],
+            Some(IndexPath::default()), window, cx));
         Self {
             component, dark, button_clicks: 0, checked: true, radio_selected: Some(0),
             radio_button_selected: Some(1), switch_on: true,
             input, input_filled, input_borderless, input_decorated, input_large,
             input_error, input_password, input_disabled,
+            select_basic, select_search, select_disabled,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -160,6 +175,33 @@ impl Gallery {
                     .child(AntRadio::new("pricing-monthly", "Monthly"))
                     .child(AntRadio::new("pricing-yearly", "Yearly"))
             )
+            .into_any_element()
+    }
+    fn select_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div().flex().flex_col().gap(px(18.))
+            .child(label("Default Select", t))
+            .child(div().w(px(270.)).child(
+                AntSelect::new(&self.select_basic)
+                    .theme(t)
+                    .clearable(true)
+                    .placeholder("Choose fruit")
+                    .aria_label("Fruit selection")))
+            .child(label("Searchable Select", t))
+            .child(div().w(px(270.)).child(
+                AntSelect::new(&self.select_search)
+                    .theme(t)
+                    .placeholder("Choose a language")
+                    .search_placeholder("Type to filter…")
+                    .aria_label("Programming language selection")
+                    .menu_width(320.)))
+            .child(label("Disabled", t))
+            .child(div().w(px(270.)).child(
+                AntSelect::new(&self.select_disabled)
+                    .theme(t)
+                    .disabled(true)
+                    .aria_label("Disabled choice")))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child("GPUI Kit owns filtering, option focus, selection, Escape and popover placement."))
             .into_any_element()
     }
     fn switch_demo(&self, t:AntTheme, cx:&mut Context<Self>) -> gpui_kit::AnyElement {
@@ -278,6 +320,7 @@ impl Render for Gallery {
         let demo=match self.component.as_str() {
             "Button"=>self.button_demo(t,cx),
             "Input"=>self.input_demo(t),
+            "Select"=>self.select_demo(t),
             "Checkbox"=>self.checkbox_demo(t,cx),
             "Radio"=>self.radio_demo(t,cx),
             "Switch"=>self.switch_demo(t,cx),
