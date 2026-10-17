@@ -106,6 +106,8 @@ try {
     {name:'IconPalette',dark:true},
     {name:'LayoutDrawer',dark:false},
     {name:'LayoutDrawer',dark:true},
+    {name:'MenuCollapsed',dark:false},
+    {name:'MenuCollapsed',dark:true},
     {name:'ThemeLab|colorPrimary=9a44b2|colorInfo=114488|Card.padding=32|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=1677ff|Map.colorPrimaryBg=d9f7be|Alias.colorLink=de7f22|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=00aa88|Checkbox.colorPrimary=ff9900|Tag.colorBg=fff1cc|motion=0|compact=1',dark:false},
@@ -728,6 +730,42 @@ try {
     console.error('FAIL: mobile Layout native Drawer interactions',String(error));
   } finally {
     await sheetPage.close();
+  }
+
+  // Exercise the real Rust GPUI popover rather than a CSS stand-in.
+  // Keep a fixed pointer position outside the collapsed Sider to confirm
+  // the popover occupies actual screen space and can dismiss on Escape.
+  const flyout=await browser.newPage({viewport:{width:660,height:570}});
+  const flyoutErrors=[];
+  flyout.on('pageerror',error=>flyoutErrors.push(error.message));
+  try {
+    await flyout.goto(base+'demo.html?component=MenuCollapsed',{waitUntil:'domcontentloaded'});
+    await flyout.waitForFunction(()=>{
+      const canvas=document.querySelector('canvas');
+      return canvas&&canvas.width>0&&canvas.height>0&&!document.querySelector('#status');
+    },null,{timeout:60000});
+    await flyout.waitForTimeout(550);
+    const before=await flyout.screenshot({path:join(screenshots,'menu-collapsed-before.png')});
+    await flyout.mouse.click(58,94);
+    await flyout.mouse.move(625,480);
+    await flyout.waitForTimeout(650);
+    const opened=await flyout.screenshot({path:join(screenshots,'menu-collapsed-open.png')});
+    const delta=await changedPixels(flyout,before,opened,660);
+    if(delta.total<3500||delta.outside<2500)
+      throw new Error('Collapsed native flyout not visible: '+JSON.stringify(delta));
+    await flyout.keyboard.press('Escape');
+    await flyout.waitForTimeout(470);
+    const closed=await flyout.screenshot({path:join(screenshots,'menu-collapsed-escape-closed.png')});
+    const residual=await changedPixels(flyout,before,closed,660);
+    if(residual.total>delta.total*0.5+1200)
+      throw new Error('Collapsed flyout failed native Escape dismissal: '+JSON.stringify(residual));
+    if(flyoutErrors.length)throw new Error(flyoutErrors.join('; '));
+    console.log('PASS: collapsed Menu native GPUI flyout opens and Escape dismisses');
+  } catch(error) {
+    failures++;
+    console.error('FAIL: collapsed Menu native Popover interaction',String(error));
+  } finally {
+    await flyout.close();
   }
 
   // Regression: long official icon names are visible, and all 848 names
