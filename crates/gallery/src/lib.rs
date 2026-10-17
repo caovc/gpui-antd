@@ -1,9 +1,11 @@
 //! One set of real Rust/GPUI previews for desktop and browser WebAssembly.
 extern crate gpui_kit as gpui;
 
+use std::collections::BTreeMap;
+
 use gpui_antd::{
     AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
-    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntDatePicker, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
+    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntDatePicker, AntForm, AntFormItem, FormSchema, FormRule, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -20,7 +22,7 @@ use gpui_kit::base::StyledExt as _;
 use gpui_kit::App;
 
 pub const COMPONENTS: &[&str] = &[
-    "Button", "Input", "Select", "DatePicker", "Checkbox", "Radio", "Switch", "Tag", "Badge",
+    "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider",
 ];
 
@@ -47,6 +49,13 @@ pub struct Gallery {
     date_range: Entity<DatePickerState>,
     date_time: Entity<DatePickerState>,
     date_disabled: Entity<DatePickerState>,
+    form_name: Entity<InputState>,
+    form_email: Entity<InputState>,
+    form_password: Entity<InputState>,
+    form_confirm: Entity<InputState>,
+    form_errors: BTreeMap<String, String>,
+    form_attempted: bool,
+    form_success: bool,
 }
 
 impl Gallery {
@@ -81,6 +90,14 @@ impl Gallery {
         let date_time = cx.new(|cx| DatePickerState::new(window, cx)
             .time_precision(TimePrecision::Minute));
         let date_disabled = cx.new(|cx| DatePickerState::new(window, cx));
+        let form_name = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("Full name"));
+        let form_email = cx.new(|cx| InputState::new(window, cx)
+            .placeholder("name@example.com"));
+        let form_password = cx.new(|cx| InputState::new(window, cx)
+            .masked(true).placeholder("6 or more characters"));
+        let form_confirm = cx.new(|cx| InputState::new(window, cx)
+            .masked(true).placeholder("Repeat password"));
         Self {
             component, dark, button_clicks: 0, checked: true, radio_selected: Some(0),
             radio_button_selected: Some(1), switch_on: true,
@@ -88,6 +105,8 @@ impl Gallery {
             input_error, input_password, input_disabled,
             select_basic, select_search, select_disabled,
             date_single, date_range, date_time, date_disabled,
+            form_name, form_email, form_password, form_confirm,
+            form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -187,6 +206,80 @@ impl Gallery {
                     .child(AntRadio::new("pricing-monthly", "Monthly"))
                     .child(AntRadio::new("pricing-yearly", "Yearly"))
             )
+            .into_any_element()
+    }
+    fn form_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let submit = cx.listener(|this, _: &gpui_kit::ClickEvent, _, cx| {
+            let values = BTreeMap::from([
+                ("name".to_owned(), this.form_name.read(cx).value().to_string()),
+                ("email".to_owned(), this.form_email.read(cx).value().to_string()),
+                ("password".to_owned(), this.form_password.read(cx).value().to_string()),
+                ("confirm".to_owned(), this.form_confirm.read(cx).value().to_string()),
+            ]);
+            let result = FormSchema::new()
+                .field("name", "Full name", [FormRule::Required, FormRule::MinLength(2)])
+                .field("email", "Email", [FormRule::Required, FormRule::Email])
+                .field("password", "Password", [FormRule::Required, FormRule::MinLength(6)])
+                .field("confirm", "Confirmation",
+                    [FormRule::Required, FormRule::EqualsField("password".to_owned())])
+                .validate(&values);
+            this.form_success = result.is_valid();
+            this.form_errors = result.errors;
+            this.form_attempted = true;
+            cx.notify();
+        });
+        let error = |key: &str| self.form_errors.get(key).cloned().map(Into::into);
+        let status = |key: &str| if self.form_errors.contains_key(key) {
+            InputStatus::Error
+        } else {
+            InputStatus::Normal
+        };
+        let message = if !self.form_attempted {
+            "Submit this form to see validation feedback."
+        } else if self.form_success {
+            "All fields passed validation. Demo data was not submitted."
+        } else {
+            "Please review the highlighted fields."
+        };
+        div().flex().flex_col().w(px(400.)).gap(px(16.))
+            .child(
+                AntForm::new().theme(theme).gap(14.)
+                    .child(
+                        AntFormItem::new("Full name").theme(theme).required(true)
+                            .error(error("name"))
+                            .child(AntInput::new(&self.form_name).theme(theme)
+                                .status(status("name")).aria_label("Full name")),
+                    )
+                    .child(
+                        AntFormItem::new("Email").theme(theme).required(true)
+                            .error(error("email"))
+                            .child(AntInput::new(&self.form_email).theme(theme)
+                                .status(status("email")).aria_label("Email address")),
+                    )
+                    .child(
+                        AntFormItem::new("Password").theme(theme).required(true)
+                            .error(error("password"))
+                            .child(AntInput::new(&self.form_password).theme(theme)
+                                .status(status("password")).password_toggle(true)
+                                .aria_label("Password")),
+                    )
+                    .child(
+                        AntFormItem::new("Confirm password").theme(theme).required(true)
+                            .error(error("confirm"))
+                            .child(AntInput::new(&self.form_confirm).theme(theme)
+                                .status(status("confirm")).password_toggle(true)
+                                .aria_label("Confirm password")),
+                    )
+                    .child(AntButton::new("form-submit", "Validate form")
+                        .theme(theme).primary().block(true).on_click(submit)),
+            )
+            .child(div().text_size(px(12.)).text_color(if self.form_success {
+                theme.success
+            } else if self.form_attempted {
+                theme.error
+            } else {
+                theme.text_secondary
+            }).child(message))
             .into_any_element()
     }
     fn date_picker_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
@@ -358,6 +451,7 @@ impl Render for Gallery {
             "Input"=>self.input_demo(t),
             "Select"=>self.select_demo(t),
             "DatePicker"=>self.date_picker_demo(t),
+            "Form"=>self.form_demo(t,cx),
             "Checkbox"=>self.checkbox_demo(t,cx),
             "Radio"=>self.radio_demo(t,cx),
             "Switch"=>self.switch_demo(t,cx),
