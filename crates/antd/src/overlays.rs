@@ -14,8 +14,9 @@ use gpui_kit::{
     SharedString, Styled as _, Window, div, px,
 };
 use gpui_kit::prelude::FluentBuilder as _;
+use gpui_kit::base::StyledExt as _;
 use gpui_kit::component::{
-    Sizable as _, Size,
+    Disableable as _, Sizable as _, Size,
     WindowExt as _,
     button::Button as KitButton,
     dialog::{
