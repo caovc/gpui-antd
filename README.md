@@ -11,6 +11,25 @@
 > Ant Design, NOT compatibility with the React component API. This is the first
 > end-to-end milestone, not the completed Ant Design catalog.
 
+## Design Token Studio (experimental)
+
+The [Design Token Studio](https://caovc.github.io/gpui-antd/#/theme) follows
+Ant Design's **Seed → Map → Alias → Component** architecture with a
+Rust-native deterministic theme resolver. Change brand and semantic colors,
+density, border radius or per-component tokens, then inspect the same Rust
+components or resolved GPUI token swatches through the **real WASM preview**.
+Export/import validated theme JSON and copy Rust configuration code.
+
+Not all 31 component namespaces are wired: the editor labels individual
+fields as Live or Planned, with support currently covering Button, Card,
+Input, Menu, Layout (Sider), Checkbox, Switch, Tag, Badge, Alert, Progress,
+Divider, Typography and Tooltip. This is **not** a port of Ant Design's
+JavaScript theme algorithm or a ConfigProvider implementation.
+
+See [Native token API, implementation and parity coverage](docs/THEME_TOKENS.md).
+The Token Studio URL is available **once the corresponding GitHub Pages
+deployment succeeds**.
+
 ## Contributor / coding agent guide
 
 This repository includes a canonical [AGENTS.md](AGENTS.md) entry point
