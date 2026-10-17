@@ -35,10 +35,14 @@ impl AntTag {
 impl RenderOnce for AntTag {
     fn render(self,_:&mut Window,_:&mut App)->impl IntoElement {
         let (bg,fg,border)=tone_colors(self.tone,self.theme);
+        let comp=self.theme.component(AntComponent::Tag);
+        let bg=comp.color_bg.unwrap_or(bg);
         div().flex().items_center().justify_center()
-            .rounded(px(4.)).px(px(7.)).h(px(24.))
-            .border_1().border_color(if self.bordered{border}else{bg})
-            .bg(bg).text_color(fg).text_size(px(12.))
+            .rounded(px(comp.border_radius.unwrap_or(4.)))
+            .px(px(comp.padding.unwrap_or(7.))).h(px(comp.control_height.unwrap_or(24.)))
+            .border_1().border_color(if self.bordered{comp.color_border.unwrap_or(border)}else{bg})
+            .bg(bg).text_color(comp.color_text.unwrap_or(fg))
+            .text_size(px(comp.font_size.unwrap_or(12.)))
             .child(self.text)
     }
 }
@@ -59,12 +63,14 @@ impl AntBadge {
 impl RenderOnce for AntBadge {
     fn render(self,_:&mut Window,_:&mut App)->impl IntoElement {
         let label=if self.count>99{"99+".to_owned()}else{self.count.to_string()};
+        let comp=self.theme.component(AntComponent::Badge);
+        let size=comp.control_height.unwrap_or(if self.dot{8.}else{20.});
         div().flex().items_center().justify_center()
-            .h(px(if self.dot{8.}else{20.}))
-            .min_w(px(if self.dot{8.}else{20.}))
-            .px(px(if self.dot{0.}else{5.}))
-            .rounded_full().bg(self.color).text_color(color(0xffffff))
-            .text_size(px(12.))
+            .h(px(size)).min_w(px(size))
+            .px(px(if self.dot{0.}else{comp.padding.unwrap_or(5.)}))
+            .rounded_full().bg(comp.color_bg.unwrap_or(self.color))
+            .text_color(comp.color_text.unwrap_or(color(0xffffff)))
+            .text_size(px(comp.font_size.unwrap_or(12.)))
             .child(if self.dot{String::new()}else{label})
     }
 }
@@ -105,7 +111,7 @@ impl RenderOnce for AntCard {
                     .text_color(fg).border_b_1().border_color(border)
                     .child(title))
             })
-            .child(div().p(px(padding)).text_size(px(t.font_size))
+            .child(div().p(px(padding)).text_size(px(comp.font_size.unwrap_or(t.font_size)))
                 .text_color(fg).children(self.children))
     }
 }
@@ -122,14 +128,20 @@ impl AntAlert {
 impl RenderOnce for AntAlert {
     fn render(self,_:&mut Window,_:&mut App)->impl IntoElement {
         let (bg,fg,border)=tone_colors(self.tone,self.theme);
+        let comp=self.theme.component(AntComponent::Alert);
         let symbol=match self.tone {Tone::Green=>"✓",Tone::Gold=>"!",Tone::Red=>"×",_=>"i"};
         div().flex().items_center().gap(px(10.))
-            .px(px(15.)).py(px(10.))
-            .rounded(px(8.)).border_1().border_color(border).bg(bg)
+            .px(px(comp.padding.unwrap_or(15.))).py(px(10.))
+            .rounded(px(comp.border_radius.unwrap_or(8.)))
+            .border_1().border_color(comp.color_border.unwrap_or(border))
+            .bg(comp.color_bg.unwrap_or(bg))
             .child(div().flex().items_center().justify_center()
-                .size(px(16.)).rounded_full().bg(fg).text_color(color(0xffffff))
+                .size(px(16.)).rounded_full()
+                .bg(comp.color_primary.unwrap_or(fg)).text_color(color(0xffffff))
                 .text_size(px(12.)).font_bold().child(symbol))
-            .child(div().text_color(self.theme.text).text_size(px(14.)).child(self.text))
+            .child(div().text_color(comp.color_text.unwrap_or(self.theme.text))
+                .text_size(px(comp.font_size.unwrap_or(self.theme.font_size)))
+                .child(self.text))
     }
 }
 
@@ -142,7 +154,10 @@ impl AntDivider {
 impl Default for AntDivider {fn default()->Self{Self::new()}}
 impl RenderOnce for AntDivider {
     fn render(self,_:&mut Window,_:&mut App)->impl IntoElement {
-        div().w_full().h(px(1.)).bg(self.theme.border)
+        let comp=self.theme.component(AntComponent::Divider);
+        div().w_full()
+            .h(px(comp.control_height.unwrap_or(1.).clamp(1.,12.)))
+            .bg(comp.color_border.unwrap_or(self.theme.border))
     }
 }
 
@@ -158,10 +173,19 @@ impl AntProgress {
 }
 impl RenderOnce for AntProgress {
     fn render(self,_:&mut Window,_:&mut App)->impl IntoElement {
-        let color=match self.tone {Tone::Green=>self.theme.success,Tone::Gold=>self.theme.warning,Tone::Red=>self.theme.error,_=>self.theme.primary};
+        let comp=self.theme.component(AntComponent::Progress);
+        let color=match self.tone {
+            Tone::Green=>self.theme.success,Tone::Gold=>self.theme.warning,
+            Tone::Red=>self.theme.error,_=>comp.color_primary.unwrap_or(self.theme.primary),
+        };
         div().flex().items_center().gap(px(12.)).w_full()
-            .child(div().flex_1().h(px(8.)).rounded_full().bg(self.theme.disabled_bg)
+            .child(div().flex_1()
+                .h(px(comp.control_height.unwrap_or(8.).clamp(2.,24.)))
+                .rounded_full().bg(comp.color_bg.unwrap_or(self.theme.disabled_bg))
                 .child(div().w(relative(self.percent/100.)).h_full().rounded_full().bg(color)))
-            .when(self.show_info,|this|this.child(div().w(px(40.)).text_size(px(14.)).text_color(self.theme.text_secondary).child(format!("{:.0}%",self.percent))))
+            .when(self.show_info,|this|this.child(div().w(px(40.))
+                .text_size(px(comp.font_size.unwrap_or(self.theme.font_size)))
+                .text_color(comp.color_text.unwrap_or(self.theme.text_secondary))
+                .child(format!("{:.0}%",self.percent))))
     }
 }

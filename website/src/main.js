@@ -1,5 +1,6 @@
 import './style.css';
 import { iconExplorerHtml, initIconExplorer } from './icons-explorer.js';
+import { themeDesignerHtml, initThemeDesigner } from './theme-designer.js';
 
 const BASE = import.meta.env.BASE_URL;
 const REPO = 'https://github.com/caovc/gpui-antd';
@@ -79,7 +80,7 @@ function home() {
     '<p class="hero-desc">The familiar Ant Design language, thoughtfully rebuilt as GPU-accelerated, cross-platform GPUI components.</p>' +
     '<div class="hero-actions"><a class="primary-action" href="' + link('Button') + '">Explore components <span>→</span></a>' +
     '<a class="secondary-action" href="#/getting-started">Get started <span>↗</span></a></div>' +
-    '<div class="hero-meta"><span><b>44</b> component pages</span><span><b>100%</b> Rust preview</span><span><b>WASM</b> live gallery</span></div></div>' +
+    '<div class="hero-meta"><a href="#/theme"><b>Token Studio ↗</b> Design themes</a><span><b>44</b> component pages</span><span><b>100%</b> Rust preview</span><span><b>WASM</b> live gallery</span></div></div>' +
     '<div class="feature-title"><span>LIVE COMPONENT PREVIEW</span><span class="preview-meta"><span class="green-dot"></span> RUNNING GPUI IN WEBASSEMBLY</span></div>' +
     '<div class="home-preview">' + iframe('Button') + '</div>' +
     '<div class="section-title"><div><p class="section-eyebrow">EXPLORE THE LIBRARY</p><h2>Components, crafted for GPUI.</h2><p>Browse the first building blocks. Each demo renders from the Rust component library, not HTML replicas.</p></div></div>' +
@@ -128,18 +129,26 @@ function gettingStarted() {
     '</div>';
   toc.innerHTML = '<span class="toc-title">ON THIS PAGE</span><a href="#install" data-anchor>Installation</a><a href="#example" data-anchor>First component</a><a href="#preview" data-anchor>Gallery</a><a href="#architecture" data-anchor>Architecture</a>';
 }
+function themeStudio(){
+  content.innerHTML=themeDesignerHtml();
+  toc.innerHTML='';
+  initThemeDesigner(BASE);
+}
 function route() {
   const path = decodeURIComponent(location.hash.slice(1) || '/');
+  document.querySelector('.app-shell').classList.toggle('studio-route',path==='/theme');
   if (path.startsWith('/components/')) {
     const name = path.slice('/components/'.length);
     if (byName[name]) docs(byName[name]); else home();
-  } else if (path === '/getting-started') gettingStarted(); else home();
+  } else if (path === '/getting-started') gettingStarted();
+  else if (path === '/theme') themeStudio();
+  else home();
   document.querySelectorAll('[data-nav]').forEach(node => {
-    const id = path.startsWith('/components/') ? path.slice('/components/'.length) : path === '/getting-started' ? 'getting-started' : 'home';
+    const id = path.startsWith('/components/') ? path.slice('/components/'.length) : path === '/getting-started' ? 'getting-started' : path === '/theme' ? 'theme' : 'home';
     node.classList.toggle('active', node.dataset.nav === id);
   });
   document.querySelectorAll('[data-top]').forEach(node => {
-    const active = path.startsWith('/components/') ? 'components' : path === '/getting-started' ? 'guide' : 'home';
+    const active = path.startsWith('/components/') ? 'components' : path === '/getting-started' ? 'guide' : path === '/theme' ? 'theme' : 'home';
     node.classList.toggle('current', node.dataset.top === active);
   });
   sidebar.classList.remove('mobile-open');

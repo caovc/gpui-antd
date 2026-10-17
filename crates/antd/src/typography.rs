@@ -11,6 +11,7 @@ use gpui_kit::{
 use gpui_kit::base::{Button as BaseButton, Link as BaseLink, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
 use crate::{AntIcon, AntIconName, AntTheme};
+use crate::design_tokens::AntComponent;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum TextTone {
@@ -54,13 +55,14 @@ impl AntTitle {
 }
 impl RenderOnce for AntTitle {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        let font_size = self.font_size();
+        let comp=self.theme.component(AntComponent::Typography);
+        let font_size = self.font_size()*comp.font_size.unwrap_or(self.theme.font_size)/14.;
         div()
             .w_full()
             .font_weight(FontWeight::SEMIBOLD)
             .text_size(px(font_size))
             .line_height(relative(1.23))
-            .text_color(self.tone.color(self.theme))
+            .text_color(comp.color_text.unwrap_or(self.tone.color(self.theme)))
             .child(self.text)
     }
 }
@@ -106,18 +108,21 @@ impl RenderOnce for AntText {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let theme = self.theme;
         let value = self.text.clone();
-        let foreground = if self.disabled { theme.disabled_text } else { self.tone.color(theme) };
+        let comp=theme.component(AntComponent::Typography);
+        let foreground = if self.disabled { theme.disabled_text } else {
+            comp.color_text.unwrap_or(self.tone.color(theme))
+        };
         let body = div()
-            .text_size(px(14.))
+            .text_size(px(comp.font_size.unwrap_or(theme.font_size)))
             .line_height(relative(1.5715))
             .text_color(foreground)
             .when(self.strong, |this| this.font_semibold())
             .when(self.italic, |this| this.italic())
             .when(self.underline, |this| this.underline())
             .when(self.deleted, |this| this.line_through())
-            .when(self.code, |this| this.bg(theme.surface_secondary)
-                .border_1().border_color(theme.border)
-                .rounded(px(4.)).px(px(5.)).py(px(1.)))
+            .when(self.code, |this| this.bg(comp.color_bg.unwrap_or(theme.surface_secondary))
+                .border_1().border_color(comp.color_border.unwrap_or(theme.border))
+                .rounded(px(comp.border_radius.unwrap_or(4.))).px(px(5.)).py(px(1.)))
             .when(self.marked, |this| this.bg(theme.warning_bg))
             .child(self.text);
         div().flex().flex_wrap().items_center().gap(px(7.))
@@ -184,12 +189,13 @@ impl RenderOnce for AntParagraph {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let theme=self.theme;
         let expanded=self.expanded;
+        let comp=theme.component(AntComponent::Typography);
         let line_limit=if expanded { None } else { self.max_lines };
         let text=div()
             .w_full()
-            .text_size(px(14.))
+            .text_size(px(comp.font_size.unwrap_or(theme.font_size)))
             .line_height(relative(1.5715))
-            .text_color(self.tone.color(theme))
+            .text_color(comp.color_text.unwrap_or(self.tone.color(theme)))
             .when_some(self.width, |this, w| this.w(px(w)))
             .when(self.ellipsis && line_limit.is_none() && !expanded,
                 |this| this.min_w_0().truncate())
@@ -202,7 +208,7 @@ impl RenderOnce for AntParagraph {
                     BaseButton::new(id)
                         .cursor_pointer()
                         .text_size(px(12.))
-                        .text_color(theme.primary)
+                        .text_color(comp.color_primary.unwrap_or(theme.primary))
                         .child(if expanded { "Collapse" } else { "Expand" })
                         .on_click(move |_, window, cx| handler(!expanded, window, cx)),
                 )
@@ -234,15 +240,17 @@ impl AntLink {
 impl RenderOnce for AntLink {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let t = self.theme;
+        let comp=t.component(AntComponent::Typography);
+        let accent=comp.color_primary.unwrap_or(t.color_link);
         BaseLink::new(self.id)
             .href(self.href)
             .open_with(|href, _, _, cx| cx.open_url(href))
             .disabled(self.disabled)
-            .text_size(px(14.))
-            .text_color(if self.disabled { t.disabled_text } else { t.primary })
+            .text_size(px(comp.font_size.unwrap_or(t.font_size)))
+            .text_color(if self.disabled { t.disabled_text } else { accent })
             .when(self.underline, |this| this.underline())
             .when(!self.disabled, |this| this.cursor_pointer()
-                .hover(|this| this.text_color(t.primary_hover)))
+                .hover(|this| this.text_color(accent)))
             .child(self.text)
     }
 }
