@@ -9,7 +9,7 @@
 use std::rc::Rc;
 
 use gpui_kit::{
-    AnyElement, App, ElementId, IntoElement, ParentElement as _,
+    AnyElement, App, ElementId, IntoElement, InteractiveElement as _, ParentElement as _,
     RenderOnce, Styled as _, Window, div, px,
 };
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
@@ -17,7 +17,6 @@ use gpui_kit::prelude::FluentBuilder as _;
 
 use crate::{
     AntIcon, AntIconName, AntTheme, GridBreakpoint,
-    tokens::color,
 };
 
 type CollapseChange = Rc<dyn Fn(bool, &mut Window, &mut App)>;

@@ -10,6 +10,7 @@ use gpui_antd::{
     AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify,
     AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem,
     AntTabs, AntTab, TabsVariant, AntTooltip,
+    AntLayout, AntSider, AntHeader, AntContent, AntFooter, GridBreakpoint,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -67,7 +68,7 @@ impl GalleryAssets {
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Tabs", "Tooltip", "Icons", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
+    "Alert", "Card", "Progress", "Divider", "Tabs", "Tooltip", "Icons", "Layout", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb",
 ];
 
 pub struct Gallery {
@@ -103,6 +104,7 @@ pub struct Gallery {
     paragraph_expanded: bool,
     tabs_index: usize,
     tabs_card_index: usize,
+    layout_collapsed: bool,
 }
 
 impl Gallery {
@@ -155,7 +157,7 @@ impl Gallery {
             form_name, form_email, form_password, form_confirm,
             form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
             paragraph_expanded: false,
-            tabs_index: 0, tabs_card_index: 1,
+            tabs_index: 0, tabs_card_index: 1, layout_collapsed: false,
         }
     }
     fn theme(&self) -> AntTheme {
@@ -563,7 +565,10 @@ impl Gallery {
 
     fn icons_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         let catalog = |style: &'static str| {
-            div().flex().flex_wrap().gap(px(14.))
+            // One horizontal native GPUI scroll strip per icon variant:
+            // no deep wrapped rows masked by a fixed-height WASM iframe.
+            div().w_full().min_w_0().flex().gap(px(12.))
+                .overflow_x_scroll().pb(px(12.))
                 .children(AntIconName::ALL.iter()
                     .filter(move |icon| icon.style() == style)
                     // Keep the WASM showcase bounded; the full 848-name
@@ -571,16 +576,19 @@ impl Gallery {
                     // icon can be previewed in its own Rust GPUI view.
                     .take(24)
                     .map(move |name| {
-                        div().w(px(94.)).flex().flex_col().items_center().gap(px(8.))
-                            .p(px(8.))
-                            .rounded(px(7.))
-                            .border_1().border_color(t.border)
-                            .child(AntIcon::new(*name).size(26.).theme(t))
-                            .child(div().w_full().text_size(px(10.)).text_color(t.text_secondary)
-                                .truncate().child(name.ant_name()))
+                        div().w(px(156.)).h(px(104.)).flex_none()
+                            .flex().flex_col().items_center().justify_center().gap(px(11.))
+                            .p(px(10.))
+                            .rounded(px(8.)).border_1().border_color(t.border)
+                            .child(AntIcon::new(*name).size(32.).theme(t))
+                            .child(div().w_full().text_size(px(11.))
+                                .text_color(t.text_secondary)
+                                .text_center().child(name.ant_name()))
                     }))
         };
-        div().flex().flex_col().gap(px(16.))
+        div().w_full().min_w_0().flex().flex_col().gap(px(16.))
+            .child(div().text_size(px(12.)).text_color(t.text_secondary)
+                .child("Scroll each row sideways to explore 24 icon samples. The entire 848-icon catalog is searchable above."))
             .child(label("Outlined — official Ant Design SVGs", t))
             .child(catalog("outlined"))
             .child(label("Filled", t))
@@ -691,6 +699,73 @@ impl Gallery {
             .child(AntFlex::new().wrap(true).gap(11.).fill(true)
                 .child(chip("Tag one")).child(chip("Tag two")).child(chip("Tag three"))
                 .child(chip("Tag four")))
+            .into_any_element()
+    }
+
+    fn layout_demo(&self, t: AntTheme, window: &Window, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let compact=self.layout_collapsed || window.viewport_size().width < px(768.);
+        let on_collapse=cx.listener(|this, next: &bool, _, cx| {
+            this.layout_collapsed=*next;
+            cx.notify();
+        });
+        let nav=|icon, title: &'static str| {
+            div().w_full().h(px(42.)).px(px(17.))
+                .flex().items_center().gap(px(12.))
+                .text_color(t.layout_dark_text)
+                .child(AntIcon::new(icon).theme(t).size(17.).color(t.layout_dark_text))
+                .when(!compact, |this| this.child(title))
+        };
+        let metric=|title: &'static str, value: f64, tone: TextTone| {
+            div().p(px(12.)).border_1().border_color(t.border)
+                .rounded(px(7.)).bg(t.surface)
+                .child(AntStatistic::number(title, value, 0).theme(t).tone(tone))
+        };
+        div().w_full().flex().flex_col().gap(px(14.))
+            .child(label("Responsive application shell · resize the window or collapse Sider",t))
+            .child(div().w_full().border_1().border_color(t.border)
+                .rounded(px(8.)).overflow_hidden()
+                .child(AntLayout::new().horizontal(true).height(464.).theme(t)
+                    .child(AntSider::new("demo-layout-sider")
+                        .theme(t).dark(true).width(192.).collapsed_width(64.)
+                        .collapsed(self.layout_collapsed).breakpoint(GridBreakpoint::Md)
+                        .collapsible(true)
+                        .on_collapse(move |next, win, cx| on_collapse(&next, win, cx))
+                        .child(div().h(px(60.)).flex().items_center()
+                            .px(px(18.)).gap(px(9.))
+                            .child(AntIcon::new(AntIconName::AppstoreOutlined)
+                                .theme(t).size(21.).color(t.layout_dark_text))
+                            .when(!compact, |this| this.child(div().font_semibold()
+                                .text_color(t.layout_dark_text).child("GPUI Admin"))))
+                        .child(nav(AntIconName::DashboardOutlined, "Dashboard"))
+                        .child(nav(AntIconName::BarChartOutlined, "Analytics"))
+                        .child(nav(AntIconName::FileTextOutlined, "Documents"))
+                        .child(nav(AntIconName::SettingOutlined, "Settings")))
+                    .child(AntLayout::new().theme(t)
+                        .child(AntHeader::new().theme(t).dark(false)
+                            .height(56.).padding(20.)
+                            .child(AntIcon::new(AntIconName::MenuOutlined)
+                                .size(17.).theme(t))
+                            .child(div().ml(px(12.)).font_semibold()
+                                .text_color(t.text).child("Dashboard overview")))
+                        .child(AntContent::new().theme(t).padding(18.)
+                            .child(div().w_full().flex().flex_col().gap(px(15.))
+                                .child(AntTitle::new("Workspace overview").level(4).theme(t))
+                                .child(AntRow::new().gutter(12.).vertical_gutter(10.)
+                                    .child(AntCol::new(24).sm(12).md(8)
+                                        .child(metric("Projects",18.,TextTone::Default)))
+                                    .child(AntCol::new(24).sm(12).md(8)
+                                        .child(metric("Completed",12.,TextTone::Success)))
+                                    .child(AntCol::new(24).sm(12).md(8)
+                                        .child(metric("In progress",6.,TextTone::Warning))))
+                                .child(AntCard::new().theme(t).title("Recent activity")
+                                    .child(div().flex().flex_col().gap(px(10.))
+                                        .child(AntText::new("UI components compiled to WASM").theme(t))
+                                        .child(AntProgress::new(75.).theme(t).show_info(true)))))
+                        .child(AntFooter::new().theme(t).padding(12.)
+                            .child(AntText::new("GPUI Ant Design · native Rust layout")
+                                .theme(t).tone(TextTone::Secondary)))))
+            .child(div().text_size(px(12.)).text_color(t.text_secondary)
+                .child(format!("Sider: {} · auto-collapse below md (768px)", if compact { "collapsed" } else { "expanded" })))
             .into_any_element()
     }
 
@@ -853,7 +928,7 @@ fn label(text:&'static str,t:AntTheme)->gpui_kit::Div {
 }
 
 impl Render for Gallery {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let t=self.theme();
         let demo=match self.component.as_str() {
             "Button"=>self.button_demo(t,cx),
@@ -879,6 +954,7 @@ impl Render for Gallery {
             "Space"=>self.space_demo(t),
             "Flex"=>self.flex_demo(t),
             "Grid"=>self.grid_demo(t),
+            "Layout"=>self.layout_demo(t,window,cx),
             "Avatar"=>self.avatar_demo(t),
             "Statistic"=>self.statistic_demo(t),
             "Empty"=>self.empty_demo(t),
