@@ -338,6 +338,62 @@ try {
     }
   }
 
+  // Wave-two interaction smoke: all coordinates target Rust-painted GPUI
+  // controls, not HTML stand-ins. Make sure a visual state transition follows
+  // native pointer activation, beyond simply booting a WASM canvas.
+  const inputInteractions = [
+    {name:'Segmented', x:65, y:78, minChanged:250},
+    {name:'Slider', x:450, y:76, minChanged:300},
+    {name:'AutoComplete', x:78, y:118, minChanged:650},
+  ];
+  for (const spec of inputInteractions) {
+    const page=await browser.newPage({viewport:{width:900,height:550}});
+    const errors=[];
+    page.on('pageerror',error=>errors.push(String(error.message)));
+    try {
+      await page.goto(base+'demo.html?component='+spec.name,{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>{
+        const canvas=document.querySelector('canvas');
+        return canvas&&canvas.width>0&&canvas.height>0&&!document.querySelector('#status');
+      },null,{timeout:60000});
+      await page.waitForTimeout(750);
+      const baseline=await page.screenshot({
+        path:join(screenshots,spec.name.toLowerCase()+'-control-before.png')
+      });
+      await page.mouse.click(spec.x,spec.y);
+      await page.mouse.move(880,530);
+      await page.waitForTimeout(650);
+      const changed=await page.screenshot({
+        path:join(screenshots,spec.name.toLowerCase()+'-control-after.png')
+      });
+      const diff=await changedPixels(page,baseline,changed);
+      if(diff.total<spec.minChanged){
+        throw new Error('Click did not cause expected GPUI state transition: '+JSON.stringify(diff));
+      }
+      if(errors.length)throw new Error(errors.join('; '));
+      console.log('PASS: native '+spec.name+' pointer action changed '+diff.total+' GPUI pixels');
+      if(spec.name==='Segmented'){
+        // A button click should focus its native segment; Right changes
+        // selection to the next enabled option without a second mouse click.
+        await page.keyboard.press('ArrowRight');
+        await page.waitForTimeout(450);
+        const keyboard=await page.screenshot({
+          path:join(screenshots,'segmented-keyboard-next.png')
+        });
+        const nav=await changedPixels(page,changed,keyboard);
+        if(nav.total<180) {
+          throw new Error('Segmented ArrowRight failed after pointer focus: '+JSON.stringify(nav));
+        }
+        console.log('PASS: Segmented ArrowRight updates controlled Rust selection');
+      }
+    } catch(error) {
+      failures++;
+      console.error('FAIL: native '+spec.name+' GPUI interaction',String(error));
+    } finally {
+      await page.close();
+    }
+  }
+
   // Interactive nested GPUI Menu regression. Unlike DOM navigation,
   // these operations act on pixels in the Rust/WebAssembly canvas.
   // Native Tabs keyboard test: click a Kit tab to place focus on the
