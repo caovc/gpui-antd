@@ -2,7 +2,7 @@
 //!
 //! Source: ant-design/ant-design-icons, commit 7f2516ac91226d2b41f93b35cb5197c8d94f7189.
 //! Asset keys are namespaced under "antd-icons/" to coexist with GPUI Kit.
-//! Two-tone artwork has Ant Design default primary/secondary colors baked in.
+//! Bundled two-tone artwork remains unmodified; runtime palettes are optional.
 
 use std::{borrow::Cow, time::Duration};
 use gpui_kit::{
@@ -11,6 +11,7 @@ use gpui_kit::{
     prelude::FluentBuilder as _,
 };
 use crate::tokens::AntTheme;
+use crate::icon_palette::{palette_asset_key, parse_palette_asset_key, recolor_svg};
 use gpui_kit::component::{Icon as KitIcon, Size, Sizable as _};
 
 /// Every official Ant Design SVG icon, generated from a pinned upstream revision.
@@ -5136,25 +5137,35 @@ impl AntIconName {
 /// Render an actual official Ant Design SVG using GPUI's SVG painter.
 ///
 /// Prefer `AntIcon::new(AntIconName::SearchOutlined)` in buttons and text.
-/// Outlined/Filled icons use a theme-tinted SVG mask. TwoTone icons are painted
-/// with GPUI's full-color image element so both official fill colors survive.
+/// Outlined/Filled icons use a theme-tinted SVG mask. TwoTone icons retain
+/// both SVG fill layers and follow light/dark tokens by default.
 #[derive(IntoElement)]
 pub struct AntIcon {
     name: AntIconName,
     size: f32,
     color: Option<Hsla>,
+    two_tone_secondary: Option<Hsla>,
     theme: AntTheme,
     spin: bool,
 }
 
 impl AntIcon {
     pub fn new(name: AntIconName) -> Self {
-        Self { name, size: 16., color: None, theme: AntTheme::default(), spin: false }
+        Self { name, size: 16., color: None, two_tone_secondary: None, theme: AntTheme::default(), spin: false }
     }
     pub fn loading() -> Self { Self::new(AntIconName::LoadingOutlined).spin(true) }
     pub fn size(mut self, size: f32) -> Self { self.size = size.max(0.); self }
-    /// Tint Outlined/Filled icons; TwoTone icons preserve their official SVG palette.
+    /// Tint Outlined/Filled icons; for TwoTone, set the primary SVG fill.
+    /// The TwoTone secondary fill follows `theme.info_bg` unless overridden.
     pub fn color(mut self, color: Hsla) -> Self { self.color = Some(color); self }
+
+    /// Override both colors of official TwoTone artwork without altering SVG files.
+    /// Ignored by non-TwoTone icons; explicit colors override theme defaults.
+    pub fn two_tone_colors(mut self, primary: Hsla, secondary: Hsla) -> Self {
+        self.color = Some(primary);
+        self.two_tone_secondary = Some(secondary);
+        self
+    }
     pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
     /// Animate monochrome icons (such as `LoadingOutlined`).
     /// TwoTone icons currently render as static, full-color images.
@@ -5167,7 +5178,12 @@ impl RenderOnce for AntIcon {
             // KitIcon/svg() paints only the SVG alpha mask with one tint; this
             // destroys the pale fill and makes checks look like solid blocks.
             // img() preserves the official foreground and background colors.
-            return img(self.name.path())
+            let key = palette_asset_key(
+                self.name.path(),
+                self.color.unwrap_or(self.theme.primary),
+                self.two_tone_secondary.unwrap_or(self.theme.info_bg),
+            );
+            return img(key)
                 .size(px(self.size))
                 .flex_shrink_0()
                 .into_any_element();
@@ -5217,7 +5233,10 @@ fn two_tone_image_svg(bytes: &'static [u8]) -> Cow<'static, [u8]> {
 pub struct AntIconAssets;
 impl AssetSource for AntIconAssets {
     fn load(&self, path: &str) -> Result<Option<Cow<'static, [u8]>>> {
-        let svg: Option<&'static [u8]> = match path {
+        let Some((asset_path, palette)) = parse_palette_asset_key(path) else {
+            return Ok(None);
+        };
+        let svg: Option<&'static [u8]> = match asset_path {
             "antd-icons/outlined/account-book.svg" => Some(include_bytes!("../assets/antd-icons/outlined/account-book.svg").as_slice()),
             "antd-icons/outlined/aim.svg" => Some(include_bytes!("../assets/antd-icons/outlined/aim.svg").as_slice()),
             "antd-icons/outlined/alert.svg" => Some(include_bytes!("../assets/antd-icons/outlined/alert.svg").as_slice()),
@@ -6068,8 +6087,15 @@ impl AssetSource for AntIconAssets {
             "antd-icons/twotone/warning.svg" => Some(include_bytes!("../assets/antd-icons/twotone/warning.svg").as_slice()),
             _ => None,
         };
-        if path.starts_with("antd-icons/twotone/") {
-            Ok(svg.map(two_tone_image_svg))
+        if asset_path.starts_with("antd-icons/twotone/") {
+            Ok(svg.map(|bytes| {
+                let resized = two_tone_image_svg(bytes);
+                match palette {
+                    Some((primary, secondary)) =>
+                        Cow::Owned(recolor_svg(&resized, primary, secondary)),
+                    None => resized,
+                }
+            }))
         } else {
             Ok(svg.map(Cow::Borrowed))
         }
@@ -6136,5 +6162,20 @@ mod tests {
             source.load(AntIconName::CheckCircleFilled.path()).unwrap(),
             Some(Cow::Borrowed(_))
         ));
+    }
+    #[test]
+    fn two_tone_builder_prioritizes_explicit_colors() {
+        let icon = AntIcon::new(AntIconName::CheckCircleTwoTone)
+            .theme(AntTheme::dark())
+            .two_tone_colors(crate::tokens::color(0x52c41a), crate::tokens::color(0xf6ffed))
+            .color(crate::tokens::color(0xff4d4f));
+        assert_eq!(
+            palette_asset_key(
+                icon.name.path(),
+                icon.color.unwrap_or(icon.theme.primary),
+                icon.two_tone_secondary.unwrap_or(icon.theme.info_bg),
+            ),
+            "antd-icons/twotone/check-circle.svg?primary=ff4d4fff&secondary=f6ffedff"
+        );
     }
 }

@@ -11,6 +11,7 @@ extern crate gpui_kit as gpui;
 pub mod controls;
 pub mod display;
 pub mod input;
+mod icon_palette;
 pub mod icons;
 pub mod radio;
 pub mod select;

@@ -147,7 +147,12 @@ GPUI `svg()` discards interior fill colors, which made the TwoTone light layer
 look like a solid black shape. The asset loader injects a 128px intrinsic size
 for TwoTone rasterization (the 1024-unit viewBox and original path/fill art
 remain unchanged) to avoid huge cached textures. `.color()` and `.spin()`
-currently apply only to monochrome icons; TwoTone keeps its baked palette. `GalleryAssets` in `crates/gallery/src/lib.rs` composes
+currently animates only monochrome icons. For TwoTone, `.color(primary)` overrides
+the primary fill and `.two_tone_colors(primary, secondary)` overrides both fills;
+otherwise colors follow `theme.primary` and `theme.info_bg`, including dark
+mode. The runtime palette parser in `crates/antd/src/icon_palette.rs`
+generates validated virtual asset keys, preserving image-cache isolation and
+official SVG bytes. `GalleryAssets` in `crates/gallery/src/lib.rs` composes
 `AntIconAssets` with GPUI Kit's own `Assets` source. On browser WASM, Kit's
 source may fetch its original icons asynchronously. The docs icon explorer is
 only a **DOM index**; selecting a name loads a *single actual* Rust/GPUI canvas

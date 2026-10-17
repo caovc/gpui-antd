@@ -111,7 +111,7 @@ def generate(upstream: Path) -> None:
         "}", "", "",
     ])
     source = source[:begin] + "\n".join(registry) + source[end:]
-    label = "        let svg: Option<&'static [u8]> = match path {"
+    label = "        let svg: Option<&'static [u8]> = match asset_path {"
     start = source.index(label) + len(label)
     finish = source.index("            _ => None,", start)
     cases = "\n" + "\n".join(

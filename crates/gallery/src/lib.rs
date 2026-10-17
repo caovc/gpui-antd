@@ -621,8 +621,32 @@ impl Gallery {
             .child(catalog("outlined"))
             .child(label("Filled", t))
             .child(catalog("filled"))
-            .child(label("Two Tone (primary blue and light fill)", t))
+            .child(label("Two Tone (theme-aware primary and secondary)", t))
             .child(catalog("twotone"))
+            .child(label("Two Tone — theme palette and custom colors", t))
+            .child(div().flex().flex_wrap().gap(px(28.))
+                .child(div().flex().flex_col().items_center().gap(px(8.))
+                    .child(AntIcon::new(AntIconName::CheckCircleTwoTone)
+                        .size(48.).theme(t))
+                    .child(div().text_size(px(11.)).text_color(t.text_secondary)
+                        .child("Theme default")))
+                .child(div().flex().flex_col().items_center().gap(px(8.))
+                    .child(AntIcon::new(AntIconName::CheckCircleTwoTone)
+                        .size(48.).theme(t).color(t.success))
+                    .child(div().text_size(px(11.)).text_color(t.text_secondary)
+                        .child("Primary tint")))
+                .child(div().flex().flex_col().items_center().gap(px(8.))
+                    .child(AntIcon::new(AntIconName::CheckCircleTwoTone)
+                        .size(48.).theme(t).two_tone_colors(
+                            gpui_antd::color(0x52c41a), gpui_antd::color(0xf6ffed)))
+                    .child(div().text_size(px(11.)).text_color(t.text_secondary)
+                        .child("Custom green")))
+                .child(div().flex().flex_col().items_center().gap(px(8.))
+                    .child(AntIcon::new(AntIconName::CheckCircleTwoTone)
+                        .size(48.).theme(t).two_tone_colors(
+                            gpui_antd::color(0xff4d4f), gpui_antd::color(0xfff2f0)))
+                    .child(div().text_size(px(11.)).text_color(t.text_secondary)
+                        .child("Custom red"))))
             .child(label("Theme tint and animated loading", t))
             .child(
                 AntSpace::new().size(SpaceSize::Middle)
@@ -631,6 +655,18 @@ impl Gallery {
                     .child(AntIcon::new(AntIconName::InfoCircleOutlined).size(28.).color(t.primary))
                     .child(AntIcon::loading().size(26.).color(t.primary)),
             )
+            .into_any_element()
+    }
+
+    // Dedicated real-GPUI preview used for full-color custom-palette pixel tests.
+    fn icon_palette_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div().w_full().flex().flex_col().items_center()
+            .justify_center().gap(px(16.)).p(px(18.))
+            .child(AntIcon::new(AntIconName::CheckCircleTwoTone)
+                .size(64.).theme(t).two_tone_colors(
+                    gpui_antd::color(0x52c41a), gpui_antd::color(0xf6ffed)))
+            .child(div().text_color(t.text).text_size(px(18.))
+                .child("CheckCircleTwoTone: custom green"))
             .into_any_element()
     }
 
@@ -1176,6 +1212,8 @@ impl Render for Gallery {
             "Tabs"=>self.tabs_demo(t,cx),
             "Tooltip"=>self.tooltip_demo(t),
             "Icons"=>self.icons_demo(t),
+            // Internal icon-palette screenshot route; not a separate public component.
+            "IconPalette"=>self.icon_palette_demo(t),
             name if name.starts_with("Icon:") =>
                 self.icon_single_demo(t, name.trim_start_matches("Icon:")),
             "Typography"=>self.typography_demo(t,cx),

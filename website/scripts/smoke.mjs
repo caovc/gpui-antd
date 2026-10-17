@@ -86,7 +86,7 @@ try {
     ],
   });
 
-  const twoToneCases = ['CarryOutTwoTone', 'CheckCircleTwoTone', 'CiTwoTone'];
+  const twoToneCases = ['CarryOutTwoTone', 'CheckCircleTwoTone', 'CheckSquareTwoTone', 'CiCircleTwoTone', 'CiTwoTone'];
   const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Layout', 'Menu', 'Dropdown', 'Popover', 'Modal', 'Popconfirm', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Tabs', 'Tooltip', 'Icon:SearchOutlined', ...twoToneCases.map(name => 'Icon:' + name)];
   for (const name of components) {
     const page = await browser.newPage({ viewport: { width: 900, height: 550 } });

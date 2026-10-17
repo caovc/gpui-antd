@@ -53,7 +53,9 @@
    Update through `scripts/sync_antd_icons.py` and its workflow; preserve
    the official MIT license and `THIRD_PARTY_NOTICES.md`. There are currently
    848 official icon SVGs (447 outlined, 251 filled, 150 two-tone). Do not
-   replace official SVGs with Lucide icons or Unicode characters.
+   replace official SVGs with Lucide icons or Unicode characters. Dynamic
+   TwoTone colors belong in `crates/antd/src/icon_palette.rs` rather than
+   generated SVGs; preserve the generator's `match asset_path` marker.
 7. **GitHub Pages:** Vite base is `/gpui-antd/`; production documentation is
    <https://caovc.github.io/gpui-antd/>. Preserve this subpath in browser
    routes and asset URLs. Do not confuse a successful compilation with
