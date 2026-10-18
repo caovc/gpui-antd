@@ -13,6 +13,9 @@ use gpui_kit::component::{
 use crate::{AntTheme, ControlSize, color};
 use crate::design_tokens::AntComponent;
 
+/// Clamp a wide calendar view to a supported number of adjacent months.
+pub fn calendar_month_count(months:usize)->usize{months.clamp(1,3)}
+
 /// A real calendar control, not the DatePicker's popup or an HTML table.
 /// The GPUI Kit implementation handles month/year dropdowns, arrow-key
 /// navigation and date constraints set on CalendarState.
@@ -34,7 +37,7 @@ impl AntCalendar {
     /// Show 1–3 adjacent months. Larger counts are deliberately capped for
     /// the desktop/WASM gallery; app-specific wide layouts can stack views.
     pub fn months(mut self, months: usize) -> Self {
-        self.months=months.clamp(1,3); self
+        self.months=calendar_month_count(months); self
     }
     pub fn bordered(mut self, bordered: bool) -> Self { self.bordered=bordered; self }
 }
@@ -66,8 +69,9 @@ mod tests {
     fn display_months_are_bounded(){
         // No GPUI context is necessary to test the bounds — keep the clamp
         // logic consistent with the builder's documented 1–3 month contract.
-        assert_eq!(0usize.clamp(1,3),1);
-        assert_eq!(1usize.clamp(1,3),1);
-        assert_eq!(9usize.clamp(1,3),3);
+        assert_eq!(calendar_month_count(0),1);
+        assert_eq!(calendar_month_count(1),1);
+        assert_eq!(calendar_month_count(2),2);
+        assert_eq!(calendar_month_count(9),3);
     }
 }
