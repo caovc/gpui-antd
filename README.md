@@ -131,6 +131,29 @@ The new RadioGroup supports a controlled selected index, roving Tab stops,
 arrows, Home/End navigation and disabled-item skipping. Both layouts and the
 radio-button style have examples in the interactive docs.
 
+## Native Menu navigation modes
+
+`AntMenu` supports `AntMenuMode::Inline` (expanded rows),
+`AntMenuMode::Vertical` (right-anchored native popup), and
+`AntMenuMode::Horizontal` (one-row navigation with below-trigger popup):
+
+```rust,ignore
+AntMenu::new("top-menu")
+    .mode(AntMenuMode::Horizontal)
+    .selected_key(route)
+    .open_keys(open_submenus.iter())
+    .on_open_change(|key,open,window,cx| { /* update owner */ })
+    .item(AntMenuItem::submenu("reports","Reports")
+        .child(AntMenuItem::new("daily","Daily report")));
+```
+
+Left/Right move horizontal root focus, Down requests submenu expansion,
+Home/End jump to boundaries, and Escape closes an open submenu.
+Collapsed vertical sidebars still use icon-only popovers. All flyouts
+use the native GPUI Base Popover, not a DOM overlay. Hover opening and
+responsive horizontal overflow-more remain parity work; see
+[menu modes](docs/MENU_MODES.md).
+
 ## Tabs and Tooltip
 
 `AntTabs` wraps the GPUI Kit native TabBar with controlled selection,
