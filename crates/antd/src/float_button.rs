@@ -80,6 +80,13 @@ impl RenderOnce for AntFloatButton {
         let height=o.control_height.unwrap_or(40.).clamp(24.,72.);
         let radius=if self.shape==FloatShape::Circle{height/2.}
             else{o.border_radius.unwrap_or(t.border_radius)};
+        let hover_bg=match self.variant{
+            FloatVariant::Default=>t.surface_secondary,
+            FloatVariant::Primary=>if o.color_primary.is_some(){
+                primary.opacity(0.88)
+            }else{t.primary_hover},
+            FloatVariant::Danger=>t.error,
+        };
         let size=px(height);
         let icon=AntIcon::new(self.icon).theme(t).size(height*0.48).color(fg);
         let click=self.on_click;
@@ -92,7 +99,7 @@ impl RenderOnce for AntFloatButton {
                     .border_1().border_color(border)
                     .rounded(px(radius)).bg(bg).text_color(fg)
                     .when(!self.disabled,|this|this.cursor_pointer()
-                        .hover(|this|this.bg(t.surface_secondary)))
+                        .hover(|this|this.bg(hover_bg)))
                     .child(icon)
                     .when_some(click,|this,handler|this.on_click(move|event,window,cx|{
                         handler(event,window,cx);
@@ -172,6 +179,9 @@ impl RenderOnce for AntFloatButtonGroup {
         let primary=token.color_primary.unwrap_or(t.primary);
         let surface=token.color_bg.unwrap_or(t.surface);
         let border=token.color_border.unwrap_or(t.border);
+        let group_hover=if token.color_primary.is_some(){
+            primary.opacity(0.88)
+        }else{t.primary_hover};
         let on_toggle=self.on_open_change;
         let on_select=self.on_select;
         div().absolute().right(px(self.right)).bottom(px(self.bottom))
@@ -212,7 +222,7 @@ impl RenderOnce for AntFloatButtonGroup {
                 .accessibility_label(self.label)
                 .size(px(42.)).rounded_full().bg(primary).text_color(color(0xffffff))
                 .flex().items_center().justify_center()
-                .when(!disabled,|this|this.cursor_pointer().hover(|this|this.bg(t.primary_hover)))
+                .when(!disabled,|this|this.cursor_pointer() .hover(|this|this.bg(group_hover)))
                 .child(AntIcon::new(if open{AntIconName::CloseOutlined}else{self.icon})
                     .theme(t).color(color(0xffffff)).size(19.))
                 .when_some(on_toggle,|this,callback|this.on_click(move|_,window,cx|{
@@ -229,6 +239,11 @@ mod tests {
         assert_eq!(float_offset(30.),30.);
         assert_eq!(float_offset(f32::INFINITY),24.);
         assert_eq!(float_offset(9999.),2048.);
+    }
+    #[test]
+    fn badge_bounds_are_explicit(){
+        assert_eq!(AntFloatButton::new("a","Add").badge(123).badge,Some(99));
+        assert_eq!(AntFloatButton::new("b","Add").badge(0).badge,Some(0));
     }
     #[test]
     fn group_actions_keep_keys_and_disabled_state(){
