@@ -17,10 +17,11 @@ use gpui_antd::{
     AntMenu, AntMenuItem, AntTokenLayer, AntTokenValue, AntResolvedToken,
     AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
     AntDescriptions, AntDescriptionItem, AntResult, ResultStatus, AntSkeleton, AntSpin,
-    AntList, AntListItem, ListSize,
     AntInputNumber, AntSlider, AntSegmented, AntSegmentedOption, AntTimePicker, AntAutoComplete,
     AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone,
     AntTree, AntTreeNode, AntTable, AntTableColumn, AntTableRow, TableSort,
+    AntTimeline, AntTimelineItem, TimelineMode, TimelineTone,
+    AntList, AntListItem, ListSize,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -82,8 +83,8 @@ impl GalleryAssets {
 
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "List", "Tabs", "Tooltip", "Icons", "Layout",
-    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
+    "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
+    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "List", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
 ];
 
 /// Options in the browser icon inspector are only display parameters.
@@ -191,6 +192,8 @@ pub struct Gallery {
     table_sort:TableSort,
     table_selected:BTreeSet<String>,
     table_page:usize,
+    table_filters:BTreeMap<String,String>,
+    timeline_reversed:bool,
     number_basic:Entity<InputState>,
     number_decimal:Entity<InputState>,
     number_disabled:Entity<InputState>,
@@ -316,6 +319,7 @@ impl Gallery {
             tree_checked:BTreeSet::from(["src/main.rs".to_owned()]),
             table_sort_key:"score".to_owned(),table_sort:TableSort::Ascending,
             table_selected:BTreeSet::new(),table_page:1,
+            table_filters:BTreeMap::new(),timeline_reversed:false,
             number_basic,number_decimal,number_disabled,
             slider_single,slider_range,slider_vertical,slider_value:35.,
             time_basic,time_seconds,time_12,time_disabled,
@@ -397,6 +401,21 @@ impl Gallery {
             .child(AntCard::new().theme(t).title("Card token override: padding and radius")
                 .child(AntText::new("The body padding and header color come from Card tokens.")
                     .theme(t)))
+            .child(AntCard::new().theme(t).title("Native Tree / Table / Timeline component tokens")
+                .child(div().flex().flex_col().gap(px(16.))
+                    .child(AntTree::new("lab-tree").theme(t)
+                        .checkable(true).expanded_keys(["tree-root"])
+                        .checked_keys(["tree-a"])
+                        .child(AntTreeNode::new("tree-root","Components")
+                            .child(AntTreeNode::new("tree-a","Button"))
+                            .child(AntTreeNode::new("tree-b","Table"))))
+                    .child(AntTable::new("lab-table").theme(t).pagination(false)
+                        .column(AntTableColumn::new("name","Name").width(150.))
+                        .column(AntTableColumn::new("status","Status").width(150.))
+                        .row(AntTableRow::new("row").cells(["Build","Active"])))
+                    .child(AntTimeline::new().theme(t)
+                        .child(AntTimelineItem::new("Start").tone(TimelineTone::Success))
+                        .child(AntTimelineItem::new("Ready").tone(TimelineTone::Processing)))))
             .child(div().text_size(px(12.)).text_color(t.text_secondary)
                 .child(format!("Primary clicked {} times · menu route {}",
                     self.button_clicks,self.menu_selected)))
@@ -1179,9 +1198,8 @@ impl Gallery {
             else{this.tree_expanded.remove(key.as_ref());}
             cx.notify();
         });
-        let checked=cx.listener(|this,(key,value):&(SharedString,bool),_,cx|{
-            if *value{this.tree_checked.insert(key.to_string());}
-            else{this.tree_checked.remove(key.as_ref());}
+        let checked=cx.listener(|this,keys:&BTreeSet<String>,_,cx|{
+            this.tree_checked=keys.clone();
             cx.notify();
         });
         let nodes=vec![
@@ -1196,8 +1214,10 @@ impl Gallery {
                 .child(AntTreeNode::new("docs/guide.md","guide.md")),
             AntTreeNode::new("Cargo.toml","Cargo.toml"),
         ];
+        let states=gpui_antd::tree_check_states(&nodes,&self.tree_checked,false);
+        let half=states.values().filter(|status|**status==gpui_antd::TreeCheckState::Indeterminate).count();
         div().flex().flex_col().gap(px(12.))
-            .child(label("Native GPUI tree · select, expand and check nodes independently",t))
+            .child(label("Native GPUI tree · check parents to cascade; mixed branches show half-checks",t))
             .child(div().w(px(440.)).border_1().border_color(t.border)
                 .rounded(px(8.)).child(AntTree::new("tree-example")
                     .theme(t).children(nodes).checkable(true)
@@ -1206,10 +1226,10 @@ impl Gallery {
                     .selected_key(self.tree_selected.clone())
                     .on_select(move|key,window,cx|selected(&key,window,cx))
                     .on_expand(move|key,value,window,cx|expanded(&(key,value),window,cx))
-                    .on_check(move|key,value,window,cx|checked(&(key,value),window,cx))))
+                    .on_checked_keys_change(move|keys,window,cx|checked(&keys,window,cx))))
             .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Selected: {} · Checked: {}",
-                    self.tree_selected,self.tree_checked.len())))
+                .child(format!("Selected: {} · Checked: {} · Partially checked: {}",
+                    self.tree_selected,self.tree_checked.len(),half)))
             .into_any_element()
     }
 
@@ -1225,27 +1245,77 @@ impl Gallery {
         let page_change=cx.listener(|this,page:&usize,_,cx|{
             this.table_page=*page;cx.notify();
         });
+        let filter_change=cx.listener(|this,(key,value):&(SharedString,Option<SharedString>),_,cx|{
+            if let Some(value)=value{
+                this.table_filters.insert(key.to_string(),value.to_string());
+            }else{
+                this.table_filters.remove(key.as_ref());
+            }
+            this.table_page=1;
+            cx.notify();
+        });
         let data=(1..=24).map(|i|{
             AntTableRow::new(format!("user-{i:02}"))
                 .cells([format!("User {i:02}"),format!("{}",(i*7)%101),
                     if i%3==0{"Pending".to_owned()}else{"Active".to_owned()}])
         });
         div().w_full().flex().flex_col().gap(px(14.))
-            .child(label("Native table · sort Score, choose rows and change page",t))
+            .child(label("Native table · sort Score, filter Status, select all on the current page",t))
             .child(AntTable::new("table-demo").theme(t)
                 .column(AntTableColumn::new("name","Name").sortable(true).width(180.))
                 .column(AntTableColumn::new("score","Score").sortable(true).numeric(true).width(140.))
-                .column(AntTableColumn::new("status","Status").width(170.))
+                .column(AntTableColumn::new("status","Status").width(220.)
+                    .filters(["Active","Pending"]))
                 .rows(data).selectable(true).striped(true)
                 .selected_keys(self.table_selected.iter().map(String::as_str))
                 .sort_by(self.table_sort_key.clone(),self.table_sort)
+                .active_filters(self.table_filters.iter().map(|(key,value)|
+                    (key.as_str(),value.as_str())))
                 .page(self.table_page).page_size(5)
                 .on_sort(move|key,order,window,cx|sorted(&(key,order),window,cx))
                 .on_selection(move|keys,window,cx|selection(&keys,window,cx))
-                .on_page_change(move|page,window,cx|page_change(&page,window,cx)))
+                .on_page_change(move|page,window,cx|page_change(&page,window,cx))
+                .on_filter_change(move|key,value,window,cx|{
+                    filter_change(&(key,value),window,cx)
+                }))
             .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Page {} · Sorted: {:?} · Selected rows: {}",
-                    self.table_page,self.table_sort,self.table_selected.len())))
+                .child(format!("Page {} · Sorted: {:?} · Filter: {} · Selected rows: {}",
+                    self.table_page,self.table_sort,
+                    self.table_filters.get("status").map(String::as_str).unwrap_or("All"),
+                    self.table_selected.len())))
+            .into_any_element()
+    }
+
+
+    fn timeline_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let reverse=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
+            this.timeline_reversed=!this.timeline_reversed;
+            cx.notify();
+        });
+        div().w_full().flex().flex_col().gap(px(18.))
+            .child(label("Chronological events · toggle native Rust order",t))
+            .child(AntButton::new("timeline-reverse","Reverse timeline")
+                .theme(t).on_click(reverse))
+            .child(div().w(px(650.)).child(AntTimeline::new().theme(t)
+                .mode(TimelineMode::Alternate).reverse(self.timeline_reversed)
+                .child(AntTimelineItem::new("Build created")
+                    .timestamp("09:10")
+                    .description("Source fetched from the latest main branch.")
+                    .tone(TimelineTone::Success))
+                .child(AntTimelineItem::new("WASM compilation")
+                    .timestamp("09:12")
+                    .description("The same Rust component compiles to native and WASM.")
+                    .icon(AntIconName::CodeOutlined)
+                    .tone(TimelineTone::Processing))
+                .child(AntTimelineItem::new("Visual regression")
+                    .timestamp("09:14").description("Chromium validates rendered GPUI pixels.")
+                    .tone(TimelineTone::Warning))
+                .pending("Deploying to GitHub Pages")))
+            .child(label("Left-aligned completed steps",t))
+            .child(AntTimeline::new().theme(t)
+                .child(AntTimelineItem::new("Start").tone(TimelineTone::Success))
+                .child(AntTimelineItem::new("Validated").tone(TimelineTone::Success))
+                .child(AntTimelineItem::new("Failed step").tone(TimelineTone::Error)))
             .into_any_element()
     }
 
@@ -2177,7 +2247,6 @@ impl Render for Gallery {
             "Rate"=>self.rate_demo(t,cx),
             "Collapse"=>self.collapse_demo(t,cx),
             "Descriptions"=>self.descriptions_demo(t),
-            "List"=>self.list_demo(t),
             "Result"=>self.result_demo(t),
             "Skeleton"=>self.skeleton_demo(t),
             "Spin"=>self.spin_demo(t),
@@ -2191,6 +2260,8 @@ impl Render for Gallery {
             "Notification"=>self.notification_demo(t),
             "Tree"=>self.tree_demo(t,cx),
             "Table"=>self.table_demo(t,cx),
+            "Timeline"=>self.timeline_demo(t,cx),
+            "List"=>self.list_demo(t),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")

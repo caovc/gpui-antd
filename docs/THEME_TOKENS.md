@@ -89,7 +89,7 @@ and numeric values are bounded and validated on both sides of the bridge.
 
 ## Component Token coverage
 
-`AntComponent::ALL` registers 31 independent namespaces. `AntComponentToken`
+`AntComponent::ALL` registers 51 independent namespaces. `AntComponentToken`
 has a shared typed shape, but not every field is consumed by every component.
 
 | Component | Live fields in native renderer |
@@ -108,6 +108,9 @@ has a shared typed shape, but not every field is consumed by every component.
 | Divider | colorBorder, controlHeight |
 | Typography | colorPrimary, colorBg, colorText, colorBorder, borderRadius, fontSize |
 | Tooltip | colorBg, colorText, colorBorder, borderRadius |
+| Tree | colorPrimary, colorBg, colorText, colorBgHover, colorBgSelected, borderRadius, controlHeight, fontSize |
+| Table | colorBg, colorText, colorBorder, colorHeaderBg, colorBgSelected, borderRadius, fontSize |
+| Timeline | colorPrimary, colorText, colorBorder, fontSize |
 
 This matrix states actual **property consumption**, not visual Ant Design
 pixel parity. Other namespaces are serialized for forward compatibility but

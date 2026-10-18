@@ -1,10 +1,10 @@
-//! Ant Design Tree: parent-controlled expansion, selection, independent checks,
+//! Ant Design Tree: parent-controlled expansion, selection, cascading or strict checks,
 //! disabled nodes, and keyboard roving focus. All nodes paint in native GPUI.
 //!
 //! This first data-tree model is deliberately simple and non-virtualized. For
 //! large file explorers use GPUI Kit's virtualized TreeState instead; lazy
-//! loading, drag-drop and propagated/half-checked parents are parity backlog.
-use std::{collections::BTreeSet,rc::Rc};
+//! loading and drag-drop remain parity backlog. Check state derives from keyed roots.
+use std::{collections::{BTreeMap,BTreeSet},rc::Rc};
 use gpui_kit::{
     App, ElementId, FocusHandle, InteractiveElement as _, IntoElement,
     KeyDownEvent, ParentElement as _, RenderOnce, Role, SharedString,
@@ -14,6 +14,7 @@ use gpui_kit::base::{Button as BaseButton,StyledExt as _};
 use gpui_kit::component::scroll::ScrollableElement as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use crate::{AntIcon,AntIconName,AntTheme};
+use crate::design_tokens::AntComponent;
 
 type KeyChange=Rc<dyn Fn(SharedString,&mut Window,&mut App)>;
 type ExpandChange=Rc<dyn Fn(SharedString,bool,&mut Window,&mut App)>;
@@ -105,8 +106,123 @@ pub fn tree_focus_index(
     }
 }
 
+
+/// Visual checkbox state. Indeterminate is derived from enabled descendants;
+/// callers own checked keys and do not need to store a second half-check set.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum TreeCheckState {
+    Unchecked,
+    Checked,
+    Indeterminate,
+}
+
+/// Evaluate one node from the controlled checked-key set. A disabled node or
+/// checkbox-disabled node blocks participation in its ancestor's check state.
+/// An explicitly checked disabled node still paints as checked.
+fn node_check_state(node:&AntTreeNode,checked:&BTreeSet<String>)->Option<TreeCheckState>{
+    if node.disabled||node.check_disabled{return None;}
+    let mut eligible=0usize;
+    let mut completed=0usize;
+    let mut touched=0usize;
+    for child in &node.children {
+        if let Some(state)=node_check_state(child,checked) {
+            eligible+=1;
+            match state {
+                TreeCheckState::Checked=>{completed+=1;touched+=1;},
+                TreeCheckState::Indeterminate=>{touched+=1;},
+                TreeCheckState::Unchecked=>{},
+            }
+        }
+    }
+    if eligible==0{
+        Some(if checked.contains(node.key.as_ref()){
+            TreeCheckState::Checked
+        }else{TreeCheckState::Unchecked})
+    }else if completed==eligible{
+        Some(TreeCheckState::Checked)
+    }else if touched>0{
+        Some(TreeCheckState::Indeterminate)
+    }else{
+        Some(TreeCheckState::Unchecked)
+    }
+}
+
+/// Derive display state for all nodes, including collapsed descendants.
+///
+/// When strictly checking, each key is independent and there is no
+/// indeterminate state. Otherwise, a parent is full only when all its
+/// eligible child branches are full. A disabled subtree does not contribute.
+pub fn tree_check_states(
+    roots:&[AntTreeNode],checked:&BTreeSet<String>,strict:bool
+)->BTreeMap<String,TreeCheckState>{
+    fn collect(nodes:&[AntTreeNode],checked:&BTreeSet<String>,strict:bool,
+        out:&mut BTreeMap<String,TreeCheckState>){
+        for node in nodes {
+            let state=if strict||node.disabled||node.check_disabled{
+                if checked.contains(node.key.as_ref()){TreeCheckState::Checked}
+                else{TreeCheckState::Unchecked}
+            }else{node_check_state(node,checked).unwrap_or(TreeCheckState::Unchecked)};
+            out.insert(node.key.to_string(),state);
+            collect(&node.children,checked,strict,out);
+        }
+    }
+    let mut out=BTreeMap::new();
+    collect(roots,checked,strict,&mut out);
+    out
+}
+
+/// Pure state transition for Ant Design's non-strict parent-child checking.
+///
+/// Checking a branch applies to every enabled and checkable descendant,
+/// including those hidden under collapsed nodes. Ancestors are then
+/// recalculated bottom-up. Disabled subtrees retain their checked values and
+/// do not contribute to the parent's full/partial calculation.
+/// Invalid and disabled target keys are a no-op.
+pub fn cascade_tree_checked_keys(
+    roots:&[AntTreeNode],checked:&BTreeSet<String>,target:&str,next:bool
+)->BTreeSet<String>{
+    fn apply_branch(node:&AntTreeNode,keys:&mut BTreeSet<String>,check:bool){
+        if node.disabled{return;}
+        if !node.check_disabled{
+            if check{keys.insert(node.key.to_string());}
+            else{keys.remove(node.key.as_ref());}
+        }
+        for child in &node.children{apply_branch(child,keys,check);}
+    }
+    fn locate(nodes:&[AntTreeNode],target:&str,check:bool,
+        keys:&mut BTreeSet<String>)->bool{
+        for node in nodes{
+            if node.key.as_ref()==target{
+                if node.disabled||node.check_disabled{return false;}
+                apply_branch(node,keys,check);
+                return true;
+            }
+            if !node.disabled&&locate(&node.children,target,check,keys){return true;}
+        }
+        false
+    }
+    fn normalize(node:&AntTreeNode,keys:&mut BTreeSet<String>){
+        if node.disabled{return;}
+        for child in &node.children{normalize(child,keys);}
+        if node.check_disabled{return;}
+        let states:Vec<_>=node.children.iter()
+            .filter_map(|child|node_check_state(child,keys)).collect();
+        if !states.is_empty(){
+            if states.iter().all(|state|*state==TreeCheckState::Checked){
+                keys.insert(node.key.to_string());
+            }else{
+                keys.remove(node.key.as_ref());
+            }
+        }
+    }
+    let mut out=checked.clone();
+    if !locate(roots,target,next,&mut out){return out;}
+    for node in roots{normalize(node,&mut out);}
+    out
+}
+
 /// Click a label to select; click the chevron or Right/Left to expand/collapse.
-/// Optional checkboxes are strictly controlled (no parent-child cascade yet).
+/// Checks may be strict (independent) or cascading (derived half-check states).
 #[derive(IntoElement)]
 pub struct AntTree {
     id:ElementId,
@@ -115,6 +231,7 @@ pub struct AntTree {
     checked_keys:BTreeSet<String>,
     selected_key:Option<SharedString>,
     checkable:bool,
+    check_strictly:bool,
     show_icon:bool,
     block_node:bool,
     disabled:bool,
@@ -123,13 +240,15 @@ pub struct AntTree {
     on_select:Option<KeyChange>,
     on_expand:Option<ExpandChange>,
     on_check:Option<CheckChange>,
+    on_checked_keys_change:Option<Rc<dyn Fn(BTreeSet<String>,&mut Window,&mut App)>>,
 }
 impl AntTree{
     pub fn new(id:impl Into<ElementId>)->Self{
         Self{id:id.into(),nodes:Vec::new(),expanded_keys:BTreeSet::new(),
-            checked_keys:BTreeSet::new(),selected_key:None,checkable:false,
+            checked_keys:BTreeSet::new(),selected_key:None,checkable:false,check_strictly:false,
             show_icon:true,block_node:true,disabled:false,max_height:320.,
-            theme:AntTheme::default(),on_select:None,on_expand:None,on_check:None}
+            theme:AntTheme::default(),on_select:None,on_expand:None,on_check:None,
+            on_checked_keys_change:None}
     }
     pub fn child(mut self,node:AntTreeNode)->Self{self.nodes.push(node);self}
     pub fn children(mut self,nodes:impl IntoIterator<Item=AntTreeNode>)->Self{
@@ -145,6 +264,9 @@ impl AntTree{
         self.selected_key=Some(key.into());self
     }
     pub fn checkable(mut self,yes:bool)->Self{self.checkable=yes;self}
+    /// Independent checkboxes (Ant Design checkStrictly) rather than
+    /// default cascading/indeterminate branch state.
+    pub fn check_strictly(mut self,strict:bool)->Self{self.check_strictly=strict;self}
     pub fn show_icon(mut self,yes:bool)->Self{self.show_icon=yes;self}
     pub fn block_node(mut self,yes:bool)->Self{self.block_node=yes;self}
     pub fn disabled(mut self,yes:bool)->Self{self.disabled=yes;self}
@@ -158,13 +280,34 @@ impl AntTree{
     pub fn on_expand(mut self,f:impl Fn(SharedString,bool,&mut Window,&mut App)+'static)->Self{
         self.on_expand=Some(Rc::new(f));self
     }
+    /// Legacy single-key request. In cascading mode, prefer
+    /// on_checked_keys_change to update the full resulting key set.
     pub fn on_check(mut self,f:impl Fn(SharedString,bool,&mut Window,&mut App)+'static)->Self{
         self.on_check=Some(Rc::new(f));self
+    }
+    /// Receives the full requested checked-key set after native activation.
+    /// Parent Entity applies the result and calls cx.notify().
+    pub fn on_checked_keys_change(
+        mut self,f:impl Fn(BTreeSet<String>,&mut Window,&mut App)+'static
+    )->Self{
+        self.on_checked_keys_change=Some(Rc::new(f));self
     }
 }
 impl RenderOnce for AntTree{
     fn render(self,window:&mut Window,cx:&mut App)->impl IntoElement{
         let theme=self.theme;
+        let overrides=theme.component(AntComponent::Tree);
+        let bg=overrides.color_bg.unwrap_or(theme.surface);
+        let selected_bg=overrides.color_bg_selected.unwrap_or(theme.info_bg);
+        let hover_bg=overrides.color_bg_hover.unwrap_or(theme.info_bg);
+        let fg_base=overrides.color_text.unwrap_or(theme.text);
+        let primary=overrides.color_primary.unwrap_or(theme.primary);
+        let radius=overrides.border_radius.unwrap_or(theme.border_radius);
+        let height=overrides.control_height.unwrap_or(32.).max(24.);
+        let font_size=overrides.font_size.unwrap_or(theme.font_size);
+        let check_states=tree_check_states(&self.nodes,&self.checked_keys,self.check_strictly);
+        let tree_roots=Rc::new(self.nodes.clone());
+        let strict=self.check_strictly;
         let nodes=visible_tree_nodes(&self.nodes,&self.expanded_keys);
         let enabled:Vec<bool>=nodes.iter().map(|node|!node.disabled&&!self.disabled).collect();
         let selected=self.selected_key.clone();
@@ -220,13 +363,16 @@ impl RenderOnce for AntTree{
         let on_expand=self.on_expand;
         let on_select=self.on_select;
         let on_check=self.on_check;
+        let on_checked_keys_change=self.on_checked_keys_change;
         div().id(self.id).role(Role::Tree)
             .w_full().max_h(px(self.max_height)).overflow_y_scrollbar()
             .flex().flex_col().gap(px(2.)).p(px(4.))
             .on_key_down(on_keyboard)
             .children(nodes.into_iter().enumerate().map(move|(index,node)|{
                 let is_selected=selected.as_ref()==Some(&node.key);
-                let is_checked=checked.contains(node.key.as_ref());
+                let check_state=check_states.get(node.key.as_ref()).copied()
+                    .unwrap_or(TreeCheckState::Unchecked);
+                let is_checked=check_state==TreeCheckState::Checked;
                 let row_disabled=disabled||node.disabled;
                 let key=node.key.clone();
                 let toggle_key=key.clone();
@@ -235,10 +381,13 @@ impl RenderOnce for AntTree{
                 let expand_listener=on_expand.clone();
                 let select_listener=on_select.clone();
                 let check_listener=on_check.clone();
+                let checked_set_listener=on_checked_keys_change.clone();
+                let source_roots=tree_roots.clone();
+                let previous_checks=checked.clone();
                 let title=node.title.clone();
                 let requested_expansion=!node.expanded;
                 let fg=if row_disabled{theme.disabled_text}
-                    else if is_selected{theme.primary}else{theme.text};
+                    else if is_selected{primary}else{fg_base};
                 let arrow=BaseButton::new(format!("ant-tree-expand:{prefix}:{key}"))
                     .tab_stop(false).disabled(row_disabled||!node.folder)
                     .accessibility_label(format!("{} {}",if node.expanded{"Collapse"}else{"Expand"},title))
@@ -257,12 +406,12 @@ impl RenderOnce for AntTree{
                     .track_focus(&focus_handles[index])
                     .tab_stop(tab_stop==Some(index))
                     .when(block,|this|this.flex_1())
-                    .h(px(32.)).px(px(8.)).flex().items_center().gap(px(8.))
-                    .rounded(px(theme.border_radius))
-                    .bg(if is_selected{theme.info_bg}else{theme.surface})
-                    .text_color(fg).text_size(px(14.))
+                    .h(px(height)).px(px(8.)).flex().items_center().gap(px(8.))
+                    .rounded(px(radius))
+                    .bg(if is_selected{selected_bg}else{bg})
+                    .text_color(fg).text_size(px(font_size))
                     .when(!row_disabled,|this|this.cursor_pointer()
-                        .hover(|this|this.bg(theme.info_bg)))
+                        .hover(|this|this.bg(hover_bg)))
                     .when(show_icon,|this|this.child(
                         AntIcon::new(node.icon.unwrap_or(if node.folder{
                             if node.expanded{AntIconName::FolderOpenOutlined}
@@ -280,17 +429,41 @@ impl RenderOnce for AntTree{
                     .when(node.folder,|this|this.child(arrow))
                     .when(!node.folder,|this|this.child(div().w(px(28.))))
                     .when(checkable,|this|{
-                        let label_text=format!("{} {}",if is_checked{"Uncheck"}else{"Check"},node.title);
+                        let label_text=format!("{} {}",match check_state{
+                            TreeCheckState::Checked=>"Uncheck",
+                            TreeCheckState::Indeterminate=>"Partially checked",
+                            TreeCheckState::Unchecked=>"Check",
+                        },node.title);
                         let check=BaseButton::new(format!("ant-tree-check:{prefix}:{key}"))
                             .tab_stop(true).disabled(row_disabled||node.check_disabled)
                             .accessibility_label(label_text)
                             .size(px(24.)).flex().items_center().justify_center()
-                            .child(AntIcon::new(if is_checked{AntIconName::CheckSquareFilled}
-                                else{AntIconName::BorderOutlined})
-                                .theme(theme).color(if is_checked{theme.primary}else{theme.text_secondary}).size(17.))
-                            .when_some(check_listener,|this,listener|{
+                            .child(AntIcon::new(match check_state{
+                                TreeCheckState::Checked=>AntIconName::CheckSquareFilled,
+                                TreeCheckState::Indeterminate=>AntIconName::MinusSquareFilled,
+                                TreeCheckState::Unchecked=>AntIconName::BorderOutlined,
+                            })
+                                .theme(theme).color(if check_state!=TreeCheckState::Unchecked{
+                                    primary
+                                }else{theme.text_secondary}).size(17.))
+                            .when(check_listener.is_some()||checked_set_listener.is_some(),|this|{
                                 this.on_click(move|_,window,cx|{
-                                    listener(check_key.clone(),!is_checked,window,cx);
+                                    let requested=!is_checked;
+                                    if let Some(listener)=&checked_set_listener{
+                                        let next=if strict{
+                                            let mut next=previous_checks.clone();
+                                            if requested{next.insert(check_key.to_string());}
+                                            else{next.remove(check_key.as_ref());}
+                                            next
+                                        }else{
+                                            cascade_tree_checked_keys(&source_roots,
+                                                &previous_checks,check_key.as_ref(),requested)
+                                        };
+                                        listener(next,window,cx);
+                                    }
+                                    if let Some(listener)=&check_listener{
+                                        listener(check_key.clone(),requested,window,cx);
+                                    }
                                 })
                             });
                         this.child(check)
@@ -326,4 +499,49 @@ mod tests{
         assert_eq!(tree_focus_index(&[],0,"up"),None);
         assert_eq!(tree_focus_index(&[true],0,"escape"),None);
     }
+
+    #[test]
+    fn cascaded_checks_propagate_and_show_partial_parents(){
+        let roots=sample();
+        let empty=BTreeSet::new();
+        let half=cascade_tree_checked_keys(&roots,&empty,"a",true);
+        // The only other child is disabled, so the parent is fully
+        // selected as soon as every eligible child is selected.
+        assert_eq!(half,BTreeSet::from(["a".to_owned(),"src".to_owned()]));
+        let states=tree_check_states(&roots,&half,false);
+        assert_eq!(states["a"],TreeCheckState::Checked);
+        assert_eq!(states["src"],TreeCheckState::Checked);
+        // Disabled "disabled" subtree contributes no votes.
+        assert_eq!(states["disabled"],TreeCheckState::Unchecked);
+        let after=cascade_tree_checked_keys(&roots,&half,"src",false);
+        assert!(after.is_empty());
+    }
+    #[test]
+    fn deep_cascade_indeterminate_and_disabled_preserved(){
+        let roots=vec![AntTreeNode::new("root","Root")
+            .child(AntTreeNode::new("branch","Branch")
+                .child(AntTreeNode::new("one","One"))
+                .child(AntTreeNode::new("two","Two")))
+            .child(AntTreeNode::new("locked","Locked").disabled(true))];
+        let pre=BTreeSet::from(["locked".to_owned()]);
+        let one=cascade_tree_checked_keys(&roots,&pre,"one",true);
+        assert_eq!(tree_check_states(&roots,&one,false)["root"],TreeCheckState::Indeterminate);
+        assert_eq!(tree_check_states(&roots,&one,false)["branch"],TreeCheckState::Indeterminate);
+        assert!(one.contains("locked"));
+        let two=cascade_tree_checked_keys(&roots,&one,"two",true);
+        assert!(two.contains("branch")&&two.contains("root")&&two.contains("locked"));
+        let cleared=cascade_tree_checked_keys(&roots,&two,"branch",false);
+        assert!(!cleared.contains("root"));
+        assert_eq!(cleared,BTreeSet::from(["locked".to_owned()]));
+        assert_eq!(cascade_tree_checked_keys(&roots,&pre,"locked",false),pre);
+        assert_eq!(cascade_tree_checked_keys(&roots,&pre,"missing",true),pre);
+    }
+    #[test]
+    fn strict_check_state_does_not_derive_parents(){
+        let keys=BTreeSet::from(["a".to_owned()]);
+        let states=tree_check_states(&sample(),&keys,true);
+        assert_eq!(states["src"],TreeCheckState::Unchecked);
+        assert_eq!(states["a"],TreeCheckState::Checked);
+    }
+
 }

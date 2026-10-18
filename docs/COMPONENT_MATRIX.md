@@ -14,10 +14,10 @@ Data Entry or Feedback's similarly named full component.
 | Layout (7) | Divider, Flex, Grid, Layout, Space | Masonry, Splitter |
 | Navigation (7) | Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | Anchor |
 | Data Entry (18) | AutoComplete, Checkbox, DatePicker, Form, Input, InputNumber, Radio, Rate, Select, Slider, Switch, TimePicker | Cascader, ColorPicker, Mentions, Transfer, TreeSelect, Upload |
-| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, Popover, Segmented, Statistic, Table, Tag, Tooltip, Tree | Calendar, Carousel, Image, List (deprecated), Listy, QRCode, Timeline, Tour |
+| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, List, Popover, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tree | Calendar, Carousel, Image, Listy, QRCode, Tour |
 | Feedback (11) | Alert, Drawer, Message, Modal, Notification, Popconfirm, Progress, Result, Skeleton, Spin | Watermark |
 | Other (5) | — | Affix, App, BorderBeam, ConfigProvider, Util |
-| **Total (73)** | **49 alpha** | **24 missing** |
+| **Total (73)** | **51 alpha** | **22 missing** |
 
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
 higher-level packages and do not count toward this 73-item core overview.
@@ -54,8 +54,17 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | Drawer | Root-hosted Kit Sheet, four edges, backdrop, size, resizable, close callback, GPUI-content closure | Controlled open, nested push, title actions, transition callbacks and detailed motion |
 | Message | Imperative top-center Kit toast, keyed update, severity, persistent and auto-hide lifecycle | Dedicated Ant message visuals, loading, duration seconds and promise handles |
 | Notification | Root-hosted stacked notification, heading/details, severity, keyed replacement and placements | Rich custom action/close controls, Ant animated stacks and per-item duration |
-| Tree | Controlled hierarchy, expand/selected/checked keys, disabled nodes, focus navigation | Cascading/indeterminate check, virtualized rows, lazy load and drag/drop |
-| Table | Semantic Kit Table, numeric/text sorting, controlled row selection, pagination, striped mode | Filtering, virtualization, fixed columns, resize, edit cells, remote data |
+| Tree | Controlled hierarchy, parent-child check cascade, half-check states, strict mode, disabled barriers, focus navigation | Virtualized rows, lazy load and drag/drop |
+| Table | Semantic Kit Table, native exact-match filter dropdowns, filtered pagination, numeric/text sorting, page-select and persistent row selection | Complex filters, virtualization, fixed columns, resize, edit cells, remote data |
+
+## Wave 4: Enterprise interactions and Timeline
+
+| Component | Added or hardened | Remaining gaps |
+| --- | --- | --- |
+| Tree | Cascaded check/uncheck of collapsed descendants, bottom-up parent checks, indeterminate icon, strict independent mode, disabled subtree barrier | Lazy loading, virtualization, drag/drop, fully audited treeitem ARIA check states |
+| Table | Controlled per-column exact-match filters via native Dropdown menus; filter before sort/page, total reflects filtered rows; select/deselect all enabled visible page rows | Multi-choice filters, search/fuzzy predicates, fixed columns, large data virtualization, editable cells |
+| Timeline | Left/Right/Alternate alignment, status dots/icons, reverse ordering, pending spinner, timestamps and native GPUI child content | Animated connector/entry motion, responsive alternate layout, exact Ant pixel parity |
+| Token Studio | 50 independent component names, live Table/Tree/Timeline overrides and Rust GPU scene | Seed derivation parity, broader native consumption, global ConfigProvider |
 
 ## Next batches (dependency order)
 

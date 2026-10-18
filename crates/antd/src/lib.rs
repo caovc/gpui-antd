@@ -73,9 +73,13 @@ pub use auto_complete::{AntAutoComplete, autocomplete_matches, next_autocomplete
 pub mod feedback_actions;
 pub mod tree;
 pub mod table;
+pub mod timeline;
 
 pub use feedback_actions::{AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone};
-pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, visible_tree_nodes, tree_focus_index};
-pub use table::{AntTable, AntTableColumn, AntTableRow, TableSort, sorted_table_indices};
+pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, TreeCheckState, visible_tree_nodes,
+    tree_focus_index, tree_check_states, cascade_tree_checked_keys};
+pub use table::{AntTable, AntTableColumn, AntTableRow, TableSort, sorted_table_indices,
+    filtered_table_indices, table_view_indices, toggle_table_visible_selection};
+pub use timeline::{AntTimeline, AntTimelineItem, TimelineMode, TimelineTone};
 
 pub use list::{AntList, AntListItem, ListSize};
