@@ -108,6 +108,8 @@ try {
     {name:'LayoutDrawer',dark:true},
     {name:'MenuCollapsed',dark:false},
     {name:'MenuCollapsed',dark:true},
+    {name:'MenuModes',dark:false},
+    {name:'MenuModes',dark:true},
     {name:'ThemeLab|colorPrimary=9a44b2|colorInfo=114488|Card.padding=32|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=1677ff|Map.colorPrimaryBg=d9f7be|Alias.colorLink=de7f22|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=00aa88|Checkbox.colorPrimary=ff9900|Tag.colorBg=fff1cc|motion=0|compact=1',dark:false},
