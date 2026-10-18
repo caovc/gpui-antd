@@ -144,3 +144,19 @@ test('all 51 components accept scoped Tree/Table/Timeline native tokens',()=>{
   const code=rustCode(valid);
   for(const component of ['Tree','Table','Timeline'])assert.ok(code.includes('AntComponent::'+component));
 });
+
+
+test('Calendar and FloatButton overrides serialize to Rust/WASM',()=>{
+  const theme=emptyTheme();
+  theme.components.Calendar={colorBg:'#fff9ee',borderRadius:'10'};
+  theme.components.FloatButton={colorPrimary:'#1677ff',controlHeight:'46'};
+  const validatedTheme=validated(theme);
+  assert.deepEqual(validatedTheme.components.Calendar,theme.components.Calendar);
+  assert.deepEqual(validatedTheme.components.FloatButton,theme.components.FloatButton);
+  const url=previewParam(validatedTheme);
+  assert.match(url,/Calendar\.colorBg=fff9ee/);
+  assert.match(url,/FloatButton\.controlHeight=46/);
+  const code=rustCode(validatedTheme);
+  assert.match(code,/AntComponent::Calendar/);
+  assert.match(code,/AntComponent::FloatButton/);
+});
