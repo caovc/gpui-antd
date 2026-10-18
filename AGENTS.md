@@ -75,6 +75,10 @@
   `docs/THEME_TOKENS.md` in the same change.
 - `website/src/theme-designer.js` is an editor only. Its component previews
   must remain **actual Rust GPUI/WASM canvases**, not HTML replicas.
+- `scene=single|preview=<name>` in Token Studio resolves ONLY public
+  `Gallery::COMPONENTS` names to their existing Rust demo functions.
+  Keep the Gallery and website component lists in sync; do not introduce
+  stand-in visuals or expose internal icon audit routes through preview.
 - Keep JSON import compatible with `gpui-antd-theme-v1`, validating every
   imported numeric and color before preview.
 
