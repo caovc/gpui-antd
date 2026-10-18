@@ -14,7 +14,7 @@ use gpui_antd::{
     AntTabs, AntTab, TabsVariant, AntTooltip,
     AntLayout, AntSider, AntMobileDrawer, AntHeader, AntContent, AntFooter, GridBreakpoint,
     AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm,
-    AntMenu, AntMenuItem, AntTokenLayer, AntTokenValue, AntResolvedToken,
+    AntMenu, AntMenuItem, AntMenuMode, AntTokenLayer, AntTokenValue, AntResolvedToken,
     AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
     AntDescriptions, AntDescriptionItem, AntResult, ResultStatus, AntSkeleton, AntSpin,
     AntInputNumber, AntSlider, AntSegmented, AntSegmentedOption, AntTimePicker, AntAutoComplete,
@@ -1756,6 +1756,74 @@ impl Gallery {
             .into_any_element()
     }
 
+    /// Horizontal and vertical popup modes share real controlled GPUI state.
+    /// Native Popup placement and keyboard focus belong to AntMenu itself.
+    fn menu_modes_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement {
+        let select_top=cx.listener(|this,key:&SharedString,_,cx|{
+            this.menu_selected=key.to_string();cx.notify();
+        });
+        let open_top=cx.listener(|this,change:&(SharedString,bool),_,cx|{
+            let (key,open)=change;
+            if *open {this.menu_open_keys.insert(key.to_string());}
+            else {this.menu_open_keys.remove(key.as_ref());}
+            cx.notify();
+        });
+        let select_side=cx.listener(|this,key:&SharedString,_,cx|{
+            this.menu_selected=key.to_string();cx.notify();
+        });
+        let open_side=cx.listener(|this,change:&(SharedString,bool),_,cx|{
+            let (key,open)=change;
+            if *open {this.menu_open_keys.insert(key.to_string());}
+            else {this.menu_open_keys.remove(key.as_ref());}
+            cx.notify();
+        });
+        div().w_full().min_h(px(510.)).flex().flex_col().gap(px(18.))
+            .child(label("Horizontal · Left/Right rove, Down opens submenu, Escape dismisses",t))
+            .child(AntMenu::new("top-horizontal-nav").theme(t)
+                .mode(AntMenuMode::Horizontal)
+                .selected_key(self.menu_selected.clone())
+                .open_keys(self.menu_open_keys.iter())
+                .on_select(move |key,window,cx|select_top(&key,window,cx))
+                .on_open_change(move |key,open,window,cx|{
+                    open_top(&(key,open),window,cx)
+                })
+                .item(AntMenuItem::new("dashboard","Dashboard")
+                    .icon(AntIconName::DashboardOutlined))
+                .item(AntMenuItem::submenu("reports","Reports")
+                    .icon(AntIconName::BarChartOutlined)
+                    .child(AntMenuItem::new("daily","Daily report"))
+                    .child(AntMenuItem::new("monthly","Monthly report")))
+                .item(AntMenuItem::submenu("workspace","Workspace")
+                    .icon(AntIconName::FolderOutlined)
+                    .child(AntMenuItem::new("settings","Settings"))
+                    .child(AntMenuItem::submenu("more","More")
+                        .child(AntMenuItem::new("team","Team"))))
+                .item(AntMenuItem::new("locked","Restricted").disabled(true)))
+            .child(label("Vertical · native right-hand submenu flyouts",t))
+            .child(div().w(px(240.)).border_1().border_color(t.border)
+                .child(AntMenu::new("vertical-popup-nav").theme(t)
+                    .mode(AntMenuMode::Vertical)
+                    .selected_key(self.menu_selected.clone())
+                    .open_keys(self.menu_open_keys.iter())
+                    .on_select(move |key,window,cx|select_side(&key,window,cx))
+                    .on_open_change(move |key,open,window,cx|{
+                        open_side(&(key,open),window,cx)
+                    })
+                    .item(AntMenuItem::new("dashboard","Dashboard")
+                        .icon(AntIconName::DashboardOutlined))
+                    .item(AntMenuItem::submenu("reports","Reports")
+                        .icon(AntIconName::BarChartOutlined)
+                        .child(AntMenuItem::new("daily","Daily report"))
+                        .child(AntMenuItem::new("monthly","Monthly report")))
+                    .item(AntMenuItem::new("settings","Settings")
+                        .icon(AntIconName::SettingOutlined))))
+            .child(AntText::new(format!("Selected: {} · Open: {}",
+                self.menu_selected,
+                self.menu_open_keys.iter().cloned().collect::<Vec<_>>().join(", ")))
+                .theme(t).tone(TextTone::Secondary))
+            .into_any_element()
+    }
+
     /// Test-only route "MenuTree" and the embedded nested example on the
     /// public Menu page both use this same real Rust GPUI view.
     /// Collapsed icon-only navigation with controlled native anchored flyouts.
@@ -2296,6 +2364,7 @@ impl Render for Gallery {
             "Menu"=>self.menu_demo(t,cx),
             "MenuTree"=>self.menu_tree_demo(t,cx),
             "MenuCollapsed"=>self.menu_collapsed_demo(t,cx),
+            "MenuModes"=>self.menu_modes_demo(t,cx),
             "Dropdown"=>self.dropdown_demo(t,cx),
             "Popover"=>self.popover_demo(t,cx),
             "Modal"=>self.modal_demo(t,cx),
