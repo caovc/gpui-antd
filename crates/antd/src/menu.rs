@@ -475,7 +475,7 @@ impl RenderOnce for AntMenu {
                                         }
                                     }))
                         })
-                        .w_full()
+                        .when(!horizontal,|this|this.w_full())
                         .into_any_element()
                 } else {
                     button.into_any_element()
