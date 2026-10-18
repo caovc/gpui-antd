@@ -126,13 +126,24 @@ the change has passed CI and been deployed. The page offers:
 1. Global Seed Token editor with independently configurable Info and Link
    colors; presets and four light/dark/compact algorithms.
 2. Component Token overrides restricted to fields with real Rust consumers.
-3. **Components** view for Button, Card, Input, Menu and the newly wired
-   data-display/feedback tokens; **Resolved Tokens** view for a Rust/GPUI
-   rendering of Map and Alias values.
+3. **Overview** view for a curated group of widgets, **Selected component**
+   view for any of the 51 registered native GPUI Gallery components (including
+   Tabs, Menu, Table, Tree, and Timeline), and **Resolved Tokens** view
+   for native Rust Map and Alias swatches.
 4. JSON import/export using `gpui-antd-theme-v1`, validated before use,
    and a copyable Rust configuration generated from the same input.
 5. GPU readiness/error feedback from the embedded demo instead of using
    iframe `load` as a false renderer-success signal.
+
+Choosing a name in the **Component Token** editor automatically switches the
+preview to **Selected component**, except while inspecting resolved tokens.
+All 51 component names use the **same actual Rust demo** as the public
+component docs; per-component overrides and global Seed/Map/Alias colors are
+passed through `ThemeLabSpec`. Unimplemented token fields remain labeled
+Planned; rendering a component is not proof of full component-token coverage.
+The preview route accepts `scene=single|preview=Tabs` or another registered
+name, rejects unknown names, and does not grant access to internal icon
+audit routes. Browser CI checks the real Tabs and Menu GPUI/WASM scenes.
 
 The toolbar includes a **Viewport** selector for Desktop (fluid),
 Tablet (768 logical CSS pixels), and Mobile (390px). It changes the
@@ -156,7 +167,9 @@ Token Studio editor (DOM input controls only)
     -> same-origin URL params on GPUI demo.html
     -> ThemeLabSpec parser (Rust, bounded/clamped)
     -> AntTheme::from_seed() + Map/Alias/Component overrides
-    -> real Gallery::theme_lab_demo / theme_tokens_demo
+    -> Overview / Resolved Tokens / validated single-component route
+    -> actual Gallery::theme_lab_demo / theme_tokens_demo /
+       existing Gallery::<component>_demo
     -> GPUI WebAssembly canvas and readiness postMessage
 ```
 

@@ -14,6 +14,28 @@ test('studio exposes the real GPU preview and two independent scenes',()=>{
   assert.ok(!html.includes('<button class="ant-btn"'));
 });
 
+test('selected native component preview uses one validated Rust gallery route',()=>{
+  const html=themeDesignerHtml();
+  assert.match(html,/value="single"/);
+  assert.match(html,/id="theme-preview-target"/);
+  const state=emptyTheme();
+  state.seed.colorPrimary='#228866';
+  state.components.Tabs={colorPrimary:'#7788aa'};
+  for(const component of ['Tabs','Menu','Tree','Table','Timeline','Button']){
+    const route=previewParam(state,'single',component);
+    assert.ok(route.startsWith('ThemeLab|'));
+    assert.match(route,/scene=single/);
+    assert.ok(route.includes('preview='+component));
+    assert.ok(route.includes('Tabs.colorPrimary=7788aa'));
+    assert.ok(route.includes('colorPrimary=228866'));
+    assert.doesNotMatch(route,/scene=tokens/);
+  }
+  assert.match(previewParam(state,'single','../../IconAudit:0'),/preview=Button/);
+  assert.doesNotMatch(previewParam(state,'components','Tabs'),/preview=/);
+  assert.doesNotMatch(previewParam(state,'tokens','Tabs'),/preview=/);
+  assert.match(previewParam(state,'tokens','Tabs'),/scene=tokens/);
+});
+
 test('responsive preview viewport changes the real GPU iframe width without theme changes',()=>{
   const html=themeDesignerHtml();
   assert.match(html,/id="theme-viewport"/);

@@ -221,7 +221,31 @@ try {
     await studio.screenshot({path:join(screenshots,'token-studio-mobile.png')});
     await studio.locator('#theme-viewport').selectOption('desktop');
     await studio.screenshot({path:join(screenshots,'token-studio-resolved.png')});
-    console.log('PASS: Theme Studio route, token controls and Rust/GPUI Map/Alias live preview');
+    // A selected-component scene routes to an existing Rust Gallery demo.
+    // Verify two independent components with the *same* edited theme.
+    await studio.locator('#theme-scene').selectOption('single');
+    for (const target of ['Tabs','Menu']) {
+      await studio.locator('#theme-component').selectOption(target);
+      await studio.waitForFunction(name=>{
+        const src=document.querySelector('#theme-preview-frame')?.src;
+        const route=src?new URL(src).searchParams.get('component')||'':'';
+        return route.includes('scene=single') &&
+          route.includes('preview='+name) &&
+          route.includes('Map.colorPrimaryBg=d9f7be') &&
+          route.includes('Alias.colorLink=de7f22');
+      },target,{timeout:20000});
+      await studio.frameLocator('#theme-preview-frame').locator('canvas').first()
+        .waitFor({state:'visible',timeout:60000});
+      await studio.waitForFunction(()=>
+        document.querySelector('#theme-preview-status')?.textContent.includes('ready'),
+        null,{timeout:60000});
+      const shown=await studio.locator('#theme-preview-target').textContent();
+      if(!shown?.includes(target))
+        throw Error('Selected native component label not updated: '+target);
+      await studio.screenshot({path:join(screenshots,
+        'token-studio-component-'+target.toLowerCase()+'.png')});
+    }
+    console.log('PASS: Theme Studio Seed/Map/Alias and single-component Rust/GPUI scenes');
   } catch (error) {
     failures++;
     console.error('FAIL: Token Studio browser interaction:',String(error));

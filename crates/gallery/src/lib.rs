@@ -87,6 +87,20 @@ pub const COMPONENTS: &[&str] = &[
     "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "List", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
 ];
 
+/// Only public Gallery components may be used by a Theme Studio single-component
+/// scene. The editor sends this as a *route*, never as a DOM component implementation.
+/// A missing/unknown target falls back to the comprehensive native Theme Lab.
+fn theme_preview_target(route:&str)->Option<&str>{
+    if !route.starts_with("ThemeLab|") ||
+        !route.split('|').any(|part|part=="scene=single") ||
+        route.split('|').any(|part|part=="scene=tokens") {
+        return None;
+    }
+    route.split('|')
+        .filter_map(|part|part.strip_prefix("preview="))
+        .find(|name|COMPONENTS.contains(name))
+}
+
 /// Options in the browser icon inspector are only display parameters.
 /// State and icons stay in native Rust/GPUI; the docs DOM never paints them.
 #[derive(Debug, Clone, PartialEq)]
@@ -2260,7 +2274,12 @@ fn render_resolved_token(token:AntResolvedToken,t:AntTheme)->gpui_kit::AnyElemen
 impl Render for Gallery {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let t=self.theme();
-        let demo=match self.component.as_str() {
+        // Resolve the single-component Theme Studio scene into the *same*
+        // Rust demo renderer used by the regular gallery. This preserves
+        // state/callbacks and avoids a second fake or DOM implementation.
+        let route=theme_preview_target(self.component.as_str())
+            .unwrap_or(self.component.as_str());
+        let demo=match route {
             "Button"=>self.button_demo(t,cx),
             name if name.starts_with("ThemeLab") &&
                 name.split('|').any(|part|part=="scene=tokens") => self.theme_tokens_demo(t),
@@ -2398,6 +2417,20 @@ mod browser {
 #[cfg(test)]
 mod icon_preview_tests {
     use super::*;
+
+    #[test]
+    fn theme_studio_routes_single_component_to_existing_native_gallery() {
+        for name in COMPONENTS {
+            let route=format!("ThemeLab|colorPrimary=1677ff|scene=single|preview={name}");
+            assert_eq!(theme_preview_target(&route),Some(*name));
+        }
+        assert_eq!(theme_preview_target("ThemeLab|scene=single|preview=NotAComponent"),None);
+        assert_eq!(theme_preview_target("ThemeLab|preview=Menu"),None);
+        assert_eq!(theme_preview_target("ThemeLab|scene=tokens|preview=Tabs"),None);
+        assert_eq!(theme_preview_target("ThemeLab|scene=single|scene=tokens|preview=Tabs"),None);
+        assert_eq!(theme_preview_target("Menu|scene=single|preview=Tabs"),None);
+        assert_eq!(theme_preview_target("ThemeLab|scene=single|preview=IconAudit:0"),None);
+    }
 
     #[test]
     fn display_parameter_parser_clamps_and_rejects_bad_colors() {
