@@ -269,6 +269,17 @@ mod tests {
         assert_eq!(invalid.control_height_sm,24.);
     }
     #[test]
+    fn single_component_route_resolves_same_native_theme_overrides() {
+        let theme=ThemeLabSpec::parse(
+            "ThemeLab|colorPrimary=228866|Map.colorPrimaryBg=f0fff0|scene=single|preview=Tabs|Tabs.colorPrimary=7788aa",
+            false).unwrap().theme;
+        assert_eq!(theme.primary,color(0x228866));
+        assert_eq!(theme.map_tokens().color_primary_bg,color(0xf0fff0));
+        assert_eq!(theme.component(AntComponent::Tabs).color_primary,
+            Some(color(0x7788aa)));
+        assert_eq!(theme.component(AntComponent::Table).color_primary,None);
+    }
+    #[test]
     fn parse_rejects_injection_and_nonfinite_inputs() {
         assert!(ThemeLabSpec::parse("ThemeLab",false).is_some());
         assert!(ThemeLabSpec::parse("Other|colorPrimary=ff0000",false).is_none());
