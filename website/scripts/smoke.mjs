@@ -108,6 +108,8 @@ try {
     {name:'LayoutDrawer',dark:true},
     {name:'MenuCollapsed',dark:false},
     {name:'MenuCollapsed',dark:true},
+    {name:'MenuModes',dark:false},
+    {name:'MenuModes',dark:true},
     {name:'ThemeLab|colorPrimary=9a44b2|colorInfo=114488|Card.padding=32|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=1677ff|Map.colorPrimaryBg=d9f7be|Alias.colorLink=de7f22|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=00aa88|Checkbox.colorPrimary=ff9900|Tag.colorBg=fff1cc|motion=0|compact=1',dark:false},
@@ -266,6 +268,7 @@ try {
     // The initial selected menu item is Dashboard. This clicks Analytics,
     // changing the selected row in all three native Menu variants.
     { name: 'Menu', x: 110, y: 135, minChanged: 3500, minOutside: 2500 },
+    { name: 'MenuModes', x: 90, y: 88, minChanged: 2200, minOutside: 1200 },
     { name: 'Layout', x: 98, y: 500, minChanged: 12000, minOutside: 8000 },
   ];
 
@@ -390,7 +393,7 @@ try {
         console.log('PASS: disabled native GPUI Menu item does not change selection');
       }
 
-      if (['Dropdown','Popover','Modal','Popconfirm'].includes(spec.name)) {
+      if (['Dropdown','Popover','Modal','Popconfirm','MenuModes'].includes(spec.name)) {
         // Native Escape dismissal is a required interaction, not just a
         // startup/canvas check. Compare against the pre-popup frame;
         // the trigger can retain its focus ring, but the popup must vanish.

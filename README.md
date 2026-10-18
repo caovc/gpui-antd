@@ -131,6 +131,29 @@ The new RadioGroup supports a controlled selected index, roving Tab stops,
 arrows, Home/End navigation and disabled-item skipping. Both layouts and the
 radio-button style have examples in the interactive docs.
 
+## Native Menu navigation modes
+
+`AntMenu` supports `AntMenuMode::Inline` (expanded rows),
+`AntMenuMode::Vertical` (right-anchored native popup), and
+`AntMenuMode::Horizontal` (one-row navigation with below-trigger popup):
+
+```rust,ignore
+AntMenu::new("top-menu")
+    .mode(AntMenuMode::Horizontal)
+    .selected_key(route)
+    .open_keys(open_submenus.iter())
+    .on_open_change(|key,open,window,cx| { /* update owner */ })
+    .item(AntMenuItem::submenu("reports","Reports")
+        .child(AntMenuItem::new("daily","Daily report")));
+```
+
+Left/Right move horizontal root focus, Down requests submenu expansion,
+Home/End jump to boundaries, and Escape closes an open submenu.
+Collapsed vertical sidebars still use icon-only popovers. All flyouts
+use the native GPUI Base Popover, not a DOM overlay. Hover opening and
+responsive horizontal overflow-more remain parity work; see
+[menu modes](docs/MENU_MODES.md).
+
 ## Tabs and Tooltip
 
 `AntTabs` wraps the GPUI Kit native TabBar with controlled selection,
@@ -257,20 +280,20 @@ chosen icon with real Rust/GPUI.
 
 ## Navigation Menu
 
-`AntMenu` and `AntMenuItem` are GPUI-native controlled flat navigation
-components. They provide light/dark styles, selected route keys, SVG icons,
-disabled/danger states and icon-only collapsed Sider rendering with accessible
-labels. GPUI Base Button handles Tab, Enter/Space, focus and activation. The
-Layout gallery uses a **real AntMenu** in its sidebar; no inert icon/text rows.
+`AntMenu` and `AntMenuItem` are GPUI-native, controlled hierarchical
+navigation components. They provide selected route keys, accessible icons,
+light/dark, disabled/danger and keyboard behavior; application state owns
+selection and expanded submenu keys through `on_select` and
+`on_open_change`.
 
-Nested inline `AntMenuItem::submenu(key,label).child(...)` supports
-controlled `AntMenu::open_keys([...])` and
-`on_open_change(key, next_open, window, cx)` callbacks. Up/Down/Home/End
-move keyboard focus across enabled visible rows; Right opens a submenu
-and Left/Escape return to its parent. Pointer, Enter and Space activation
-are handled by GPUI Base Button. When inline-collapsed, nested children
-are hidden; an icon-only flyout submenu remains future parity work.
-Horizontal menu and typeahead also remain future milestones.
+In `AntMenuMode::Inline`, Up/Down/Home/End rove across visible rows,
+Right expands and Left/Escape return to parents. Vertical mode and
+inline-collapsed icon-only Siders use an anchored native right-hand Popover,
+while `AntMenuMode::Horizontal` lays out a single row, moves focus using
+Left/Right and opens submenus with Down below the trigger. Popover dismissal
+and focus management remain native GPUI Base responsibilities. The real
+Layout and Menu Gallery examples share the same Rust implementation.
+Hover-opening delays and horizontal overflow-more are not implemented.
 
 ## Dropdown, Popover, Modal and Popconfirm (alpha)
 

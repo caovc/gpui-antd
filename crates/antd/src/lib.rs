@@ -58,7 +58,7 @@ pub use tooltip::AntTooltip;
 pub use app_layout::{AntLayout, AntHeader, AntSider, AntMobileDrawer, AntContent, AntFooter};
 pub use overlays::{AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm};
 
-pub use menu::{AntMenu, AntMenuItem};
+pub use menu::{AntMenu, AntMenuItem, AntMenuMode};
 
 pub use navigation_extra::{AntPagination, PageSlot, AntSteps, AntStep, StepStatus};
 pub use data_extra::{AntRate, AntCollapse, AntCollapseItem, AntDescriptions, AntDescriptionItem};
