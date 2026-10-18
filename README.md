@@ -457,3 +457,26 @@ pixel parity. See [component matrix](docs/COMPONENT_MATRIX.md) and
 ## Native List
 
 `AntList` / `AntListItem` implement density, icons, descriptive text, native action slots, optional header/footer, row separators, loading and empty states using the same Rust/GPUI implementation in desktop and WASM. Virtualization and responsive grid-style listing are still pending.
+
+
+## Wave 5: Calendar and FloatButton
+
+**53 alpha component pages** are now documented, rendered by one shared
+Rust/GPUI codebase on desktop and WebAssembly.
+
+- AntCalendar is a themed native GPUI Kit calendar built around persistent
+  CalendarState, supporting keyboard date navigation, single/range selection,
+  disabled-date rules and 1–3 adjacent months. Subscribe to
+  CalendarEvent::Selected from the owning GPUI Entity.
+- AntFloatButton is a focusable native floating button with an official
+  SVG icon, badge, variants, shape and click handling; attach it to a GPUI
+  relative parent to position within its own panel.
+- AntFloatButtonGroup supports controlled expansion, disabled actions,
+  stable action keys and close-on-select callbacks; the parent owns open state.
+- AntComponent::{Calendar,FloatButton} expose real component-scoped
+  tokens in Token Studio, with matching live GPUI examples.
+
+Remaining gaps: Ant's custom calendar date cell renderers, fully locale-aware
+calendar API, portal-based viewport-fixed FloatButton positioning, smooth
+group animations and tooltip placement. This is alpha, not complete React
+feature, pixel, or accessibility parity.
