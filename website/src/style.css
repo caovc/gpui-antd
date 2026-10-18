@@ -436,3 +436,14 @@ td code { font: 11px ui-monospace,Consolas,monospace; color: var(--blue); }
 @media(max-width:700px){.menu-flyout-stage{padding:8px}.menu-flyout-stage iframe{height:560px}}
 
 .example-card iframe.wasm-iframe[src*="component=List"] { height: 900px; }
+
+/* Horizontal and vertical menus are real Rust/GPUI canvases with native
+   deferred popovers, not DOM replicas or CSS-only dropdown examples. */
+.menu-modes-stage {display:flex;justify-content:center;padding:16px;
+  border-bottom:1px solid var(--line);background:var(--soft);}
+.menu-modes-stage iframe {display:block;box-sizing:border-box;width:min(100%,790px);
+  height:650px;border:1px solid var(--border);border-radius:8px;background:var(--surface);}
+@media(max-width:700px){
+  .menu-modes-stage{padding:8px}
+  .menu-modes-stage iframe{height:600px}
+}
