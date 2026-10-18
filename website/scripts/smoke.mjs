@@ -244,6 +244,7 @@ try {
     // The initial selected menu item is Dashboard. This clicks Analytics,
     // changing the selected row in all three native Menu variants.
     { name: 'Menu', x: 110, y: 135, minChanged: 3500, minOutside: 2500 },
+    { name: 'MenuModes', x: 90, y: 88, minChanged: 2200, minOutside: 1200 },
     { name: 'Layout', x: 98, y: 500, minChanged: 12000, minOutside: 8000 },
   ];
 
@@ -368,7 +369,7 @@ try {
         console.log('PASS: disabled native GPUI Menu item does not change selection');
       }
 
-      if (['Dropdown','Popover','Modal','Popconfirm'].includes(spec.name)) {
+      if (['Dropdown','Popover','Modal','Popconfirm','MenuModes'].includes(spec.name)) {
         // Native Escape dismissal is a required interaction, not just a
         // startup/canvas check. Compare against the pre-popup frame;
         // the trigger can retain its focus ring, but the popup must vanish.
