@@ -128,8 +128,9 @@ Dropdown/Modal/Popconfirm:
 
 ### Native Menu behavior
 
-- `AntMenu` is a controlled flat menu backed by GPUI Base Button semantics.
-  Owner Entities update `selected_key` after `on_select(SharedString,...)`.
+- `AntMenu` is a controlled hierarchical menu built from GPUI Base
+  Buttons and native Popovers. Owner Entities update `selected_key`
+  after `on_select(SharedString,...)`.
 - Each item must have a unique, stable key. Disabled items stay inert.
   Collapsed icon-only items retain accessible names.
 - Use `AntMenu` in Sider and in standalone navigation; do not substitute
@@ -137,11 +138,18 @@ Dropdown/Modal/Popconfirm:
 - Inline `AntMenuItem::submenu(key,label).child(...)` nests entries.
   The parent Entity owns expanded keys through `.open_keys(...)` and
   `on_open_change(key, next_open, window, cx)`, separate from route selection.
-- Up/Down/Home/End rove focus and skip disabled visible rows; Right expands
-  a group and Left/Escape closes one, restoring focus to the group header.
-  Enter/Space and pointer activation use GPUI Base Buttons.
-- Collapsed submenu flyouts, horizontal menu and typeahead have **not**
-  been implemented. Verify keyboard behavior before claiming full a11y parity.
+- Inline mode: Up/Down/Home/End rove focus and skip disabled visible rows;
+  Right expands a group and Left/Escape closes it. Vertical mode uses the
+  same keyboard directions but right-anchored Popovers rather than inline
+  child rows. Horizontal mode uses Left/Right/Home/End to navigate root
+  items and Down to open a below-trigger native Popover. Enter/Space
+  and pointer activation use GPUI Base Buttons.
+- The root has `Role::Menu` and orientation metadata; submenu titles expose
+  `aria-expanded`. Icon-only collapsed Siders use native right-hand
+  flyouts. Detailed contracts are in `docs/MENU_MODES.md`.
+- Hover-open timing, horizontal overflow grouping and typeahead are still
+  missing. Browser/native keyboard and screen-reader parity must be
+  verified separately; do not assume full Ant Design APG support.
 
 ### Responsive Layout behavior
 
@@ -153,8 +161,10 @@ Dropdown/Modal/Popconfirm:
 - Use `AntContent::scrollable(true).scroll_id(stable_id)` for independent
   Content scrolling in an explicit-height layout. Header/Footer/Sider are
   normal GPUI siblings and remain in place.
-- This is not yet Ant Design's sliding mobile drawer/overlay or fixed-position
-  global Header/Sider implementation; do not claim those behaviors.
+- `AntMobileDrawer` opens a real GPUI Kit Sheet at the responsive
+  breakpoint with native Escape, backdrop and focus behavior. Global
+  fixed-position Header/Sider and exact Drawer motion remain parity gaps;
+  see `docs/MOBILE_DRAWER.md`.
 
 ## 6. Live preview / regression requirements
 
