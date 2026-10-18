@@ -6,13 +6,14 @@
 //! controlled open keys and selection. Flyouts use GPUI Base Popover's native
 //! focus, keyboard dismissal and deferred overlay placement.
 //!
-//! Still pending: horizontal mode, hover-trigger timing, typeahead and
-//! complete per-platform screen-reader regression tests.
+//! Inline, vertical flyout and horizontal modes share native controlled
+//! popups. Pending: hover timing, horizontal overflow-more and typeahead.
 
 use std::{collections::BTreeSet, rc::Rc};
 
 use gpui_kit::{
     Anchor, App, ElementId, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
+    Orientation,
     ParentElement as _, RenderOnce, Role, SharedString,
     StatefulInteractiveElement as _, Styled as _, Window, div, px,
 };
@@ -68,6 +69,16 @@ impl AntMenuItem {
     pub fn is_submenu(&self) -> bool {self.submenu || !self.children.is_empty()}
 }
 
+/// Menu layout and SubMenu presentation. Only inline mode inserts nested
+/// rows; vertical and horizontal modes use native deferred GPUI overlays.
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub enum AntMenuMode {
+    #[default]
+    Inline,
+    Vertical,
+    Horizontal,
+}
+
 /// Keys can be navigated independently from the selected route.
 ///
 /// Arrow keys move focus, not application route state. The route changes
@@ -75,6 +86,16 @@ impl AntMenuItem {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum MenuMove { Next, Previous, First, Last }
 
+fn move_for_key(key:&str,horizontal:bool)->Option<MenuMove> {
+    match key {
+        "home"=>Some(MenuMove::First),"end"=>Some(MenuMove::Last),
+        "right" if horizontal=>Some(MenuMove::Next),
+        "left" if horizontal=>Some(MenuMove::Previous),
+        "down" if !horizontal=>Some(MenuMove::Next),
+        "up" if !horizontal=>Some(MenuMove::Previous),
+        _=>None,
+    }
+}
 fn next_menu_focus(enabled: &[bool], current:usize, command:MenuMove) -> Option<usize> {
     if enabled.is_empty() || !enabled.iter().any(|item|*item) {return None;}
     let len=enabled.len();
@@ -101,8 +122,7 @@ fn has_selected_descendant(item:&AntMenuItem, selected:Option<&str>) -> bool {
         selected==Some(child.key()) || has_selected_descendant(child,selected))
 }
 
-/// Snapshot of a visible menu row: descendants are only included when the
-/// corresponding controlled key is open (and inline mode isn't collapsed).
+/// Visible rows keep popup descendants separate from the inline root tree.
 struct VisibleMenuRow {
     item: AntMenuItem,
     depth:usize,
@@ -135,8 +155,8 @@ fn flatten_visible(
     }
 }
 
-/// Ant Design-inspired vertical inline menu with controlled selection and
-/// expandable, multi-level submenus.
+/// Ant Design-inspired inline, vertical and horizontal native menu with
+/// controlled selection and expandable, multi-level submenus.
 ///
 /// - `selected_key` is a route key reported by `on_select`.
 /// - `open_keys` is the set of submenu keys, updated from
@@ -146,9 +166,9 @@ fn flatten_visible(
 /// - Left/Escape close a focused submenu and return focus to its parent.
 /// - Enter and Space use GPUI Base Button native activation.
 ///
-/// Collapsed mode opens an anchored native GPUI submenu flyout, preserving
-/// the application-owned `open_keys` and `selected_key` contracts.
-/// Horizontal navigation, hover delays and typeahead remain roadmap.
+/// Collapsed and vertical modes open a flyout to the right; horizontal mode
+/// opens a flyout below. Controlled open/selected keys persist across modes.
+/// Hover delays, responsive overflow and typeahead remain future milestones.
 #[derive(IntoElement)]
 pub struct AntMenu {
     id: ElementId,
@@ -157,6 +177,7 @@ pub struct AntMenu {
     open_keys:BTreeSet<String>,
     theme:AntTheme,
     dark:bool,
+    mode:AntMenuMode,
     inline_collapsed:bool,
     item_height:f32,
     on_select:Option<MenuSelect>,
@@ -166,12 +187,17 @@ impl AntMenu {
     pub fn new(id:impl Into<ElementId>) -> Self {
         Self {
             id:id.into(),items:Vec::new(),selected:None,open_keys:BTreeSet::new(),
-            theme:AntTheme::default(),dark:false,inline_collapsed:false,
-            item_height:40.,on_select:None,on_open_change:None,
+            theme:AntTheme::default(),dark:false,mode:AntMenuMode::Inline,
+            inline_collapsed:false,item_height:40.,on_select:None,on_open_change:None,
         }
     }
     pub fn theme(mut self, theme:AntTheme)->Self {self.theme=theme;self}
     pub fn dark(mut self, dark:bool)->Self {self.dark=dark;self}
+    pub fn mode(mut self, mode:AntMenuMode)->Self {self.mode=mode;self}
+    /// Convenience for an Ant Design-style horizontal root navigation.
+    pub fn horizontal(mut self, horizontal:bool)->Self {
+        self.mode=if horizontal{AntMenuMode::Horizontal}else{AntMenuMode::Inline};self
+    }
     pub fn inline_collapsed(mut self, collapsed:bool)->Self {
         self.inline_collapsed=collapsed;self
     }
@@ -227,7 +253,10 @@ impl RenderOnce for AntMenu {
     fn render(self, window:&mut Window, cx:&mut App)->impl IntoElement {
         let theme=self.theme;
         let dark=self.dark;
-        let collapsed=self.inline_collapsed;
+        let horizontal=self.mode==AntMenuMode::Horizontal;
+        // Horizontal always shows labels; collapsed applies to the rail only.
+        let collapsed=self.inline_collapsed&&!horizontal;
+        let popup_mode=collapsed||self.mode!=AntMenuMode::Inline;
         let selected=self.selected;
         let on_select=self.on_select;
         let on_open_change=self.on_open_change;
@@ -237,7 +266,7 @@ impl RenderOnce for AntMenu {
         let flyout_open_keys=self.open_keys.clone();
         let mut rows=Vec::new();
         flatten_visible(self.items,&self.open_keys,selected.as_deref(),
-            collapsed,0,None,&mut rows);
+            popup_mode,0,None,&mut rows);
 
         let focus_handles:Vec<FocusHandle>=rows.iter().map(|row| {
             let id=format!("ant-menu-{prefix}-{}",row.item.key);
@@ -247,6 +276,7 @@ impl RenderOnce for AntMenu {
         let enabled:Vec<bool>=rows.iter().map(|row|!row.item.disabled).collect();
         let active=selected.as_ref().and_then(|key| rows.iter()
             .position(|row|row.item.key==*key&&!row.item.disabled))
+            .or_else(||rows.iter().position(|row|row.selected_descendant&&!row.item.disabled))
             .or_else(||enabled.iter().position(|enabled|*enabled));
         let keys:Vec<String>=rows.iter().map(|row|row.item.key().to_owned()).collect();
         let submenu:Vec<bool>=rows.iter().map(|row|row.item.is_submenu()).collect();
@@ -263,13 +293,7 @@ impl RenderOnce for AntMenu {
             let Some(origin)=focus_handles.iter().position(|handle|handle.is_focused(window))
             else {return;};
             let key=event.keystroke.key.as_str();
-            let direction=match key {
-                "down"=>Some(MenuMove::Next),
-                "up"=>Some(MenuMove::Previous),
-                "home"=>Some(MenuMove::First),
-                "end"=>Some(MenuMove::Last),
-                _=>None,
-            };
+            let direction=move_for_key(key,horizontal);
             if let Some(command)=direction {
                 if let Some(next)=next_menu_focus(&enabled,origin,command) {
                     window.focus(&focus_handles[next],cx);
@@ -279,7 +303,7 @@ impl RenderOnce for AntMenu {
                 return;
             }
             let focused_key=keys[origin].clone();
-            if key=="right" && submenu[origin] {
+            if (if horizontal {key=="down"} else {key=="right"}) && submenu[origin] {
                 if !expanded[origin] {
                     if let Some(listener)=&open_change_keyboard {
                         listener(focused_key.into(),true,window,cx);
@@ -310,7 +334,10 @@ impl RenderOnce for AntMenu {
         };
 
         div().id(self.id).role(Role::Menu)
+            .aria_orientation(if horizontal {Orientation::Horizontal} else {Orientation::Vertical})
             .w_full().flex().flex_col().gap(px(3.))
+            .when(horizontal,|this|this.flex_row().flex_nowrap()
+                .overflow_x_scroll().items_center())
             .px(px(7.)).py(px(6.))
             .bg(overrides.color_bg.unwrap_or(
                 if dark {theme.layout_dark} else {theme.surface}))
@@ -357,11 +384,19 @@ impl RenderOnce for AntMenu {
                     .disabled(row.item.disabled)
                     .track_focus(&row_handles[index])
                     .tab_stop(active==Some(index))
-                    .w_full().h(px(item_height))
-                    .px(px(if collapsed {6.} else {12.+row.depth as f32*16.}))
+                    .when(is_submenu,|this|this.aria_expanded(row.expanded))
+                    .when(!horizontal,|this|this.w_full())
+                    .when(horizontal,|this|this.flex_none())
+                    .h(px(item_height))
+                    .px(px(if collapsed {6.} else if horizontal {16.} else {
+                        12.+row.depth as f32*16.
+                    }))
                     .flex().items_center().justify_start()
                     .gap(px(11.)).rounded(px(overrides.border_radius.unwrap_or(theme.border_radius)))
                     .bg(bg).text_color(overrides.color_text.unwrap_or(fg))
+                    .when(horizontal&&highlighted,|this|{
+                        this.border_b(px(2.)).border_color(theme.primary)
+                    })
                     .text_size(px(overrides.font_size.unwrap_or(theme.font_size)))
                     .when(!row.item.disabled, |this| this.cursor_pointer()
                         .hover(|this|this.bg(hover_bg)))
@@ -370,13 +405,12 @@ impl RenderOnce for AntMenu {
                     })
                     .when(!collapsed, |this|this.child(div().min_w_0().flex_1().child(label)))
                     .when(is_submenu&&!collapsed, |this| {
-                        this.child(AntIcon::new(if row.expanded {
+                        let arrow=if horizontal || (!popup_mode&&row.expanded) {
                             AntIconName::DownOutlined
-                        } else {
-                            AntIconName::RightOutlined
-                        }).theme(theme).size(12.).color(fg))
+                        } else {AntIconName::RightOutlined};
+                        this.child(AntIcon::new(arrow).theme(theme).size(12.).color(fg))
                     })
-                    .when(is_submenu && !collapsed,|this|{
+                    .when(is_submenu && !popup_mode,|this|{
                         this.when_some(expand_callback,|this,callback|{
                             let new_open=!row.expanded;
                             this.on_click(move |_,window,cx|{
@@ -391,7 +425,7 @@ impl RenderOnce for AntMenu {
                             })
                         })
                     });
-                if collapsed && is_submenu && !is_disabled {
+                if popup_mode && is_submenu && !is_disabled {
                     // Native deferred GPUI overlay owns Escape/outside focus
                     // restoration and safe positioning; not an absolute div.
                     // Keep the original BaseButton with its MenuItem role and
@@ -400,7 +434,7 @@ impl RenderOnce for AntMenu {
                     let key_for_close=flyout_key.clone();
                     let popup_change=flyout_callback.clone();
                     BasePopover::new(flyout_id)
-                        .anchor(Anchor::RightCenter)
+                        .anchor(if horizontal {Anchor::BottomLeft} else {Anchor::RightCenter})
                         .offset(px(6.))
                         .open(row_expanded)
                         .overlay_closable(true)
@@ -452,6 +486,39 @@ impl RenderOnce for AntMenu {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn menu_modes_choose_keyboard_navigation_and_open_direction() {
+        assert_eq!(AntMenu::new("default").mode,AntMenuMode::Inline);
+        assert_eq!(AntMenu::new("top").horizontal(true).mode,AntMenuMode::Horizontal);
+        assert_eq!(AntMenu::new("vertical").mode(AntMenuMode::Vertical).mode,
+            AntMenuMode::Vertical);
+        assert_eq!(AntMenu::new("top").horizontal(true).horizontal(false).mode,
+            AntMenuMode::Inline);
+        assert_eq!(move_for_key("right",true),Some(MenuMove::Next));
+        assert_eq!(move_for_key("left",true),Some(MenuMove::Previous));
+        assert_eq!(move_for_key("down",true),None);
+        assert_eq!(move_for_key("down",false),Some(MenuMove::Next));
+        assert_eq!(move_for_key("right",false),None);
+        assert_eq!(move_for_key("home",true),Some(MenuMove::First));
+    }
+    #[test]
+    fn popup_mode_preserves_nested_items_without_inlining_rows() {
+        let items=vec![
+            AntMenuItem::submenu("reports","Reports")
+                .child(AntMenuItem::new("daily","Daily")),
+            AntMenuItem::new("home","Home"),
+        ];
+        let keys=BTreeSet::from(["reports".to_owned()]);
+        let mut rows=Vec::new();
+        flatten_visible(items.clone(),&keys,Some("daily"),true,0,None,&mut rows);
+        assert_eq!(rows.len(),2);
+        assert!(rows[0].selected_descendant);
+        assert_eq!(rows[0].flyout_children[0].key(),"daily");
+        let mut inline=Vec::new();
+        flatten_visible(items,&keys,Some("daily"),false,0,None,&mut inline);
+        assert_eq!(inline.len(),3);
+        assert!(inline[0].flyout_children.is_empty());
+    }
     #[test]
     fn navigation_skips_disabled_and_wraps() {
         assert_eq!(next_menu_focus(&[true,false,true],0,MenuMove::Next),Some(2));
