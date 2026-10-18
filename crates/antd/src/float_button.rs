@@ -6,7 +6,7 @@
 
 use std::rc::Rc;
 use gpui_kit::{
-    App, ClickEvent, ElementId, IntoElement, ParentElement as _,
+    App, ClickEvent, ElementId, InteractiveElement as _, IntoElement, ParentElement as _,
     RenderOnce, SharedString, Styled as _, Window, div, px,
 };
 use gpui_kit::base::{Button as BaseButton, StyledExt as _};
