@@ -20,6 +20,7 @@ use gpui_antd::{
     AntInputNumber, AntSlider, AntSegmented, AntSegmentedOption, AntTimePicker, AntAutoComplete,
     AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone,
     AntTree, AntTreeNode, AntTable, AntTableColumn, AntTableRow, TableSort,
+    AntCalendar, AntFloatButton, AntFloatButtonGroup, AntFloatAction, FloatShape, FloatVariant,
     AntTimeline, AntTimelineItem, TimelineMode, TimelineTone,
     AntList, AntListItem, ListSize,
 };
@@ -33,6 +34,7 @@ use gpui_kit::component::slider::{SliderState, SliderEvent};
 use gpui_kit::component::time_field::{TimeFieldState, HourCycle, TimeFieldEvent};
 use gpui_kit::component::select::{SelectState, SearchableVec};
 use gpui_kit::component::date_picker::DatePickerState;
+use gpui_kit::component::calendar::{CalendarState, CalendarEvent, Date};
 use gpui_kit::component::time_field::TimePrecision;
 use gpui_kit::component::IndexPath;
 use gpui_kit::component::scroll::ScrollableElement as _;
@@ -84,7 +86,7 @@ impl GalleryAssets {
 pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
-    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "List", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
+    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "List", "Calendar", "FloatButton", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
 ];
 
 /// Options in the browser icon inspector are only display parameters.
@@ -211,6 +213,15 @@ pub struct Gallery {
     autocomplete_active:usize,
     autocomplete_last:String,
     _input_subscriptions:Vec<Subscription>,
+    calendar_single:Entity<CalendarState>,
+    calendar_range:Entity<CalendarState>,
+    calendar_restricted:Entity<CalendarState>,
+    calendar_selected:String,
+    calendar_range_selected:String,
+    _calendar_subscriptions:Vec<Subscription>,
+    float_group_open:bool,
+    float_clicks:usize,
+    float_last_action:String,
 }
 
 impl Gallery {
@@ -294,6 +305,27 @@ impl Gallery {
             }));
         _input_subscriptions.push(cx.subscribe(&time_basic,
             |_,_,_:&TimeFieldEvent,cx|{cx.notify();}));
+        let calendar_single=cx.new(|cx|CalendarState::new(window,cx));
+        let calendar_range=cx.new(|cx|{
+            let mut state=CalendarState::new(window,cx);
+            state.apply_date(Date::Range(None,None));
+            state
+        });
+        let calendar_restricted=cx.new(|cx|CalendarState::new(window,cx)
+            .disabled_matcher(vec![0,6]));
+        let mut _calendar_subscriptions=Vec::new();
+        _calendar_subscriptions.push(cx.subscribe(&calendar_single,
+            |this,_,event:&CalendarEvent,cx|{
+                let CalendarEvent::Selected(date)=event;
+                this.calendar_selected=date.to_string();
+                cx.notify();
+            }));
+        _calendar_subscriptions.push(cx.subscribe(&calendar_range,
+            |this,_,event:&CalendarEvent,cx|{
+                let CalendarEvent::Selected(date)=event;
+                this.calendar_range_selected=date.to_string();
+                cx.notify();
+            }));
         let theme_override=ThemeLabSpec::parse(&component,dark).map(|spec|spec.theme);
         Self {
             component, dark, theme_override, button_clicks: 0, checked: true, radio_selected: Some(0),
@@ -325,6 +357,10 @@ impl Gallery {
             time_basic,time_seconds,time_12,time_disabled,
             segmented_index:1,autocomplete_input,autocomplete_open:true,
             autocomplete_active:0,autocomplete_last:"None".into(),_input_subscriptions,
+            calendar_single,calendar_range,calendar_restricted,
+            calendar_selected:"No date selected".to_owned(),
+            calendar_range_selected:"No range selected".to_owned(),_calendar_subscriptions,
+            float_group_open:false,float_clicks:0,float_last_action:"None".to_owned(),
         }
     }
     fn theme(&self) -> AntTheme {
@@ -416,6 +452,14 @@ impl Gallery {
                     .child(AntTimeline::new().theme(t)
                         .child(AntTimelineItem::new("Start").tone(TimelineTone::Success))
                         .child(AntTimelineItem::new("Ready").tone(TimelineTone::Processing)))))
+            .child(AntCard::new().theme(t).title("Calendar and FloatButton component tokens")
+                .child(div().flex().flex_wrap().gap(px(14.))
+                    .child(AntCalendar::new(&self.calendar_single).theme(t)
+                        .size(ControlSize::Small))
+                    .child(div().relative().size(px(155.)).bg(t.surface_secondary)
+                        .rounded(px(t.border_radius))
+                        .child(AntFloatButton::new("lab-float","Token-aware FloatButton")
+                            .theme(t).icon(AntIconName::PlusOutlined).position(14.,14.)))))
             .child(div().text_size(px(12.)).text_color(t.text_secondary)
                 .child(format!("Primary clicked {} times · menu route {}",
                     self.button_clicks,self.menu_selected)))
@@ -1316,6 +1360,65 @@ impl Gallery {
                 .child(AntTimelineItem::new("Start").tone(TimelineTone::Success))
                 .child(AntTimelineItem::new("Validated").tone(TimelineTone::Success))
                 .child(AntTimelineItem::new("Failed step").tone(TimelineTone::Error)))
+            .into_any_element()
+    }
+
+
+    fn calendar_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
+        div().w_full().flex().flex_col().gap(px(18.))
+            .child(label("Native month / year navigation and keyboard-selectable dates",t))
+            .child(AntCalendar::new(&self.calendar_single).theme(t))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Selected single date: {}",self.calendar_selected)))
+            .child(label("Range selection across two adjacent months",t))
+            .child(AntCalendar::new(&self.calendar_range).theme(t)
+                .size(ControlSize::Small).months(2))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Selected range: {}",self.calendar_range_selected)))
+            .child(label("Business days only · Saturdays and Sundays disabled",t))
+            .child(AntCalendar::new(&self.calendar_restricted)
+                .theme(t).size(ControlSize::Small).bordered(false))
+            .into_any_element()
+    }
+
+    fn float_button_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
+        let clicked=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
+            this.float_clicks+=1;cx.notify();
+        });
+        let open=cx.listener(|this,open:&bool,_,cx|{
+            this.float_group_open=*open;cx.notify();
+        });
+        let selected=cx.listener(|this,key:&SharedString,_,cx|{
+            this.float_last_action=key.to_string();cx.notify();
+        });
+        div().flex().flex_col().gap(px(18.)).w_full()
+            .child(label("Floating actions use native GPUI buttons and keyboard focus",t))
+            .child(div().relative().w(px(520.)).h(px(180.))
+                .border_1().border_color(t.border).rounded(px(t.border_radius))
+                .bg(t.surface_secondary)
+                .child(div().p(px(16.))
+                    .child(AntText::new("Standalone primary action · 7 unread").theme(t)))
+                .child(AntFloatButton::new("floating-primary","Add item")
+                    .theme(t).variant(FloatVariant::Primary).shape(FloatShape::Circle)
+                    .icon(AntIconName::PlusOutlined).badge(7).position(18.,18.)
+                    .on_click(clicked)))
+            .child(div().text_size(px(13.)).text_color(t.text_secondary)
+                .child(format!("Standalone action clicked {} times",self.float_clicks)))
+            .child(label("Controlled FloatButton.Group · expand and choose action",t))
+            .child(div().relative().w(px(520.)).h(px(275.))
+                .border_1().border_color(t.border).rounded(px(t.border_radius))
+                .bg(t.surface_secondary)
+                .child(div().p(px(16.)).text_color(t.text_secondary)
+                    .child(format!("Last selected: {}",self.float_last_action)))
+                .child(AntFloatButtonGroup::new("floating-group","Quick actions")
+                    .theme(t).open(self.float_group_open)
+                    .position(18.,18.)
+                    .action(AntFloatAction::new("edit","Edit",AntIconName::EditOutlined))
+                    .action(AntFloatAction::new("share","Share",AntIconName::ShareAltOutlined))
+                    .action(AntFloatAction::new("delete","Delete",AntIconName::DeleteOutlined)
+                        .danger(true).disabled(true))
+                    .on_open_change(move|expanded,window,cx|open(&expanded,window,cx))
+                    .on_select(move|key,window,cx|selected(&key,window,cx))))
             .into_any_element()
     }
 
@@ -2324,6 +2427,8 @@ impl Render for Gallery {
             "Table"=>self.table_demo(t,cx),
             "Timeline"=>self.timeline_demo(t,cx),
             "List"=>self.list_demo(t),
+            "Calendar"=>self.calendar_demo(t),
+            "FloatButton"=>self.float_button_demo(t,cx),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")
