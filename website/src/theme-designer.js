@@ -122,12 +122,17 @@ function validated(raw){
 }
 const modeDark=s=>s.algorithm.includes('dark');
 const rgbParam=value=>String(value).replace('#','');
-function previewParam(state,scene='components'){
+function previewParam(state,scene='components',selectedComponent='Button'){
   const parts=['ThemeLab'];
   for(const [key] of SEEDS)parts.push(key+'='+rgbParam(state.seed[key]));
   if(state.algorithm.includes('compact'))parts.push('compact=1');
   if(!state.motion)parts.push('motion=0');
   if(scene==='tokens')parts.push('scene=tokens');
+  if(scene==='single'){
+    // Strict allowlist: never forward arbitrary editor text as a gallery route.
+    const target=COMPONENTS.includes(selectedComponent)?selectedComponent:'Button';
+    parts.push('scene=single','preview='+target);
+  }
   for(const [layer,values] of [['map',state.map],['alias',state.alias]])
     for(const [key,value] of Object.entries(values))
       parts.push((layer==='map'?'Map':'Alias')+'.'+key+'='+rgbParam(value));
@@ -223,7 +228,8 @@ export function themeDesignerHtml(){
     '<label>Algorithm<select id="theme-mode"><option value="default">Light</option>'+
     '<option value="dark">Dark</option><option value="compact">Compact</option>'+
     '<option value="dark-compact">Dark + Compact</option></select></label>'+
-    '<label>Preview<select id="theme-scene"><option value="components">Components</option>'+
+    '<label>Preview<select id="theme-scene"><option value="components">Overview</option>'+
+    '<option value="single">Selected component</option>'+
     '<option value="tokens">Resolved Tokens</option></select></label>'+
     '<label>Viewport<select id="theme-viewport" aria-label="GPUI preview viewport">'+
     '<option value="desktop">Desktop · fluid</option>'+
@@ -266,7 +272,8 @@ export function themeDesignerHtml(){
     '</section>'+
     '<section class="theme-live-panel">'+
     '<div class="theme-preview-title"><div><span class="section-eyebrow">LIVE GPU / RUST</span>'+
-    '<h2>Theme preview</h2></div><span id="theme-preview-status">Loading GPUI...</span></div>'+
+    '<h2>Theme preview</h2><small id="theme-preview-target">Component overview</small></div>'+
+    '<span id="theme-preview-status">Loading GPUI...</span></div>'+
     '<div id="theme-preview-stage" class="theme-preview-stage" data-viewport="desktop">'+
     '<iframe id="theme-preview-frame" title="Live Rust GPUI WASM token preview" loading="eager"></iframe></div>'+
     '<p class="theme-caption">The editor controls are DOM; all UI inside this iframe is the native Rust component library running as GPUI/WASM. Edits recreate the GPU preview.</p>'+
@@ -331,7 +338,14 @@ export function initThemeDesigner(base){
   }
   function drawPreview(){
     clearTimeout(timer);
-    const params=new URLSearchParams({component:previewParam(state,scene),dark:modeDark(state)?'1':'0'});
+    const selectedComponent=$('#theme-component').value;
+    const label=scene==='tokens'?'Derived Map / Alias tokens':
+      scene==='single'?selectedComponent+' · native component':'Component overview';
+    $('#theme-preview-target').textContent=label;
+    const params=new URLSearchParams({
+      component:previewParam(state,scene,selectedComponent),
+      dark:modeDark(state)?'1':'0'
+    });
     $('#theme-preview-status').textContent='Rendering…';
     frame.src=base+'demo.html?'+params.toString();
     $('#theme-code').textContent=rustCode(state);
@@ -385,7 +399,14 @@ export function initThemeDesigner(base){
   $('#theme-motion').addEventListener('change',()=>{
     state.motion=$('#theme-motion').checked;schedule();
   });
-  $('#theme-component').addEventListener('change',drawFields);
+  $('#theme-component').addEventListener('change',()=>{
+    drawFields();
+    // Choosing a component is an explicit intent to inspect its real native
+    // preview. Keep the token inspector scene if the user chose it.
+    if(scene!=='tokens'){
+      scene='single';$('#theme-scene').value='single';schedule();
+    }
+  });
   for(const [layer,defs] of Object.entries(LAYER_FIELDS)){
     const container=$('#theme-'+layer+'-fields');
     container.addEventListener('change',e=>{
