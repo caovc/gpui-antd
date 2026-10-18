@@ -10,14 +10,14 @@ Data Entry or Feedback's similarly named full component.
 
 | Official category | Alpha in gpui-antd | Missing / not yet public |
 | --- | --- | --- |
-| General (4) | Button, Icon (Icons), Typography | FloatButton |
+| General (4) | Button, FloatButton, Icon (Icons), Typography | — |
 | Layout (7) | Divider, Flex, Grid, Layout, Space | Masonry, Splitter |
 | Navigation (7) | Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | Anchor |
 | Data Entry (18) | AutoComplete, Checkbox, DatePicker, Form, Input, InputNumber, Radio, Rate, Select, Slider, Switch, TimePicker | Cascader, ColorPicker, Mentions, Transfer, TreeSelect, Upload |
-| Data Display (21) | Avatar, Badge, Card, Collapse, Descriptions, Empty, List, Popover, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tree | Calendar, Carousel, Image, Listy, QRCode, Tour |
+| Data Display (21) | Avatar, Badge, Calendar, Card, Collapse, Descriptions, Empty, List, Popover, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tree | Carousel, Image, Listy, QRCode, Tour |
 | Feedback (11) | Alert, Drawer, Message, Modal, Notification, Popconfirm, Progress, Result, Skeleton, Spin | Watermark |
 | Other (5) | — | Affix, App, BorderBeam, ConfigProvider, Util |
-| **Total (73)** | **51 alpha** | **22 missing** |
+| **Total (73)** | **53 alpha** | **20 missing** |
 
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
 higher-level packages and do not count toward this 73-item core overview.
@@ -65,6 +65,14 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | Table | Controlled per-column exact-match filters via native Dropdown menus; filter before sort/page, total reflects filtered rows; select/deselect all enabled visible page rows | Multi-choice filters, search/fuzzy predicates, fixed columns, large data virtualization, editable cells |
 | Timeline | Left/Right/Alternate alignment, status dots/icons, reverse ordering, pending spinner, timestamps and native GPUI child content | Animated connector/entry motion, responsive alternate layout, exact Ant pixel parity |
 | Token Studio | 50 independent component names, live Table/Tree/Timeline overrides and Rust GPU scene | Seed derivation parity, broader native consumption, global ConfigProvider |
+
+## Wave 5: Calendar and floating actions
+
+| Component | Native foundation | Remaining Ant Design parity |
+| --- | --- | --- |
+| Calendar | GPUI Kit date and date-range state, month/year navigation, keyboard focus, disabled day rules, 1–3 adjacent months, Ant surface/border/radius tokens | Date cell custom renderer, event scheduling cell, locale/week-start facades, full screenshot fidelity |
+| FloatButton | GPUI Base accessible buttons, SVG icons, default/primary/danger, shape, badge, offsets, disabled and callbacks | Global fixed portal attachment, scroll-to-top integration, tooltip placement and full group motion |
+| FloatButton.Group | Controlled open, native submenu actions with stable keys, close-on-select and disabled actions | Hover activation, collision/viewport positioning, animation |
 
 ## Next batches (dependency order)
 

@@ -74,6 +74,8 @@ pub mod feedback_actions;
 pub mod tree;
 pub mod table;
 pub mod timeline;
+pub mod calendar;
+pub mod float_button;
 
 pub use feedback_actions::{AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone};
 pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, TreeCheckState, visible_tree_nodes,
@@ -83,3 +85,6 @@ pub use table::{AntTable, AntTableColumn, AntTableRow, TableSort, sorted_table_i
 pub use timeline::{AntTimeline, AntTimelineItem, TimelineMode, TimelineTone};
 
 pub use list::{AntList, AntListItem, ListSize};
+
+pub use calendar::AntCalendar;
+pub use float_button::{AntFloatButton, AntFloatButtonGroup, AntFloatAction, FloatShape, FloatVariant, float_offset};
