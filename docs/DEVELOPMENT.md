@@ -170,6 +170,8 @@ the GPUI gallery using `component=Icon:SearchOutlined`.
 
 Native CI:
 `cargo check --workspace` followed by `cargo test -p gpui-antd --lib`.
+The native workflow also runs `cargo test -p gpui-antd --test control_interactions`
+for pointer, keyboard, popup geometry and state regression coverage.
 The command label in the workflow might say "Unit tests (theme tokens)" but
 the command actually runs **all library unit tests**.
 

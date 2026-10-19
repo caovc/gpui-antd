@@ -579,7 +579,7 @@ impl RenderOnce for AntSelect {
         let parent_view = window.current_view();
 
         BasePopover::new(popover_id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(Anchor::TopLeft)
             .offset(px(4.))
             .open(open)
             .overlay_closable(true)

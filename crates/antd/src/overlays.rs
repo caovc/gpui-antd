@@ -10,13 +10,13 @@
 
 use std::rc::Rc;
 use gpui_kit::{
-    Anchor, AnyElement, App, ElementId, Hsla, InteractiveElement as _, IntoElement,
+    Anchor, AnyElement, App, ElementId, FocusHandle, Focusable as _, Hsla, InteractiveElement as _, IntoElement, KeyDownEvent, Role,
     ParentElement as _, RenderOnce, SharedString, StatefulInteractiveElement as _,
     Styled as _, Window, div, px,
 };
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::base::{
-    Button as BaseButton, Popover as BasePopover, StyledExt as _,
+    Button as BaseButton, Popover as BasePopover, StyledExt as _, TestSupportExt as _,
 };
 use gpui_kit::component::{
     WindowExt as _,
@@ -27,6 +27,8 @@ use gpui_kit::component::{
 };
 use crate::{AntButton, AntIcon, AntIconName, AntTheme, color};
 use crate::design_tokens::AntComponent;
+use crate::menu::{MenuMove, move_for_key, next_menu_focus};
+use gpui_kit::base::actions::Confirm;
 
 type MenuSelect = Rc<dyn Fn(SharedString, &mut Window, &mut App)>;
 type OpenChange = Rc<dyn Fn(bool, &mut Window, &mut App)>;
@@ -205,12 +207,13 @@ impl RenderOnce for AntDropdown {
                 trigger_id, self.label, theme, chrome, true, false, true,
             ).into_any_element();
         }
+        let focus_prefix = format!("ant-dropdown-focus:{:?}", self.id);
         let entries=self.entries;
         let on_select=self.on_select;
         let min_width=self.min_width;
         let label=self.label;
         BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(Anchor::TopLeft)
             .offset(px(4.))
             .default_open(self.default_open)
             .overlay_closable(true)
@@ -223,9 +226,61 @@ impl RenderOnce for AntDropdown {
                     trigger_id.clone(), label.clone(), theme, chrome, false, is_open, true,
                 ).into_any_element()
             })
-            .content(move |_, _, cx| {
+            .content(move |state, window, cx| {
                 let dismiss=cx.weak_entity();
-                div()
+                let focus = state.focus_handle(cx);
+                // Retain focus by the item's key, including across parent redraws.
+                let handles: Vec<FocusHandle> = entries.iter().map(|item| {
+                    window.use_keyed_state(format!("{focus_prefix}:{}", item.key), cx,
+                        |_, cx| cx.focus_handle()).read(cx).clone()
+                }).collect();
+                let enabled: Vec<bool> = entries.iter()
+                    .map(|item| !item.separator && !item.disabled).collect();
+                let first = enabled.iter().position(|enabled| *enabled);
+                let row_handles = handles.clone();
+                let confirm_handles = handles.clone();
+                let confirm_keys: Vec<Option<SharedString>> = entries.iter()
+                    .map(|item| (!item.separator && !item.disabled).then(|| item.key.clone()))
+                    .collect();
+                let confirm_select = on_select.clone();
+                let confirm_dismiss = dismiss.clone();
+                div().id("ant-dropdown-menu").test_support()
+                    .flex().flex_col()
+                    .role(Role::Menu)
+                    .track_focus(&focus)
+                    // Popover binds Enter/Space to Confirm. Consume that action
+                    // here so it activates a menu item before the host can toggle.
+                    .on_action(move |_: &Confirm, window, cx| {
+                        let focused = confirm_handles.iter().position(|handle| handle.is_focused(window));
+                        if let Some(key) = focused.or(first).and_then(|ix| confirm_keys[ix].clone()) {
+                            if let Some(callback) = &confirm_select {
+                                callback(key, window, cx);
+                            }
+                            let _ = confirm_dismiss.update(cx, |state, cx| state.dismiss(window, cx));
+                        }
+                        cx.stop_propagation();
+                    })
+                    .on_key_down(move |event: &KeyDownEvent, window, cx| {
+                        if event.keystroke.modifiers.modified()
+                            || event.keystroke.is_ime_in_progress() { return; }
+                        let Some(command) = move_for_key(&event.keystroke.key, false)
+                            else { return; };
+                        let origin = handles.iter().position(|handle| handle.is_focused(window));
+                        let next = if let Some(origin) = origin {
+                            next_menu_focus(&enabled, origin, command)
+                        } else {
+                            let edge = match command {
+                                MenuMove::Previous | MenuMove::Last => MenuMove::Last,
+                                _ => MenuMove::First,
+                            };
+                            next_menu_focus(&enabled, 0, edge)
+                        };
+                        if let Some(next) = next {
+                            window.focus(&handles[next], cx);
+                            window.prevent_default();
+                            cx.stop_propagation();
+                        }
+                    })
                     .min_w(px(min_width))
                     .py(px(4.))
                     .bg(chrome.panel_bg)
@@ -254,7 +309,11 @@ impl RenderOnce for AntDropdown {
                         } else {
                             chrome.panel_text
                         };
-                        BaseButton::new(format!("ant-dropdown-item:{index}:{}", item.key))
+                        BaseButton::new(format!("ant-dropdown-item:{}", item.key))
+                            .role(Role::MenuItem)
+                            .accessibility_label(item.label.clone())
+                            .track_focus(&row_handles[index])
+                            .tab_stop(first == Some(index))
                             .disabled(row_disabled)
                             .w_full()
                             .h(px(32.))
@@ -266,6 +325,7 @@ impl RenderOnce for AntDropdown {
                             .bg(transparent())
                             .text_color(fg)
                             .text_size(px(theme.font_size))
+                            .focus_visible(|this| this.bg(theme.surface_secondary))
                             .when(!row_disabled, |this| {
                                 this.cursor_pointer().hover(|this| {
                                     this.bg(theme.surface_secondary)
@@ -356,7 +416,7 @@ impl RenderOnce for AntPopover {
         let width=self.width;
         let trigger_label=self.trigger_label;
         BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(Anchor::TopLeft)
             .offset(px(4.))
             .default_open(self.default_open)
             .overlay_closable(true)
@@ -551,7 +611,7 @@ impl RenderOnce for AntPopconfirm {
         let cancel=self.on_cancel;
         let trigger_label=self.trigger_label;
         BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(Anchor::TopLeft)
             .offset(px(4.))
             .overlay_closable(true)
             .trigger_with(move |is_open, _, _| {

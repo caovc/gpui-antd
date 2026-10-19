@@ -18,7 +18,7 @@ use gpui_kit::{
     ParentElement as _, RenderOnce, Role, SharedString, StatefulInteractiveElement as _,
     Styled as _, Window, div, px,
 };
-use gpui_kit::base::HoverCard;
+use gpui_kit::base::{HoverCard, TestSupportExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
 use crate::AntTheme;
 use crate::design_tokens::AntComponent;
@@ -144,7 +144,7 @@ impl RenderOnce for AntTooltip {
                     .py(px(6.))
                     .text_size(px(font))
                     .max_w(px(250.))
-                    .child(title.clone())
+                    .child(div().id("ant-tooltip-text").test_support().child(title.clone()))
             })
             .into_any_element()
     }

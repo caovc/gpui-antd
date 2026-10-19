@@ -30,5 +30,7 @@ jobs:
         run: cargo check --workspace
       - name: Component library unit tests
         run: cargo test -p gpui-antd --lib
+      - name: Component pointer and keyboard regressions
+        run: cargo test -p gpui-antd --test control_interactions
       - name: Gallery URL and preview option tests
         run: cargo test -p gpui-antd-gallery --lib

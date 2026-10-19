@@ -44,11 +44,23 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 
 | Component | Implemented foundation | Remaining Ant Design parity work |
 | --- | --- | --- |
-| InputNumber | Persistent GPUI Kit numeric state, stepper buttons, 0..100 bounds and decimal steps, status/size/disabled tokens | Precision/formats beyond Kit, exact Ant Design stepper placement, dedicated formatter/parser facade |
+| InputNumber | Persistent GPUI Kit numeric state, stacked stepper buttons, placeholder synchronization, 0..100 bounds and decimal steps, status/size/disabled tokens | Precision/formats beyond Kit, exact Ant Design stepper placement, dedicated formatter/parser facade |
 | Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls | Range keyboard thumbs, marks, tooltips, custom handle formatting |
 | Segmented | Controlled selection, disabled options, official icon slots, Arrow/Home/End roving focus, block and size | Animated selection indicator and more exact Ant CSS geometry |
-| TimePicker | Persistent native segmented time editor, minute/second, AM/PM, keyboard edit, status/disabled | Clock popup, presets, clear/null semantics, range selection, localization |
+| TimePicker | Persistent native segmented editor plus scrollable hour/minute/second and AM/PM popup columns, keyboard edit, status/disabled | Auto-scroll to selected time, presets, clear/null semantics, range selection, localization |
 | AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Anchored collision-aware popover (current panel is inline), outside click close, full ARIA combobox, virtualization |
+
+DatePicker retains Kit's calendar/preset panel and datetime editor so the
+parent-owned state's disabled-date rules remain authoritative. Its outer field
+uses Ant tokens; full Ant popup styling remains a gap in Kit 0.7.3. Formatting
+and browse/open state stay with Kit rather than a second custom date model.
+
+Dropdown uses Base Popover for focus and dismissal, shares Menu's navigation
+helper for Up/Down/Home/End and skips disabled items/separators. Enter/Space
+consume the host's Confirm action and select once. Regression coverage lives in
+`crates/antd/tests/control_interactions.rs`; these headless native tests also
+check date presets/disabled dates/datetime, time scrolling, number hints and
+Tooltip side geometry. Browser smoke and pixel parity are separate checks.
 
 ## Wave 3: feedback and enterprise display foundations
 

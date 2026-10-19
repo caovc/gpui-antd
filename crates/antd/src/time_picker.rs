@@ -10,7 +10,7 @@
 //!
 //! ## Gaps
 //! - No `clearable` — TimeField has no clear API in 0.7.3.
-//! - No scroll-into-view API verified on column lists; plain columns only.
+//! - Selected values are not automatically scrolled into view.
 //! - Ranges / time-range picker not implemented.
 //! - Gallery must pass `.show_second(true)` / `.hour12(true)` to match states
 //!   configured with `TimePrecision::Second` / `HourCycle::H12`.
@@ -18,7 +18,7 @@
 use std::rc::Rc;
 
 use chrono::{NaiveTime, Timelike};
-use gpui_kit::base::{Button as BaseButton, Popover as BasePopover, StyledExt as _};
+use gpui_kit::base::{Button as BaseButton, Popover as BasePopover, StyledExt as _, TestSupportExt as _};
 use gpui_kit::component::time_field::{TimeField, TimeFieldState};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
@@ -301,7 +301,7 @@ impl RenderOnce for AntTimePicker {
         let panel_state = state.clone();
 
         BasePopover::new(popover_id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(Anchor::TopLeft)
             .offset(px(4.))
             .overlay_closable(true)
             .when_some(open, |this, o| this.open(o))
@@ -418,14 +418,20 @@ fn time_column(
                 .child(heading),
         );
     }
-    let mut list = div().flex().flex_col().gap(px(2.));
+    let mut list = div()
+        .id(format!("ant-time-column-{heading}"))
+        .test_support()
+        .min_h_0()
+        .max_h(px(200.))
+        .overflow_y_scroll()
+        .flex().flex_col().gap(px(2.));
     for (idx, value, label, selected) in items {
         let apply = apply.clone();
         let st = state.clone();
         list = list.child(
             BaseButton::new(format!("ant-time-cell-{heading}-{idx}"))
                 .w_full()
-                .h(px(28.))
+                .h(px(28.)).flex_shrink_0()
                 .rounded(px(theme.border_radius_sm))
                 .text_size(px(13.))
                 .text_color(if selected {

@@ -19,7 +19,7 @@
 //!
 //! Placeholder: set on the parent-owned `InputState` (`InputState::placeholder` /
 //! `set_placeholder`). The `.placeholder` builder is kept for API compatibility
-//! and forwards once when the state's placeholder is still empty.
+//! and synchronizes an explicitly supplied hint only when it changes.
 
 use crate::design_tokens::AntComponent;
 use crate::icons::{AntIcon, AntIconName};
@@ -92,9 +92,8 @@ impl AntInputNumber {
     pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
     /// Show the antd stacked Up/Down handler column (default true).
     pub fn controls(mut self, show: bool) -> Self { self.controls = show; self }
-    /// Kept so existing callers compile. Placeholder text is read from the
-    /// parent-owned `InputState` (`InputState::placeholder` / `set_placeholder`).
-    /// This builder does not write the entity during render.
+    /// Override the hint in the parent-owned InputState. Omit this builder to
+    /// keep the placeholder configured on the state.
     pub fn placeholder(mut self, p: impl Into<SharedString>) -> Self {
         self.placeholder = Some(p.into());
         self
@@ -129,12 +128,24 @@ impl RenderOnce for AntInputNumber {
         let size = self.size;
         let theme = self.theme;
         let state = self.state;
-        let _placeholder = self.placeholder;
+        if let Some(placeholder) = self.placeholder {
+            // Kit Input reads its hint from InputState. Sync only on a change,
+            // after rendering, so this cannot create a perpetual redraw loop.
+            if state.read(cx).presentation().placeholder() != &placeholder {
+                let hint_state = state.clone();
+                window.defer(cx, move |window, cx| {
+                    hint_state.update(cx, |state, cx| {
+                        if state.presentation().placeholder() != &placeholder {
+                            state.set_placeholder(placeholder, window, cx);
+                        }
+                    });
+                });
+            }
+        }
         let prefix = self.prefix;
         let mut suffix = self.suffix;
         let addon_before = self.addon_before;
         let addon_after = self.addon_after;
-        // Accepted for call-site compatibility. The visible hint is InputState's.
 
         let kit_size = match size {
             ControlSize::Small => Size::Small,
