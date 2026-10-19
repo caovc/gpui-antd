@@ -54,7 +54,7 @@ pub use typography::{AntTitle, AntText, AntParagraph, AntLink, AntTypography, Te
 pub use layout::{AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify, GridBreakpoint};
 pub use basics::{AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem};
 pub use tabs::{AntTab, AntTabs, TabsVariant};
-pub use tooltip::AntTooltip;
+pub use tooltip::{AntTooltip, TooltipPlacement};
 pub use app_layout::{AntLayout, AntHeader, AntSider, AntMobileDrawer, AntContent, AntFooter};
 pub use overlays::{AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm};
 
@@ -76,6 +76,7 @@ pub mod table;
 pub mod timeline;
 pub mod calendar;
 pub mod float_button;
+pub mod catalog;
 
 pub use feedback_actions::{AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone};
 pub use tree::{AntTree, AntTreeNode, VisibleTreeNode, TreeCheckState, visible_tree_nodes,
@@ -88,3 +89,13 @@ pub use list::{AntList, AntListItem, ListSize};
 
 pub use calendar::AntCalendar;
 pub use float_button::{AntFloatButton, AntFloatButtonGroup, AntFloatAction, FloatShape, FloatVariant, float_offset};
+pub use catalog::{
+    AntAffix, AntAnchor, AntAnchorLink, AntApp, AntBorderBeam, AntCarousel, AntCarouselSlide,
+    AntCascader, AntCascaderOption, AntColorPicker, AntConfig, AntConfigProvider, AntDirection,
+    AntImage, AntListyItem, AntMasonry, AntMasonryItem, AntMentionOption, AntMentions,
+    AntQrCode, AntSplitter, AntTour, AntTourStep, AntTransfer, AntTransferItem, AntTreeSelect,
+    AntUpload, AntUploadFile, AntWatermark, ListySlot, QrMatrix, UploadStatus,
+    apply_mention, ant_listy, carousel_index, cascader_column, cascader_select, hsv_to_rgb, listy_slots,
+    masonry_columns, mention_matches, mention_query, next_anchor_index, parse_hex, qr_matrix,
+    tour_index, transfer_move, tree_select_title, upload_accepted, upload_without, watermark_count,
+};

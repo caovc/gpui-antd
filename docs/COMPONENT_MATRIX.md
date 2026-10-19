@@ -1,6 +1,6 @@
 # Ant Design 6 component coverage — gpui-antd
 
-**Reference:** [Ant Design Components Overview](https://ant.design/components/overview/) (6.6.6, consulted 2026-10-17).
+**Reference:** [Ant Design Components Overview](https://ant.design/components/overview/) (6.6.6, rechecked 2026-10-19 with `antd list --version 6.6.6`). `Util` is not in that catalog.
 
 **Status definitions:** Alpha = exported native GPUI component with a real
 desktop/WASM Gallery path and documented public API, but NOT full feature,
@@ -11,16 +11,19 @@ Data Entry or Feedback's similarly named full component.
 | Official category | Alpha in gpui-antd | Missing / not yet public |
 | --- | --- | --- |
 | General (4) | Button, FloatButton, Icon (Icons), Typography | — |
-| Layout (7) | Divider, Flex, Grid, Layout, Space | Masonry, Splitter |
-| Navigation (7) | Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | Anchor |
-| Data Entry (18) | AutoComplete, Checkbox, DatePicker, Form, Input, InputNumber, Radio, Rate, Select, Slider, Switch, TimePicker | Cascader, ColorPicker, Mentions, Transfer, TreeSelect, Upload |
-| Data Display (21) | Avatar, Badge, Calendar, Card, Collapse, Descriptions, Empty, List, Popover, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tree | Carousel, Image, Listy, QRCode, Tour |
-| Feedback (11) | Alert, Drawer, Message, Modal, Notification, Popconfirm, Progress, Result, Skeleton, Spin | Watermark |
-| Other (5) | — | Affix, App, BorderBeam, ConfigProvider, Util |
-| **Total (73)** | **53 alpha** | **20 missing** |
+| Layout (7) | Divider, Flex, Grid, Layout, Masonry, Space, Splitter | — |
+| Navigation (7) | Anchor, Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | — |
+| Data Entry (18) | AutoComplete, Cascader, Checkbox, ColorPicker, DatePicker, Form, Input, InputNumber, Mentions, Radio, Rate, Select, Slider, Switch, TimePicker, Transfer, TreeSelect, Upload | — |
+| Data Display (21) | Avatar, Badge, Calendar, Card, Carousel, Collapse, Descriptions, Empty, Image, List, Listy, Popover, QRCode, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tour, Tree | — |
+| Feedback (11) | Alert, Drawer, Message, Modal, Notification, Popconfirm, Progress, Result, Skeleton, Spin, Watermark | — |
+| Other (4) | Affix, App, BorderBeam, ConfigProvider | — |
+| **Total (72)** | **72 alpha** | **0 missing** |
 
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
-higher-level packages and do not count toward this 73-item core overview.
+higher-level packages and do not count toward this 72-item core overview.
+Presence is alpha, not API or pixel parity. Issue #25 records the remaining
+gaps: no viewport sticky, no OS file dialog, inline Cascader/TreeSelect panels,
+Tour cards that are not measured to a target, and no moving BorderBeam.
 This matrix tracks **component presence**, not API completeness. A complete
 Ant Design-equivalent implementation still requires multiple release cycles.
 
@@ -41,11 +44,23 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 
 | Component | Implemented foundation | Remaining Ant Design parity work |
 | --- | --- | --- |
-| InputNumber | Persistent GPUI Kit numeric state, stepper buttons, 0..100 bounds and decimal steps, status/size/disabled tokens | Precision/formats beyond Kit, exact Ant Design stepper placement, dedicated formatter/parser facade |
+| InputNumber | Persistent GPUI Kit numeric state, stacked stepper buttons, placeholder synchronization, 0..100 bounds and decimal steps, status/size/disabled tokens | Precision/formats beyond Kit, exact Ant Design stepper placement, dedicated formatter/parser facade |
 | Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls | Range keyboard thumbs, marks, tooltips, custom handle formatting |
 | Segmented | Controlled selection, disabled options, official icon slots, Arrow/Home/End roving focus, block and size | Animated selection indicator and more exact Ant CSS geometry |
-| TimePicker | Persistent native segmented time editor, minute/second, AM/PM, keyboard edit, status/disabled | Clock popup, presets, clear/null semantics, range selection, localization |
+| TimePicker | Persistent native segmented editor plus scrollable hour/minute/second and AM/PM popup columns, keyboard edit, status/disabled | Auto-scroll to selected time, presets, clear/null semantics, range selection, localization |
 | AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Anchored collision-aware popover (current panel is inline), outside click close, full ARIA combobox, virtualization |
+
+DatePicker retains Kit's calendar/preset panel and datetime editor so the
+parent-owned state's disabled-date rules remain authoritative. Its outer field
+uses Ant tokens; full Ant popup styling remains a gap in Kit 0.7.3. Formatting
+and browse/open state stay with Kit rather than a second custom date model.
+
+Dropdown uses Base Popover for focus and dismissal, shares Menu's navigation
+helper for Up/Down/Home/End and skips disabled items/separators. Enter/Space
+consume the host's Confirm action and select once. Regression coverage lives in
+`crates/antd/tests/control_interactions.rs`; these headless native tests also
+check date presets/disabled dates/datetime, time scrolling, number hints and
+Tooltip side geometry. Browser smoke and pixel parity are separate checks.
 
 ## Wave 3: feedback and enterprise display foundations
 
@@ -76,17 +91,18 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 
 ## Next batches (dependency order)
 
-1. **Remaining core data entry:** Cascader, ColorPicker, Mentions, Transfer,
-   TreeSelect and Upload. Finish AutoComplete and TimePicker popup semantics,
-   Slider range keyboard support, and InputNumber formatter/parsing APIs.
-2. **Enterprise data display:** enhance Table/Tree virtualization and ARIA,
-   implement TreeSelect, Calendar, Timeline, Image and Carousel. Reuse gpui-grid
-   for high-volume tables, rather than reimplementing its engine.
-3. **Rich feedback:** finish Drawer open-state parity, Message/Notification action APIs, richer Spin/Skeleton;
+1. **Data-entry parity:** AutoComplete and TimePicker popup semantics, Slider
+   range keyboard, InputNumber formatter/parser. Cascader, ColorPicker,
+   Mentions, Transfer, TreeSelect and Upload now have alpha builders; their
+   popups, OS dialog and search are still open.
+2. **Enterprise data display:** Table/Tree virtualization and ARIA. Image,
+   Carousel, Listy, QRCode and Tour exist as alpha; portals, autoplay and
+   target measurement do not.
+3. **Rich feedback:** Drawer open-state parity, Message/Notification action APIs, richer Spin/Skeleton;
    use real Kit Root overlays and focus management (never paint a fake DOM
    dialog or toast over a WASM screenshot).
-4. **Advanced/complex:** Upload, Transfer, Cascader, ColorPicker, Mentions,
-   Tour, QRCode, Masonry, Splitter, Watermark, Affix, ConfigProvider and App.
+4. **Alpha follow-ups:** viewport Affix, moving BorderBeam, collision-aware
+   Cascader/TreeSelect, Upload file dialog, Watermark images.
 5. **Parity hardening:** Screenshot/reference diffs against actual Ant Design,
    dark-mode contrast, accessible value/role semantics, focus restoration,
    keyboard e2e, viewport responsiveness and mobile interactions.

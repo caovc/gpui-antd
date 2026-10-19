@@ -8,3 +8,8 @@ description = "Ant Design-inspired native Rust controls powered by GPUI and GPUI
 
 [dependencies]
 gpui-kit.workspace = true
+qrcode = "0.14"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[dev-dependencies]
+gpui-kit = { workspace = true, features = ["test-support"] }

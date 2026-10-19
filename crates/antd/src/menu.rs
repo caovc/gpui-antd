@@ -84,9 +84,9 @@ pub enum AntMenuMode {
 /// Arrow keys move focus, not application route state. The route changes
 /// only on Enter/Space or pointer activation, keeping selection controlled.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum MenuMove { Next, Previous, First, Last }
+pub(crate) enum MenuMove { Next, Previous, First, Last }
 
-fn move_for_key(key:&str,horizontal:bool)->Option<MenuMove> {
+pub(crate) fn move_for_key(key:&str,horizontal:bool)->Option<MenuMove> {
     match key {
         "home"=>Some(MenuMove::First),"end"=>Some(MenuMove::Last),
         "right" if horizontal=>Some(MenuMove::Next),
@@ -96,7 +96,7 @@ fn move_for_key(key:&str,horizontal:bool)->Option<MenuMove> {
         _=>None,
     }
 }
-fn next_menu_focus(enabled: &[bool], current:usize, command:MenuMove) -> Option<usize> {
+pub(crate) fn next_menu_focus(enabled: &[bool], current:usize, command:MenuMove) -> Option<usize> {
     if enabled.is_empty() || !enabled.iter().any(|item|*item) {return None;}
     let len=enabled.len();
     match command {
