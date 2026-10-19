@@ -484,7 +484,7 @@ pixel parity. See [component matrix](docs/COMPONENT_MATRIX.md) and
 
 ## Wave 5: Calendar and FloatButton
 
-**53 alpha component pages** are now documented, rendered by one shared
+**72 alpha component pages** are now documented, rendered by one shared
 Rust/GPUI codebase on desktop and WebAssembly.
 
 - AntCalendar is a themed native GPUI Kit calendar built around persistent

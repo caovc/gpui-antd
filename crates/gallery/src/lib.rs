@@ -23,6 +23,11 @@ use gpui_antd::{
     AntCalendar, AntFloatButton, AntFloatButtonGroup, AntFloatAction, FloatShape, FloatVariant,
     AntTimeline, AntTimelineItem, TimelineMode, TimelineTone,
     AntList, AntListItem, ListSize,
+    AntAffix, AntAnchor, AntAnchorLink, AntApp, AntBorderBeam, AntCarousel, AntCarouselSlide,
+    AntCascader, AntCascaderOption, AntColorPicker, AntConfig, AntConfigProvider, AntDirection,
+    AntImage, AntListyItem, AntMasonry, AntMasonryItem, AntMentionOption, AntMentions,
+    AntQrCode, AntSplitter, AntTour, AntTourStep, AntTransfer, AntTransferItem, AntTreeSelect,
+    AntUpload, AntUploadFile, AntWatermark, ListySlot, UploadStatus, ant_listy, apply_mention, listy_slots,
 };
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
@@ -32,11 +37,9 @@ use gpui_kit::{
 use gpui_kit::component::input::{InputState, InputEvent};
 use gpui_kit::component::slider::{SliderState, SliderEvent};
 use gpui_kit::component::time_field::{TimeFieldState, HourCycle, TimeFieldEvent};
-use gpui_kit::component::select::{SelectState, SearchableVec};
 use gpui_kit::component::date_picker::DatePickerState;
 use gpui_kit::component::calendar::{CalendarState, CalendarEvent, Date};
 use gpui_kit::component::time_field::TimePrecision;
-use gpui_kit::component::IndexPath;
 use gpui_kit::component::scroll::ScrollableElement as _;
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::assets::Assets;
@@ -87,6 +90,7 @@ pub const COMPONENTS: &[&str] = &[
     "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
     "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
     "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "List", "Calendar", "FloatButton", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
+    "Affix", "Anchor", "App", "BorderBeam", "Carousel", "Cascader", "ColorPicker", "ConfigProvider", "Image", "Listy", "Masonry", "Mentions", "QRCode", "Splitter", "Tour", "Transfer", "TreeSelect", "Upload", "Watermark",
 ];
 
 /// Only public Gallery components may be used by a Theme Studio single-component
@@ -169,9 +173,11 @@ pub struct Gallery {
     input_error: Entity<InputState>,
     input_password: Entity<InputState>,
     input_disabled: Entity<InputState>,
-    select_basic: Entity<SelectState<Vec<&'static str>>>,
-    select_search: Entity<SelectState<SearchableVec<&'static str>>>,
-    select_disabled: Entity<SelectState<Vec<&'static str>>>,
+    select_fruit: Option<SharedString>,
+    select_fruit_open: bool,
+    select_lang: Option<SharedString>,
+    select_lang_open: bool,
+    select_lang_query: SharedString,
     date_single: Entity<DatePickerState>,
     date_range: Entity<DatePickerState>,
     date_time: Entity<DatePickerState>,
@@ -236,6 +242,19 @@ pub struct Gallery {
     float_group_open:bool,
     float_clicks:usize,
     float_last_action:String,
+    mentions_input:Entity<InputState>,
+    anchor_key:String,
+    carousel_index:usize,
+    image_open:bool,
+    tour_index:usize,
+    tour_open:bool,
+    transfer_target:BTreeSet<String>,
+    transfer_selected:BTreeSet<String>,
+    upload_files:Vec<AntUploadFile>,
+    color_value:u32,
+    cascader_path:Vec<String>,
+    tree_select_open:bool,
+    tree_select_key:String,
 }
 
 impl Gallery {
@@ -256,15 +275,6 @@ impl Gallery {
             .masked(true).placeholder("Password"));
         let input_disabled = cx.new(|cx| InputState::new(window, cx)
             .placeholder("Disabled input").default_value("Cannot edit"));
-        let select_basic = cx.new(|cx| SelectState::new(
-            vec!["Apple", "Orange", "Banana", "Pineapple"],
-            Some(IndexPath::default()), window, cx));
-        let select_search = cx.new(|cx| SelectState::new(
-            SearchableVec::new(vec!["Rust", "TypeScript", "Go", "Python", "Java"]),
-            None, window, cx).searchable(true));
-        let select_disabled = cx.new(|cx| SelectState::new(
-            vec!["Enabled", "Disabled"],
-            Some(IndexPath::default()), window, cx));
         let date_single = cx.new(|cx| DatePickerState::new(window, cx));
         let date_range = cx.new(|cx| DatePickerState::range(window, cx));
         let date_time = cx.new(|cx| DatePickerState::new(window, cx)
@@ -319,6 +329,8 @@ impl Gallery {
             }));
         _input_subscriptions.push(cx.subscribe(&time_basic,
             |_,_,_:&TimeFieldEvent,cx|{cx.notify();}));
+        let mentions_input=cx.new(|cx|InputState::new(window,cx).placeholder("Type @ to mention"));
+        _input_subscriptions.push(cx.subscribe(&mentions_input,|_,_,_:&InputEvent,cx|{cx.notify();}));
         let calendar_single=cx.new(|cx|CalendarState::new(window,cx));
         let calendar_range=cx.new(|cx|{
             let mut state=CalendarState::new(window,cx);
@@ -346,7 +358,8 @@ impl Gallery {
             radio_button_selected: Some(1), switch_on: true,
             input, input_filled, input_borderless, input_decorated, input_large,
             input_error, input_password, input_disabled,
-            select_basic, select_search, select_disabled,
+            select_fruit: Some("Apple".into()), select_fruit_open: false,
+            select_lang: None, select_lang_open: false, select_lang_query: SharedString::default(),
             date_single, date_range, date_time, date_disabled,
             form_name, form_email, form_password, form_confirm,
             form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
@@ -375,6 +388,195 @@ impl Gallery {
             calendar_selected:"No date selected".to_owned(),
             calendar_range_selected:"No range selected".to_owned(),_calendar_subscriptions,
             float_group_open:false,float_clicks:0,float_last_action:"None".to_owned(),
+            mentions_input,anchor_key:"overview".into(),carousel_index:0,image_open:false,
+            tour_index:0,tour_open:true,transfer_target:BTreeSet::new(),
+            transfer_selected:BTreeSet::new(),upload_files:Vec::new(),color_value:0x1677ff,
+            cascader_path:Vec::new(),tree_select_open:false,tree_select_key:String::new(),
+        }
+    }
+    fn catalog_demo(&self, name: &str, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let anchor = cx.listener(|this, key: &SharedString, _, cx| {
+            this.anchor_key = key.to_string();
+            cx.notify();
+        });
+        let carousel = cx.listener(|this, index: &usize, _, cx| {
+            this.carousel_index = *index;
+            cx.notify();
+        });
+        let image = cx.listener(|this, open: &bool, _, cx| {
+            this.image_open = *open;
+            cx.notify();
+        });
+        let tour = cx.listener(|this, index: &usize, _, cx| {
+            this.tour_index = *index;
+            cx.notify();
+        });
+        let tour_close = cx.listener(|this, _: &(), _, cx| {
+            this.tour_open = false;
+            cx.notify();
+        });
+        let transfer = cx.listener(|this, keys: &BTreeSet<String>, _, cx| {
+            this.transfer_target = keys.clone();
+            this.transfer_selected.clear();
+            cx.notify();
+        });
+        let transfer_select = cx.listener(|this, change: &(String, bool), _, cx| {
+            if change.1 { this.transfer_selected.insert(change.0.clone()); }
+            else { this.transfer_selected.remove(&change.0); }
+            cx.notify();
+        });
+        let upload_pick = cx.listener(|this, _: &(), _, cx| {
+            let name = format!("notes-{}.txt", this.upload_files.len() + 1);
+            this.upload_files.push(AntUploadFile::new(name).status(UploadStatus::Done));
+            cx.notify();
+        });
+        let upload_remove = cx.listener(|this, name: &SharedString, _, cx| {
+            this.upload_files.retain(|file| file.name.as_ref() != name.as_ref());
+            cx.notify();
+        });
+        let color = cx.listener(|this, value: &u32, _, cx| {
+            this.color_value = *value;
+            cx.notify();
+        });
+        let cascader = cx.listener(|this, change: &(Vec<String>, bool), _, cx| {
+            this.cascader_path = change.0.clone();
+            cx.notify();
+        });
+        let tree_open = cx.listener(|this, open: &bool, _, cx| {
+            this.tree_select_open = *open;
+            cx.notify();
+        });
+        let tree_select = cx.listener(|this, key: &SharedString, _, cx| {
+            this.tree_select_key = key.to_string();
+            this.tree_select_open = false;
+            cx.notify();
+        });
+        let mention = cx.listener(|this, value: &SharedString, window, cx| {
+            let current = this.mentions_input.read(cx).value().to_string();
+            let next = apply_mention(&current, current.len(), value);
+            this.mentions_input.update(cx, |input, cx| {
+                input.set_value(next, window, cx);
+            });
+            cx.notify();
+        });
+        match name {
+            "ConfigProvider" => div().flex().flex_col().gap(px(12.))
+                .child(label("Config is an explicit value. GPUI has no React context.", t))
+                .child(AntConfigProvider::new(AntConfig::new(t).size(ControlSize::Large).direction(AntDirection::Ltr))
+                    .child(AntText::new("Provider surface uses the config theme.").theme(t)))
+                .into_any_element(),
+            "App" => AntApp::new(AntConfig::new(t))
+                .child(AntText::new("AntApp paints the config surface. Message stays an imperative toast.").theme(t))
+                .into_any_element(),
+            "Affix" => AntAffix::new().theme(t).offset(0.)
+                .child(AntText::new("Pinned in this parent, not the viewport.").theme(t))
+                .body(AntText::new("Scroll content sits under the bar.").theme(t).tone(TextTone::Secondary))
+                .into_any_element(),
+            "Anchor" => AntAnchor::new("anchor-demo").theme(t).active(self.anchor_key.clone())
+                .link(AntAnchorLink::new("overview", "Overview"))
+                .link(AntAnchorLink::new("api", "API").disabled(true))
+                .link(AntAnchorLink::new("faq", "FAQ"))
+                .on_click(move |key, window, cx| anchor(&key, window, cx))
+                .into_any_element(),
+            "Watermark" => AntWatermark::new("GPUI Ant Design").theme(t)
+                .child(div().p(px(16.)).child(AntText::new("Content under the watermark.").theme(t)))
+                .into_any_element(),
+            "BorderBeam" => AntBorderBeam::new().theme(t)
+                .child(AntText::new("Primary beam frame. Motion along the edge is still a parity gap.").theme(t))
+                .into_any_element(),
+            "Splitter" => div().w(px(520.)).child(AntSplitter::new("splitter-demo").theme(t)
+                .first(AntText::new("Left pane").theme(t))
+                .second(AntText::new("Drag the Kit handle. Paint is Ant Design.").theme(t)))
+                .into_any_element(),
+            "Masonry" => AntMasonry::new().theme(t).columns(3)
+                .item(AntMasonryItem::new("Short", 1))
+                .item(AntMasonryItem::new("Taller card", 3))
+                .item(AntMasonryItem::new("Medium", 2))
+                .item(AntMasonryItem::new("Note", 1))
+                .into_any_element(),
+            "Carousel" => AntCarousel::new("carousel-demo").theme(t).index(self.carousel_index)
+                .slide(AntCarouselSlide::new("First"))
+                .slide(AntCarouselSlide::new("Second").tone(TextTone::Success))
+                .slide(AntCarouselSlide::new("Third").tone(TextTone::Warning))
+                .on_change(move |index, window, cx| carousel(&index, window, cx))
+                .into_any_element(),
+            "QRCode" => AntQrCode::new("https://ant.design").theme(t).size(128.).into_any_element(),
+            "Tour" => AntTour::new("tour-demo").theme(t).open(self.tour_open).index(self.tour_index)
+                .step(AntTourStep::new("Welcome", "This card is not measured to a target yet."))
+                .step(AntTourStep::new("Next", "Prev and Next request the parent step."))
+                .on_change(move |index, window, cx| tour(&index, window, cx))
+                .on_close(move |window, cx| tour_close(&(), window, cx))
+                .into_any_element(),
+            "Image" => AntImage::new("image-demo", "Preview").theme(t).open(self.image_open)
+                .on_open(move |open, window, cx| image(&open, window, cx))
+                .into_any_element(),
+            "Listy" => {
+                let items = vec![
+                    AntListyItem::new("1", "Alpha", "Group A"),
+                    AntListyItem::new("2", "Beta", "Group A"),
+                    AntListyItem::new("3", "Gamma", "Group B").disabled(true),
+                ];
+                ant_listy(cx.entity(), "listy-demo", listy_slots(&items), |gallery, slot, _, _| {
+                    let theme = gallery.theme();
+                    match slot {
+                        ListySlot::Header(title) => div().px(px(8.)).py(px(4.))
+                            .child(AntText::new(title.clone()).theme(theme).tone(TextTone::Secondary))
+                            .into_any_element(),
+                        ListySlot::Item { title, disabled, .. } => div().px(px(8.)).py(px(6.))
+                            .border_b_1().border_color(theme.border)
+                            .text_color(if *disabled { theme.disabled_text } else { theme.text })
+                            .child(title.clone()).into_any_element(),
+                    }
+                }).into_any_element()
+            }
+            "Upload" => AntUpload::new("upload-demo").theme(t).accept(".txt")
+                .files(self.upload_files.clone())
+                .on_pick(move |window, cx| upload_pick(&(), window, cx))
+                .on_remove(move |name, window, cx| upload_remove(&name, window, cx))
+                .into_any_element(),
+            "Mentions" => {
+                let text = self.mentions_input.read(cx).value().to_string();
+                div().flex().flex_col().gap(px(8.))
+                    .child(label("Suggestions are ours. The field is InputState so IME stays in Kit.", t))
+                    .child(AntInput::new(&self.mentions_input).theme(t))
+                    .child(AntMentions::new("mentions-demo").theme(t)
+                        .text(text.clone(), text.len())
+                        .option(AntMentionOption::new("ada", "Ada Lovelace"))
+                        .option(AntMentionOption::new("grace", "Grace Hopper"))
+                        .on_select(move |value, window, cx| mention(&value, window, cx)))
+                    .into_any_element()
+            }
+            "ColorPicker" => AntColorPicker::new("color-demo").theme(t).color(self.color_value)
+                .on_change(move |value, window, cx| color(&value, window, cx))
+                .into_any_element(),
+            "Cascader" => AntCascader::new("cascader-demo").theme(t).path(self.cascader_path.clone())
+                .option(AntCascaderOption::new("zj", "Zhejiang")
+                    .child(AntCascaderOption::new("hz", "Hangzhou"))
+                    .child(AntCascaderOption::new("nb", "Ningbo").disabled(true)))
+                .option(AntCascaderOption::new("js", "Jiangsu")
+                    .child(AntCascaderOption::new("nj", "Nanjing")))
+                .on_change(move |path, leaf, window, cx| cascader(&(path, leaf), window, cx))
+                .into_any_element(),
+            "Transfer" => AntTransfer::new("transfer-demo").theme(t)
+                .item(AntTransferItem::new("a", "Alpha"))
+                .item(AntTransferItem::new("b", "Beta"))
+                .item(AntTransferItem::new("c", "Gamma").disabled(true))
+                .target_keys(self.transfer_target.iter().cloned())
+                .selected_keys(self.transfer_selected.iter().cloned())
+                .on_change(move |keys, window, cx| transfer(&keys, window, cx))
+                .on_select(move |key, selected, window, cx| {
+                    transfer_select(&(key.to_string(), selected), window, cx);
+                })
+                .into_any_element(),
+            "TreeSelect" => AntTreeSelect::new("tree-select-demo").theme(t)
+                .open(self.tree_select_open)
+                .selected(self.tree_select_key.clone())
+                .node(AntTreeNode::new("src", "src").child(AntTreeNode::new("main", "main.rs")))
+                .node(AntTreeNode::new("docs", "docs"))
+                .on_open(move |open, window, cx| tree_open(&open, window, cx))
+                .on_select(move |key, window, cx| tree_select(&key, window, cx))
+                .into_any_element(),
+            _ => div().into_any_element(),
         }
     }
     fn theme(&self) -> AntTheme {
@@ -694,31 +896,69 @@ impl Gallery {
                 .child("The calendar, popup, selection and keyboard interactions run inside GPUI."))
             .into_any_element()
     }
-    fn select_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+    fn select_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_fruit = cx.listener(|this, value: &Option<SharedString>, _, cx| {
+            this.select_fruit = value.clone();
+            cx.notify();
+        });
+        let on_fruit_open = cx.listener(|this, open: &bool, _, cx| {
+            this.select_fruit_open = *open;
+            cx.notify();
+        });
+        let on_lang = cx.listener(|this, value: &Option<SharedString>, _, cx| {
+            this.select_lang = value.clone();
+            this.select_lang_query = SharedString::default();
+            cx.notify();
+        });
+        let on_lang_open = cx.listener(|this, open: &bool, _, cx| {
+            this.select_lang_open = *open;
+            if !*open {
+                this.select_lang_query = SharedString::default();
+            }
+            cx.notify();
+        });
+        let on_lang_query = cx.listener(|this, query: &SharedString, _, cx| {
+            this.select_lang_query = query.clone();
+            cx.notify();
+        });
         div().flex().flex_col().gap(px(18.))
             .child(label("Default Select", t))
             .child(div().w(px(270.)).child(
-                AntSelect::new(&self.select_basic)
+                AntSelect::new("fruit")
                     .theme(t)
+                    .options(["Apple", "Orange", "Banana", "Pineapple"])
+                    .selected(self.select_fruit.clone())
+                    .open(self.select_fruit_open)
                     .clearable(true)
                     .placeholder("Choose fruit")
-                    .aria_label("Fruit selection")))
+                    .aria_label("Fruit selection")
+                    .on_select(move |value, window, cx| on_fruit(&value, window, cx))
+                    .on_open_change(move |open, window, cx| on_fruit_open(&open, window, cx))))
             .child(label("Searchable Select", t))
             .child(div().w(px(270.)).child(
-                AntSelect::new(&self.select_search)
+                AntSelect::new("language")
                     .theme(t)
+                    .options(["Rust", "TypeScript", "Go", "Python", "Java"])
+                    .selected(self.select_lang.clone())
+                    .open(self.select_lang_open)
+                    .searchable(true)
+                    .query(self.select_lang_query.clone())
                     .placeholder("Choose a language")
-                    .search_placeholder("Type to filter…")
                     .aria_label("Programming language selection")
-                    .menu_width(320.)))
+                    .menu_width(320.)
+                    .on_select(move |value, window, cx| on_lang(&value, window, cx))
+                    .on_open_change(move |open, window, cx| on_lang_open(&open, window, cx))
+                    .on_query_change(move |query, window, cx| on_lang_query(&query, window, cx))))
             .child(label("Disabled", t))
             .child(div().w(px(270.)).child(
-                AntSelect::new(&self.select_disabled)
+                AntSelect::new("disabled-choice")
                     .theme(t)
+                    .options(["Enabled", "Disabled"])
+                    .selected(Some("Enabled".into()))
                     .disabled(true)
                     .aria_label("Disabled choice")))
             .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child("GPUI Kit owns filtering, option focus, selection, Escape and popover placement."))
+                .child("Trigger, option list and keyboard live in gpui-antd. Base Popover owns placement, Escape and outside dismissal."))
             .into_any_element()
     }
     fn switch_demo(&self, t:AntTheme, cx:&mut Context<Self>) -> gpui_kit::AnyElement {
@@ -1092,13 +1332,14 @@ impl Gallery {
 
     fn time_picker_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
         div().flex().flex_col().gap(px(18.))
-            .child(label("GPUI native segment editor: Up/Down change a segment; Tab advances",t))
+            .child(label("Segment editor plus hour/minute column popup", t))
             .child(row()
                 .child(AntTimePicker::new(&self.time_basic).theme(t))
                 .child(AntTimePicker::new(&self.time_seconds).theme(t)
+                    .show_second(true)
                     .size(ControlSize::Large)))
-            .child(label("12-hour cycle including AM/PM keyboard segment",t))
-            .child(AntTimePicker::new(&self.time_12).theme(t))
+            .child(label("12-hour cycle including AM/PM column", t))
+            .child(AntTimePicker::new(&self.time_12).theme(t).hour12(true))
             .child(label("Disabled and validation statuses",t))
             .child(row()
                 .child(AntTimePicker::new(&self.time_basic).theme(t)
@@ -2456,7 +2697,7 @@ impl Render for Gallery {
                 name.split('|').any(|part|part=="scene=tokens") => self.theme_tokens_demo(t),
             name if name.starts_with("ThemeLab") => self.theme_lab_demo(t,cx),
             "Input"=>self.input_demo(t),
-            "Select"=>self.select_demo(t),
+            "Select"=>self.select_demo(t, cx),
             "DatePicker"=>self.date_picker_demo(t),
             "Form"=>self.form_demo(t,cx),
             "Checkbox"=>self.checkbox_demo(t,cx),
@@ -2517,6 +2758,10 @@ impl Render for Gallery {
             "List"=>self.list_demo(t),
             "Calendar"=>self.calendar_demo(t),
             "FloatButton"=>self.float_button_demo(t,cx),
+            "Affix"|"Anchor"|"App"|"BorderBeam"|"Carousel"|"Cascader"|"ColorPicker"
+                |"ConfigProvider"|"Image"|"Listy"|"Masonry"|"Mentions"|"QRCode"
+                |"Splitter"|"Tour"|"Transfer"|"TreeSelect"|"Upload"|"Watermark"
+                =>self.catalog_demo(route,t,cx),
             _=>self.button_demo(t,cx)
         };
         div().id("gallery-root")

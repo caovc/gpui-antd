@@ -71,7 +71,7 @@ not declare an independent `gpui` crate dependency. WASM bridge uses pinned
 | `controls.rs` | Button, Checkbox, Switch, 24/32/40 px control sizes |
 | `input.rs` | Text-editor appearance wrapping GPUI Kit InputState |
 | `radio.rs` | Single radio, controlled group, roving key navigation |
-| `select.rs` | Generic typed SelectState wrapper |
+| `select.rs` | Controlled single-value Select; Base Popover list, antd trigger |
 | `date_picker.rs` | GPUI Kit native calendar/range/datetime |
 | `form.rs` | Form presentation and pure Rust validation schema |
 | `display.rs` | Tag, Badge, Alert, Card, Progress, Divider |

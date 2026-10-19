@@ -42,6 +42,9 @@ impl AntTreeNode{
     pub fn children(mut self,children:impl IntoIterator<Item=AntTreeNode>)->Self{
         self.children.extend(children);self
     }
+    pub fn key(&self)->&str { self.key.as_ref() }
+    pub fn title(&self)->&SharedString { &self.title }
+    pub fn child_nodes(&self)->&[AntTreeNode] { &self.children }
 }
 
 #[derive(Clone,Debug)]
