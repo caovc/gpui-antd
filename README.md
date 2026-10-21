@@ -150,8 +150,11 @@ AntMenu::new("top-menu")
 Left/Right move horizontal root focus, Down requests submenu expansion,
 Home/End jump to boundaries, and Escape closes an open submenu.
 Collapsed vertical sidebars still use icon-only popovers. All flyouts
-use the native GPUI Base Popover, not a DOM overlay. Hover opening and
-responsive horizontal overflow-more remain parity work; see
+use the native GPUI Base Popover. Opt in to hover using
+`.submenu_trigger(AntMenuTrigger::Hover)`, with
+`.submenu_open_delay(Duration)` and `.submenu_close_delay(Duration)`.
+Click stays the default; inline groups stay click-activated. Responsive
+horizontal overflow-more remains parity work; see
 [menu modes](docs/MENU_MODES.md).
 
 ## Tabs and Tooltip
@@ -293,7 +296,8 @@ while `AntMenuMode::Horizontal` lays out a single row, moves focus using
 Left/Right and opens submenus with Down below the trigger. Popover dismissal
 and focus management remain native GPUI Base responsibilities. The real
 Layout and Menu Gallery examples share the same Rust implementation.
-Hover-opening delays and horizontal overflow-more are not implemented.
+Popup menus support optional hover opening and a close grace period with
+cancellable timers. Horizontal overflow-more and typeahead remain open.
 
 ## Dropdown, Popover, Modal and Popconfirm (alpha)
 

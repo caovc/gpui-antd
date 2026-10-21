@@ -110,6 +110,8 @@ try {
     {name:'MenuCollapsed',dark:true},
     {name:'MenuModes',dark:false},
     {name:'MenuModes',dark:true},
+    {name:'MenuHover',dark:false},
+    {name:'MenuHover',dark:true},
     {name:'ThemeLab|colorPrimary=9a44b2|colorInfo=114488|Card.padding=32|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=1677ff|Map.colorPrimaryBg=d9f7be|Alias.colorLink=de7f22|scene=tokens',dark:false},
     {name:'ThemeLab|colorPrimary=00aa88|Checkbox.colorPrimary=ff9900|Tag.colorBg=fff1cc|motion=0|compact=1',dark:false},
@@ -337,6 +339,55 @@ try {
     console.error('FAIL: TwoTone 2x animation',String(error));
   } finally {
     await spinning.close();
+  }
+
+  // Real pointer hover opens controlled Rust menus. Exact delay boundaries
+  // use the native executor-clock tests; browser waits include GPU scheduling.
+  for (const dark of [false,true]) {
+    const page=await browser.newPage({viewport:{width:900,height:550}});
+    const errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    page.on('console',message=>{
+      if(message.type()==='error' && message.text().trim()!=='Wasm assets loading, will be available soon...')
+        errors.push(message.text());
+    });
+    try {
+      await page.goto(base+'demo.html?component=MenuHover&dark='+(dark?'1':'0'),{waitUntil:'domcontentloaded'});
+      await page.waitForFunction(()=>document.querySelector('canvas')&&!document.querySelector('#status'),null,{timeout:60000});
+      await page.mouse.move(880,530);
+      await page.waitForTimeout(650);
+      const baseline=await page.screenshot();
+      await page.mouse.move(85,88);
+      await page.waitForTimeout(450);
+      const opened=await page.screenshot({path:join(screenshots,'menu-hover-open'+(dark?'-dark':'')+'.png')});
+      const delta=await changedPixels(page,baseline,opened);
+      if(delta.outside<1500)throw Error('Hover did not open GPUI panel: '+JSON.stringify(delta));
+      await page.mouse.move(90,185);
+      await page.waitForTimeout(450);
+      const panel=await page.screenshot({path:join(screenshots,'menu-hover-panel'+(dark?'-dark':'')+'.png')});
+      if((await changedPixels(page,baseline,panel)).outside<1500)throw Error('Panel closed while pointer was inside it');
+      await page.mouse.move(880,530);
+      await page.waitForTimeout(450);
+      const closed=await page.screenshot({path:join(screenshots,'menu-hover-left'+(dark?'-dark':'')+'.png')});
+      const residual=await changedPixels(page,baseline,closed);
+      if(residual.outside>delta.outside*0.25+100)throw Error('Leaving did not dismiss panel: '+JSON.stringify(residual));
+      await page.mouse.move(85,88);
+      await page.waitForTimeout(450);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(450);
+      const escaped=await changedPixels(page,baseline,await page.screenshot());
+      if(escaped.outside>delta.outside*0.25+100)throw Error('Escape reopened the hovered panel: '+JSON.stringify(escaped));
+      await page.mouse.move(880,530);
+      await page.mouse.move(480,88);
+      await page.waitForTimeout(450);
+      const disabled=await changedPixels(page,baseline,await page.screenshot());
+      if(disabled.outside>300)throw Error('Disabled submenu reacted to hover: '+JSON.stringify(disabled));
+      if(errors.length)throw Error(errors.join('; '));
+      console.log('PASS: MenuHover'+(dark?' dark':'')+' real GPUI hover, panel traversal, leave, Escape and disabled behavior');
+    } catch(error) {
+      failures++;
+      console.error('FAIL: MenuHover'+(dark?' dark':''),String(error));
+    } finally { await page.close(); }
   }
 
   // Catalog panels must paint outside their real Rust triggers and dismiss

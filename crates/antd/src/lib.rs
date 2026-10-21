@@ -65,7 +65,7 @@ pub use tokens::{AntTheme, Appearance, color};
 pub use tooltip::{AntTooltip, TooltipPlacement};
 pub use typography::{AntLink, AntParagraph, AntText, AntTitle, AntTypography, TextTone};
 
-pub use menu::{AntMenu, AntMenuItem, AntMenuMode};
+pub use menu::{AntMenu, AntMenuItem, AntMenuMode, AntMenuTrigger};
 
 pub use data_extra::{AntCollapse, AntCollapseItem, AntDescriptionItem, AntDescriptions, AntRate};
 pub use feedback_extra::{AntResult, AntSkeleton, AntSpin, ResultStatus};

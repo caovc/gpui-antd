@@ -7,16 +7,17 @@
 //! focus, keyboard dismissal and deferred overlay placement.
 //!
 //! Inline, vertical flyout and horizontal modes share native controlled
-//! popups. Pending: hover timing, horizontal overflow-more and typeahead.
+//! popups, with optional delayed hover activation. Horizontal overflow-more
+//! and typeahead remain pending.
 
-use std::{collections::BTreeSet, rc::Rc};
+use std::{collections::BTreeSet, rc::Rc, time::Duration};
 
 use gpui_kit::base::{Button as BaseButton, Popover as BasePopover, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
-    Anchor, App, ElementId, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
-    Orientation, ParentElement as _, RenderOnce, Role, SharedString,
-    StatefulInteractiveElement as _, Styled as _, Window, div, px,
+    Anchor, App, Context, ElementId, FocusHandle, InteractiveElement as _, IntoElement,
+    KeyDownEvent, Orientation, ParentElement as _, RenderOnce, Role, SharedString,
+    StatefulInteractiveElement as _, Styled as _, Task, Window, div, px,
 };
 
 use crate::design_tokens::AntComponent;
@@ -94,6 +95,146 @@ pub enum AntMenuMode {
     Inline,
     Vertical,
     Horizontal,
+}
+
+/// Pointer activation for popup submenus. Inline groups always use clicks.
+/// Click remains the default for compatibility; Hover also retains native
+/// click and keyboard activation.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AntMenuTrigger {
+    #[default]
+    Click,
+    Hover,
+}
+
+/// Element-local hover intent only. The parent remains the owner of open keys.
+/// A weak, cancellable task cannot keep an unmounted menu alive.
+struct SubmenuHover {
+    open: bool,
+    enabled: bool,
+    trigger_hovered: bool,
+    content_hovered: bool,
+    suppressed: bool,
+    hover_open_requested: bool,
+    epoch: usize,
+    task: Option<Task<()>>,
+    open_delay: Duration,
+    close_delay: Duration,
+    key: SharedString,
+    on_open_change: Option<MenuOpenChange>,
+}
+impl SubmenuHover {
+    fn new(key: SharedString) -> Self {
+        Self {
+            open: false,
+            enabled: false,
+            trigger_hovered: false,
+            content_hovered: false,
+            suppressed: false,
+            hover_open_requested: false,
+            epoch: 0,
+            task: None,
+            open_delay: Duration::ZERO,
+            close_delay: Duration::from_millis(100),
+            key,
+            on_open_change: None,
+        }
+    }
+
+    fn cancel(&mut self) {
+        self.epoch = self.epoch.wrapping_add(1);
+        self.task = None;
+    }
+
+    fn dismiss(&mut self) {
+        self.cancel();
+        self.hover_open_requested = false;
+        self.suppressed = self.trigger_hovered || self.content_hovered;
+    }
+
+    fn activate(&mut self) {
+        self.cancel();
+        self.hover_open_requested = false;
+    }
+
+    fn sync(
+        &mut self,
+        open: bool,
+        enabled: bool,
+        open_delay: Duration,
+        close_delay: Duration,
+        callback: Option<MenuOpenChange>,
+    ) -> bool {
+        let just_opened = !self.open && open;
+        if self.open && !open {
+            self.dismiss();
+        }
+        if self.open != open
+            || self.enabled != enabled
+            || self.open_delay != open_delay
+            || self.close_delay != close_delay
+            || callback.is_none()
+        {
+            self.cancel();
+        }
+        self.open = open;
+        self.enabled = enabled;
+        self.open_delay = open_delay;
+        self.close_delay = close_delay;
+        self.on_open_change = callback;
+        if !enabled {
+            self.trigger_hovered = false;
+            self.content_hovered = false;
+            self.suppressed = false;
+            self.hover_open_requested = false;
+        }
+        // A controlled parent can accept after the pointer has left, even
+        // between the request and the next frame. Reconcile that hover intent
+        // only for a prior hover request; keyboard activation clears it.
+        just_opened
+            && enabled
+            && self.hover_open_requested
+            && !self.trigger_hovered
+            && !self.content_hovered
+    }
+
+    fn hover(&mut self, trigger: bool, hovered: bool, window: &mut Window, cx: &mut Context<Self>) {
+        if trigger {
+            self.trigger_hovered = hovered;
+        } else {
+            self.content_hovered = hovered;
+        }
+        self.cancel();
+        let desired = self.trigger_hovered || self.content_hovered;
+        if !desired {
+            self.suppressed = false;
+        }
+        if !self.enabled || self.suppressed || desired == self.open {
+            return;
+        }
+        let delay = if desired {
+            self.open_delay
+        } else {
+            self.close_delay
+        };
+        let epoch = self.epoch;
+        self.task = Some(cx.spawn_in(window, async move |this, cx| {
+            cx.background_executor().timer(delay).await;
+            _ = this.update_in(cx, |state, window, cx| {
+                if state.epoch == epoch
+                    && state.enabled
+                    && !state.suppressed
+                    && state.open != desired
+                    && (state.trigger_hovered || state.content_hovered) == desired
+                {
+                    if let Some(callback) = state.on_open_change.clone() {
+                        state.hover_open_requested = desired;
+                        callback(state.key.clone(), desired, window, cx);
+                    }
+                }
+            });
+        }));
+    }
 }
 
 /// Keys can be navigated independently from the selected route.
@@ -232,7 +373,8 @@ fn flatten_visible(
 ///
 /// The named [`Anchor`] is the popup corner pinned to the opposite edge of the
 /// trigger, so "below" is `TopLeft` and "to the right" is `LeftCenter`.
-/// Hover delays, responsive overflow and typeahead remain future milestones.
+/// Popup hover activation is opt-in through `submenu_trigger`. Responsive
+/// overflow and typeahead remain future milestones.
 #[derive(IntoElement)]
 pub struct AntMenu {
     id: ElementId,
@@ -243,6 +385,9 @@ pub struct AntMenu {
     dark: bool,
     mode: AntMenuMode,
     inline_collapsed: bool,
+    submenu_trigger: AntMenuTrigger,
+    submenu_open_delay: Duration,
+    submenu_close_delay: Duration,
     item_height: f32,
     on_select: Option<MenuSelect>,
     on_open_change: Option<MenuOpenChange>,
@@ -258,6 +403,9 @@ impl AntMenu {
             dark: false,
             mode: AntMenuMode::Inline,
             inline_collapsed: false,
+            submenu_trigger: AntMenuTrigger::Click,
+            submenu_open_delay: Duration::ZERO,
+            submenu_close_delay: Duration::from_millis(100),
             item_height: 40.,
             on_select: None,
             on_open_change: None,
@@ -286,6 +434,22 @@ impl AntMenu {
     }
     pub fn inline_collapsed(mut self, collapsed: bool) -> Self {
         self.inline_collapsed = collapsed;
+        self
+    }
+    /// Opt in to delayed hover activation for horizontal, vertical and
+    /// collapsed popup submenus. Inline expansion keeps click semantics.
+    pub fn submenu_trigger(mut self, trigger: AntMenuTrigger) -> Self {
+        self.submenu_trigger = trigger;
+        self
+    }
+    /// Hover-open delay; defaults to zero. Does not delay click/keyboard input.
+    pub fn submenu_open_delay(mut self, delay: Duration) -> Self {
+        self.submenu_open_delay = delay;
+        self
+    }
+    /// Grace period after leaving both trigger and panel; defaults to 100 ms.
+    pub fn submenu_close_delay(mut self, delay: Duration) -> Self {
+        self.submenu_close_delay = delay;
         self
     }
     pub fn item_height(mut self, height: f32) -> Self {
@@ -363,6 +527,9 @@ impl RenderOnce for AntMenu {
         // Horizontal always shows labels; collapsed applies to the rail only.
         let collapsed = self.inline_collapsed && !horizontal;
         let popup_mode = collapsed || self.mode != AntMenuMode::Inline;
+        let submenu_trigger = self.submenu_trigger;
+        let open_delay = self.submenu_open_delay;
+        let close_delay = self.submenu_close_delay;
         let selected = self.selected;
         let on_select = self.on_select;
         let on_open_change = self.on_open_change;
@@ -545,6 +712,27 @@ impl RenderOnce for AntMenu {
                 let flyout_id = format!("ant-menu-flyout-{prefix}-{}", row.item.key);
                 let flyout_menu_id = format!("ant-menu-flyout-list-{prefix}-{}", row.item.key);
                 let flyout_children = row.flyout_children;
+                let hover_state = (popup_mode && is_submenu).then(|| {
+                    let state = window.use_keyed_state(
+                        format!("ant-menu-hover-{prefix}-{}", row.item.key),
+                        cx,
+                        |_, _| SubmenuHover::new(row.item.key.clone()),
+                    );
+                    state.update(cx, |state, cx| {
+                        let left_before_open = state.sync(
+                            row_expanded,
+                            submenu_trigger == AntMenuTrigger::Hover && !is_disabled,
+                            open_delay,
+                            close_delay,
+                            flyout_callback.clone(),
+                        );
+                        if left_before_open {
+                            state.hover(false, false, window, cx);
+                        }
+                    });
+                    state
+                });
+                let trigger_hover = hover_state.clone();
                 let button = BaseButton::new(focus_id)
                     .role(Role::MenuItem)
                     .accessibility_label(label.clone())
@@ -553,6 +741,26 @@ impl RenderOnce for AntMenu {
                     .track_focus(&row_handles[index])
                     .tab_stop(active == Some(index))
                     .when(is_submenu, |this| this.aria_expanded(row.expanded))
+                    .when_some(trigger_hover, |button, state| {
+                        let keyboard_state = state.clone();
+                        button
+                            .on_hover(move |hovered, window, cx| {
+                                state.update(cx, |state, cx| {
+                                    state.hover(true, *hovered, window, cx)
+                                });
+                            })
+                            .on_key_down(move |event, _, cx| {
+                                let key = event.keystroke.key.as_str();
+                                if !event.keystroke.modifiers.modified()
+                                    && !event.keystroke.is_ime_in_progress()
+                                    && (key == "enter"
+                                        || key == "space"
+                                        || key == if horizontal { "down" } else { "right" })
+                                {
+                                    keyboard_state.update(cx, |state, _| state.activate());
+                                }
+                            })
+                    })
                     .when(!horizontal, |this| this.w_full())
                     .when(horizontal, |this| this.flex_none())
                     .h(px(item_height))
@@ -614,12 +822,22 @@ impl RenderOnce for AntMenu {
                     let key_for_open = flyout_key.clone();
                     let key_for_close = flyout_key.clone();
                     let popup_change = flyout_callback.clone();
+                    let dismiss_hover = hover_state.clone();
                     BasePopover::new(flyout_id)
                         .anchor(menu_flyout_anchor(horizontal))
                         .offset(px(6.))
                         .open(row_expanded)
                         .overlay_closable(true)
                         .on_open_change(move |open, window, cx| {
+                            if let Some(state) = &dismiss_hover {
+                                state.update(cx, |state, _| {
+                                    if *open {
+                                        state.activate();
+                                    } else {
+                                        state.dismiss();
+                                    }
+                                });
+                            }
                             if let Some(listener) = &flyout_callback {
                                 listener(key_for_open.clone(), *open, window, cx);
                             }
@@ -631,6 +849,14 @@ impl RenderOnce for AntMenu {
                             let leaf_key = key_for_close.clone();
                             let select = flyout_select.clone();
                             div()
+                                .id("ant-menu-hover-panel")
+                                .when_some(hover_state, |panel, state| {
+                                    panel.on_hover(move |hovered, window, cx| {
+                                        state.update(cx, |state, cx| {
+                                            state.hover(false, *hovered, window, cx)
+                                        });
+                                    })
+                                })
                                 .min_w(px(200.))
                                 .max_w(px(310.))
                                 .bg(theme.surface)
@@ -651,6 +877,9 @@ impl RenderOnce for AntMenu {
                                         .theme(theme)
                                         .dark(false)
                                         .item_height(item_height)
+                                        .submenu_trigger(submenu_trigger)
+                                        .submenu_open_delay(open_delay)
+                                        .submenu_close_delay(close_delay)
                                         .open_keys(flyout_open.iter())
                                         .items(flyout_children)
                                         .selected_key(flyout_selected.unwrap_or_else(|| "".into()))

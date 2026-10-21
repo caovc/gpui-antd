@@ -157,7 +157,7 @@ installation example is `.github/workflows/native.yml`. See
 
 ## Immediate priorities / known gaps
 
-Menu hover-open delays/horizontal overflow, Dropdown/Popover/Modal/Popconfirm advanced parity, complete Layout shell parity (fixed Sider/mobile drawer), Tabs arrow-key navigation, Tooltip keyboard/placement parity, icon visual parity, responsive
+Menu horizontal overflow/typeahead, Dropdown/Popover/Modal/Popconfirm advanced parity, complete Layout shell parity (fixed Sider/mobile drawer), Tabs arrow-key navigation, Tooltip keyboard/placement parity, icon visual parity, responsive
 Grid offsets/order, richer Typography editing, screenshot comparison and
 accessibility. Also consult the repository's live GitHub Issues for the
 priorities and avoid creating duplicate work. The icon catalog and its

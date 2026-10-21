@@ -147,8 +147,10 @@ Dropdown/Modal/Popconfirm:
 - The root has `Role::Menu` and orientation metadata; submenu titles expose
   `aria-expanded`. Icon-only collapsed Siders use native right-hand
   flyouts. Detailed contracts are in `docs/MENU_MODES.md`.
-- Hover-open timing, horizontal overflow grouping and typeahead are still
-  missing. Browser/native keyboard and screen-reader parity must be
+- Popup hover activation is opt-in with `AntMenuTrigger::Hover` and
+  Duration open/close delays; inline groups remain click-activated.
+  Horizontal overflow grouping and typeahead are still missing.
+  Browser/native keyboard and screen-reader parity must be
   verified separately; do not assume full Ant Design APG support.
 
 ### Responsive Layout behavior
