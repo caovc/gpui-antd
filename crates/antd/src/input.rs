@@ -14,17 +14,20 @@
 //! display-only beside `show_count`; use InputState validation if you need a hard
 //! cap), and textarea/multi-line.
 
+use crate::controls::ControlSize;
 use crate::design_tokens::{AntComponent, AntComponentToken};
 use crate::icons::{AntIcon, AntIconName};
-use crate::controls::ControlSize;
 use crate::tokens::{AntTheme, color};
+use gpui_kit::component::{
+    Sizable, Size,
+    input::{Input, InputState},
+};
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     AnyElement, App, Entity, Focusable as _, Hsla, InteractiveElement as _, IntoElement,
     ParentElement as _, RenderOnce, SharedString, StatefulInteractiveElement as _, Styled as _,
     Window, div, px,
 };
-use gpui_kit::component::{Sizable, Size, input::{Input, InputState}};
-use gpui_kit::prelude::FluentBuilder as _;
 
 /// Ant Design's three common input surface variants.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -36,8 +39,12 @@ pub enum InputVariant {
 }
 
 impl InputVariant {
-    pub fn framed(self) -> bool { self != Self::Borderless }
-    pub fn bordered(self) -> bool { self == Self::Outlined }
+    pub fn framed(self) -> bool {
+        self != Self::Borderless
+    }
+    pub fn bordered(self) -> bool {
+        self == Self::Outlined
+    }
 }
 
 /// Validation status affects the input's border and background semantic colors.
@@ -68,11 +75,13 @@ pub(crate) fn input_font_size(
     theme: &AntTheme,
     component: &AntComponentToken,
 ) -> f32 {
-    component.font_size.unwrap_or(if size == ControlSize::Large {
-        theme.font_size + 2.
-    } else {
-        theme.font_size
-    })
+    component
+        .font_size
+        .unwrap_or(if size == ControlSize::Large {
+            theme.font_size + 2.
+        } else {
+            theme.font_size
+        })
 }
 
 /// Surface fill for the field chrome.
@@ -199,16 +208,43 @@ impl AntInput {
             accessibility_label: None,
         }
     }
-    pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
-    pub fn size(mut self, size: ControlSize) -> Self { self.size = size; self }
-    pub fn variant(mut self, variant: InputVariant) -> Self { self.variant = variant; self }
-    pub fn status(mut self, status: InputStatus) -> Self { self.status = status; self }
-    pub fn disabled(mut self, disabled: bool) -> Self { self.disabled = disabled; self }
-    pub fn readonly(mut self, readonly: bool) -> Self { self.readonly = readonly; self }
-    pub fn clearable(mut self, clearable: bool) -> Self { self.clearable = clearable; self }
-    pub fn password_toggle(mut self, enabled: bool) -> Self { self.password_toggle = enabled; self }
+    pub fn theme(mut self, theme: AntTheme) -> Self {
+        self.theme = theme;
+        self
+    }
+    pub fn size(mut self, size: ControlSize) -> Self {
+        self.size = size;
+        self
+    }
+    pub fn variant(mut self, variant: InputVariant) -> Self {
+        self.variant = variant;
+        self
+    }
+    pub fn status(mut self, status: InputStatus) -> Self {
+        self.status = status;
+        self
+    }
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+    pub fn readonly(mut self, readonly: bool) -> Self {
+        self.readonly = readonly;
+        self
+    }
+    pub fn clearable(mut self, clearable: bool) -> Self {
+        self.clearable = clearable;
+        self
+    }
+    pub fn password_toggle(mut self, enabled: bool) -> Self {
+        self.password_toggle = enabled;
+        self
+    }
     /// Show a live character count beside the field (reads [`InputState::value`]).
-    pub fn show_count(mut self, show: bool) -> Self { self.show_count = show; self }
+    pub fn show_count(mut self, show: bool) -> Self {
+        self.show_count = show;
+        self
+    }
     /// Optional max displayed next to the count as `n / max`. Display only — does not truncate.
     pub fn max_length_hint(mut self, max: usize) -> Self {
         self.max_length_hint = Some(max);
@@ -318,7 +354,11 @@ impl RenderOnce for AntInput {
             .h(px(height))
             .w_full()
             .text_size(px(font_size))
-            .text_color(if disabled { theme.disabled_text } else { theme.text });
+            .text_color(if disabled {
+                theme.disabled_text
+            } else {
+                theme.text
+            });
 
         let field = if has_addons {
             // Attached addon boxes: shared outer border, secondary fill, square inner edges.
@@ -442,7 +482,10 @@ mod tests {
         let theme = AntTheme::light();
         let comp = theme.component(AntComponent::Input);
         assert_eq!(input_control_height(ControlSize::Small, &theme, &comp), 24.);
-        assert_eq!(input_control_height(ControlSize::Middle, &theme, &comp), 32.);
+        assert_eq!(
+            input_control_height(ControlSize::Middle, &theme, &comp),
+            32.
+        );
         assert_eq!(input_control_height(ControlSize::Large, &theme, &comp), 40.);
     }
 
@@ -451,7 +494,10 @@ mod tests {
         assert!(should_inject_status_suffix(InputStatus::Error, false));
         assert!(!should_inject_status_suffix(InputStatus::Error, true));
         assert!(!should_inject_status_suffix(InputStatus::Normal, false));
-        assert_eq!(input_status_icon(InputStatus::Error), Some(AntIconName::CloseCircleFilled));
+        assert_eq!(
+            input_status_icon(InputStatus::Error),
+            Some(AntIconName::CloseCircleFilled)
+        );
         assert_eq!(
             input_status_icon(InputStatus::Warning),
             Some(AntIconName::ExclamationCircleFilled)

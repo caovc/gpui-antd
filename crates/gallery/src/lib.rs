@@ -3,50 +3,53 @@ extern crate gpui_kit as gpui;
 mod theme_lab;
 use theme_lab::ThemeLabSpec;
 
-use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, rc::Rc};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet},
+    rc::Rc,
+};
 
 use gpui_antd::{
-    AntAlert, AntBadge, AntButton, AntCard, AntCheckbox, AntDivider,
-    AntInput, AntProgress, AntRadio, AntRadioGroup, AntSelect, AntDatePicker, AntForm, AntFormItem, FormSchema, FormRule, AntSwitch, AntTag, AntTheme, ControlSize, InputStatus, InputVariant, Tone,
-    AntIcon, AntIconName, AntIconAssets, AntTitle, AntText, AntParagraph, AntLink, AntTypography, TextTone,
-    AntSpace, AntFlex, AntRow, AntCol, SpaceSize, FlexAlign, FlexJustify,
-    AntAvatar, AvatarShape, AvatarSize, AntStatistic, AntEmpty, AntBreadcrumb, AntBreadcrumbItem,
-    AntTabs, AntTab, TabsVariant, AntTooltip,
-    AntLayout, AntSider, AntMobileDrawer, AntHeader, AntContent, AntFooter, GridBreakpoint,
-    AntDropdown, AntDropdownItem, AntPopover, AntModal, AntPopconfirm,
-    AntMenu, AntMenuItem, AntMenuMode, AntTokenLayer, AntTokenValue, AntResolvedToken,
-    AntPagination, AntSteps, AntStep, StepStatus, AntRate, AntCollapse, AntCollapseItem,
-    AntDescriptions, AntDescriptionItem, AntResult, ResultStatus, AntSkeleton, AntSpin,
-    AntInputNumber, AntSlider, AntSegmented, AntSegmentedOption, AntTimePicker, AntAutoComplete,
-    AntDrawer, DrawerPlacement, AntMessage, AntNotification, NoticeTone,
-    AntTree, AntTreeNode, AntTable, AntTableColumn, AntTableRow, TableSort,
-    AntCalendar, AntFloatButton, AntFloatButtonGroup, AntFloatAction, FloatShape, FloatVariant,
-    AntTimeline, AntTimelineItem, TimelineMode, TimelineTone,
-    AntList, AntListItem, ListSize,
-    AntAffix, AntAnchor, AntAnchorLink, AntApp, AntBorderBeam, AntCarousel, AntCarouselSlide,
-    AntCascader, AntCascaderOption, AntColorPicker, AntConfig, AntConfigProvider, AntDirection,
-    AntImage, AntListyItem, AntMasonry, AntMasonryItem, AntMentionOption, AntMentions,
-    AntQrCode, AntSplitter, AntTour, AntTourStep, AntTransfer, AntTransferItem, AntTreeSelect,
-    AntUpload, AntUploadFile, AntWatermark, ListySlot, UploadStatus, ant_listy, apply_mention, listy_slots,
+    AntAffix, AntAlert, AntAnchor, AntAnchorLink, AntApp, AntAutoComplete, AntAvatar, AntBadge,
+    AntBorderBeam, AntBreadcrumb, AntBreadcrumbItem, AntButton, AntCalendar, AntCard, AntCarousel,
+    AntCarouselSlide, AntCascader, AntCascaderOption, AntCheckbox, AntCol, AntCollapse,
+    AntCollapseItem, AntColorPicker, AntConfig, AntConfigProvider, AntContent, AntDatePicker,
+    AntDescriptionItem, AntDescriptions, AntDirection, AntDivider, AntDrawer, AntDropdown,
+    AntDropdownItem, AntEmpty, AntFlex, AntFloatAction, AntFloatButton, AntFloatButtonGroup,
+    AntFooter, AntForm, AntFormItem, AntHeader, AntIcon, AntIconAssets, AntIconName, AntImage,
+    AntInput, AntInputNumber, AntLayout, AntLink, AntList, AntListItem, AntListyItem, AntMasonry,
+    AntMasonryItem, AntMentionOption, AntMentions, AntMenu, AntMenuItem, AntMenuMode, AntMessage,
+    AntMobileDrawer, AntModal, AntNotification, AntPagination, AntParagraph, AntPopconfirm,
+    AntPopover, AntProgress, AntQrCode, AntRadio, AntRadioGroup, AntRate, AntResolvedToken,
+    AntResult, AntRow, AntSegmented, AntSegmentedOption, AntSelect, AntSider, AntSkeleton,
+    AntSlider, AntSpace, AntSpin, AntSplitter, AntStatistic, AntStep, AntSteps, AntSwitch, AntTab,
+    AntTable, AntTableColumn, AntTableRow, AntTabs, AntTag, AntText, AntTheme, AntTimePicker,
+    AntTimeline, AntTimelineItem, AntTitle, AntTokenLayer, AntTokenValue, AntTooltip, AntTour,
+    AntTourStep, AntTransfer, AntTransferItem, AntTree, AntTreeNode, AntTreeSelect, AntTypography,
+    AntUpload, AntUploadFile, AntWatermark, AvatarShape, AvatarSize, ControlSize, DrawerPlacement,
+    FlexAlign, FlexJustify, FloatShape, FloatVariant, FormRule, FormSchema, GridBreakpoint,
+    InputStatus, InputVariant, ListSize, ListySlot, NoticeTone, ResultStatus, SpaceSize,
+    StepStatus, TableSort, TabsVariant, TextTone, TimelineMode, TimelineTone, Tone, UploadStatus,
+    ant_listy, apply_mention, listy_slots,
 };
-use gpui_kit::{
-    AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _, Render,
-    StatefulInteractiveElement as _, Styled as _, Window, WindowOptions, div, px,
-    AssetSource, SharedString, Subscription,
-};
-use gpui_kit::component::input::{InputState, InputEvent};
-use gpui_kit::component::slider::{SliderState, SliderEvent};
-use gpui_kit::component::time_field::{TimeFieldState, HourCycle, TimeFieldEvent};
-use gpui_kit::component::date_picker::DatePickerState;
-use gpui_kit::component::calendar::{CalendarState, CalendarEvent, Date};
-use gpui_kit::component::time_field::TimePrecision;
-use gpui_kit::component::scroll::ScrollableElement as _;
-use gpui_kit::component::WindowExt as _;
-use gpui_kit::assets::Assets;
-use gpui_kit::base::StyledExt as _;
-use gpui_kit::prelude::FluentBuilder as _;
 #[cfg(target_family = "wasm")]
 use gpui_kit::App;
+use gpui_kit::assets::Assets;
+use gpui_kit::base::StyledExt as _;
+use gpui_kit::component::WindowExt as _;
+use gpui_kit::component::calendar::{CalendarEvent, CalendarState, Date};
+use gpui_kit::component::date_picker::DatePickerState;
+use gpui_kit::component::input::{InputEvent, InputState};
+use gpui_kit::component::scroll::ScrollableElement as _;
+use gpui_kit::component::slider::{SliderEvent, SliderState};
+use gpui_kit::component::time_field::TimePrecision;
+use gpui_kit::component::time_field::{HourCycle, TimeFieldEvent, TimeFieldState};
+use gpui_kit::prelude::FluentBuilder as _;
+use gpui_kit::{
+    AppContext as _, AssetSource, Context, Entity, InteractiveElement as _, IntoElement,
+    ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _,
+    Subscription, Window, WindowOptions, div, px,
+};
 
 /// Retains GPUI Kit's default component icon source while also resolving
 /// official Ant Design SVGs from embedded Rust assets. On WASM, GPUI Kit's
@@ -62,16 +65,28 @@ impl AssetSource for GalleryAssets {
             return AntIconAssets.load(path);
         }
         #[cfg(not(target_family = "wasm"))]
-        { Assets.load(path) }
+        {
+            Assets.load(path)
+        }
         #[cfg(target_family = "wasm")]
-        { self.fallback.as_ref().expect("WASM icons source").load(path) }
+        {
+            self.fallback
+                .as_ref()
+                .expect("WASM icons source")
+                .load(path)
+        }
     }
     fn list(&self, prefix: &str) -> gpui_kit::Result<Vec<SharedString>> {
         let mut icons = AntIconAssets.list(prefix)?;
         #[cfg(not(target_family = "wasm"))]
         icons.extend(Assets.list(prefix)?);
         #[cfg(target_family = "wasm")]
-        icons.extend(self.fallback.as_ref().expect("WASM icons source").list(prefix)?);
+        icons.extend(
+            self.fallback
+                .as_ref()
+                .expect("WASM icons source")
+                .list(prefix)?,
+        );
         icons.sort();
         icons.dedup();
         Ok(icons)
@@ -87,24 +102,94 @@ impl GalleryAssets {
 }
 
 pub const COMPONENTS: &[&str] = &[
-    "Button", "Input", "Select", "DatePicker", "Form", "Checkbox", "Radio", "Switch", "Tag", "Badge",
-    "Alert", "Card", "Progress", "Divider", "Pagination", "Steps", "Rate", "Collapse", "Descriptions", "Result", "Skeleton", "Spin", "Tabs", "Tooltip", "Icons", "Layout",
-    "Dropdown", "Popover", "Modal", "Popconfirm", "Menu", "Typography", "Space", "Flex", "Grid", "Avatar", "Statistic", "Empty", "Breadcrumb", "Drawer", "Message", "Notification", "Tree", "Table", "Timeline", "List", "Calendar", "FloatButton", "InputNumber", "Slider", "Segmented", "TimePicker", "AutoComplete",
-    "Affix", "Anchor", "App", "BorderBeam", "Carousel", "Cascader", "ColorPicker", "ConfigProvider", "Image", "Listy", "Masonry", "Mentions", "QRCode", "Splitter", "Tour", "Transfer", "TreeSelect", "Upload", "Watermark",
+    "Button",
+    "Input",
+    "Select",
+    "DatePicker",
+    "Form",
+    "Checkbox",
+    "Radio",
+    "Switch",
+    "Tag",
+    "Badge",
+    "Alert",
+    "Card",
+    "Progress",
+    "Divider",
+    "Pagination",
+    "Steps",
+    "Rate",
+    "Collapse",
+    "Descriptions",
+    "Result",
+    "Skeleton",
+    "Spin",
+    "Tabs",
+    "Tooltip",
+    "Icons",
+    "Layout",
+    "Dropdown",
+    "Popover",
+    "Modal",
+    "Popconfirm",
+    "Menu",
+    "Typography",
+    "Space",
+    "Flex",
+    "Grid",
+    "Avatar",
+    "Statistic",
+    "Empty",
+    "Breadcrumb",
+    "Drawer",
+    "Message",
+    "Notification",
+    "Tree",
+    "Table",
+    "Timeline",
+    "List",
+    "Calendar",
+    "FloatButton",
+    "InputNumber",
+    "Slider",
+    "Segmented",
+    "TimePicker",
+    "AutoComplete",
+    "Affix",
+    "Anchor",
+    "App",
+    "BorderBeam",
+    "Carousel",
+    "Cascader",
+    "ColorPicker",
+    "ConfigProvider",
+    "Image",
+    "Listy",
+    "Masonry",
+    "Mentions",
+    "QRCode",
+    "Splitter",
+    "Tour",
+    "Transfer",
+    "TreeSelect",
+    "Upload",
+    "Watermark",
 ];
 
 /// Only public Gallery components may be used by a Theme Studio single-component
 /// scene. The editor sends this as a *route*, never as a DOM component implementation.
 /// A missing/unknown target falls back to the comprehensive native Theme Lab.
-fn theme_preview_target(route:&str)->Option<&str>{
-    if !route.starts_with("ThemeLab|") ||
-        !route.split('|').any(|part|part=="scene=single") ||
-        route.split('|').any(|part|part=="scene=tokens") {
+fn theme_preview_target(route: &str) -> Option<&str> {
+    if !route.starts_with("ThemeLab|")
+        || !route.split('|').any(|part| part == "scene=single")
+        || route.split('|').any(|part| part == "scene=tokens")
+    {
         return None;
     }
-    route.split('|')
-        .filter_map(|part|part.strip_prefix("preview="))
-        .find(|name|COMPONENTS.contains(name))
+    route
+        .split('|')
+        .filter_map(|part| part.strip_prefix("preview="))
+        .find(|name| COMPONENTS.contains(name))
 }
 
 /// Options in the browser icon inspector are only display parameters.
@@ -129,7 +214,9 @@ impl IconPreview {
             spin: false,
         };
         for part in parts {
-            let Some((key, value)) = part.split_once('=') else { continue; };
+            let Some((key, value)) = part.split_once('=') else {
+                continue;
+            };
             match key {
                 "size" => {
                     if let Ok(px) = value.parse::<f32>() {
@@ -139,8 +226,11 @@ impl IconPreview {
                     }
                 }
                 "spin" => preview.spin = value == "1",
-                "primary" | "secondary" if value.len() == 6 && value.is_ascii()
-                    && value.bytes().all(|byte| byte.is_ascii_hexdigit()) => {
+                "primary" | "secondary"
+                    if value.len() == 6
+                        && value.is_ascii()
+                        && value.bytes().all(|byte| byte.is_ascii_hexdigit()) =>
+                {
                     if let Ok(rgb) = u32::from_str_radix(value, 16) {
                         if key == "primary" {
                             preview.primary = Some(rgb);
@@ -206,195 +296,308 @@ pub struct Gallery {
     steps_current: usize,
     rating: usize,
     collapse_keys: BTreeSet<String>,
-    drawer_closed:usize,
-    tree_selected:String,
-    tree_expanded:BTreeSet<String>,
-    tree_checked:BTreeSet<String>,
-    table_sort_key:String,
-    table_sort:TableSort,
-    table_selected:BTreeSet<String>,
-    table_page:usize,
-    table_filters:BTreeMap<String,String>,
-    timeline_reversed:bool,
-    number_basic:Entity<InputState>,
-    number_decimal:Entity<InputState>,
-    number_disabled:Entity<InputState>,
-    slider_single:Entity<SliderState>,
-    slider_range:Entity<SliderState>,
-    slider_vertical:Entity<SliderState>,
-    slider_value:f32,
-    time_basic:Entity<TimeFieldState>,
-    time_seconds:Entity<TimeFieldState>,
-    time_12:Entity<TimeFieldState>,
-    time_disabled:Entity<TimeFieldState>,
-    segmented_index:usize,
-    autocomplete_input:Entity<InputState>,
-    autocomplete_open:bool,
-    autocomplete_active:usize,
-    autocomplete_last:String,
-    _input_subscriptions:Vec<Subscription>,
-    calendar_single:Entity<CalendarState>,
-    calendar_range:Entity<CalendarState>,
-    calendar_restricted:Entity<CalendarState>,
-    calendar_selected:String,
-    calendar_range_selected:String,
-    _calendar_subscriptions:Vec<Subscription>,
-    float_group_open:bool,
-    float_clicks:usize,
-    float_last_action:String,
-    mentions_input:Entity<InputState>,
-    anchor_key:String,
-    carousel_index:usize,
-    image_open:bool,
-    tour_index:usize,
-    tour_open:bool,
-    transfer_target:BTreeSet<String>,
-    transfer_selected:BTreeSet<String>,
-    upload_files:Vec<AntUploadFile>,
-    color_value:u32,
-    cascader_path:Vec<String>,
-    tree_select_open:bool,
-    tree_select_key:String,
+    drawer_closed: usize,
+    tree_selected: String,
+    tree_expanded: BTreeSet<String>,
+    tree_checked: BTreeSet<String>,
+    table_sort_key: String,
+    table_sort: TableSort,
+    table_selected: BTreeSet<String>,
+    table_page: usize,
+    table_filters: BTreeMap<String, String>,
+    timeline_reversed: bool,
+    number_basic: Entity<InputState>,
+    number_decimal: Entity<InputState>,
+    number_disabled: Entity<InputState>,
+    slider_single: Entity<SliderState>,
+    slider_range: Entity<SliderState>,
+    slider_vertical: Entity<SliderState>,
+    slider_value: f32,
+    time_basic: Entity<TimeFieldState>,
+    time_seconds: Entity<TimeFieldState>,
+    time_12: Entity<TimeFieldState>,
+    time_disabled: Entity<TimeFieldState>,
+    segmented_index: usize,
+    autocomplete_input: Entity<InputState>,
+    autocomplete_open: bool,
+    autocomplete_active: usize,
+    autocomplete_last: String,
+    _input_subscriptions: Vec<Subscription>,
+    calendar_single: Entity<CalendarState>,
+    calendar_range: Entity<CalendarState>,
+    calendar_restricted: Entity<CalendarState>,
+    calendar_selected: String,
+    calendar_range_selected: String,
+    _calendar_subscriptions: Vec<Subscription>,
+    float_group_open: bool,
+    float_clicks: usize,
+    float_last_action: String,
+    mentions_input: Entity<InputState>,
+    anchor_key: String,
+    carousel_index: usize,
+    image_open: bool,
+    tour_index: usize,
+    tour_open: bool,
+    transfer_target: BTreeSet<String>,
+    transfer_selected: BTreeSet<String>,
+    upload_files: Vec<AntUploadFile>,
+    color_value: u32,
+    color_open: bool,
+    cascader_path: Vec<String>,
+    cascader_open: bool,
+    tree_select_open: bool,
+    tree_select_key: String,
 }
 
 impl Gallery {
     pub fn new(component: String, dark: bool, window: &mut Window, cx: &mut Context<Self>) -> Self {
-        let input = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Type your message..."));
-        let input_filled = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Filled input"));
-        let input_borderless = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Borderless input"));
-        let input_decorated = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Username"));
-        let input_large = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Large input"));
-        let input_error = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Invalid email address"));
-        let input_password = cx.new(|cx| InputState::new(window, cx)
-            .masked(true).placeholder("Password"));
-        let input_disabled = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Disabled input").default_value("Cannot edit"));
+        let input = cx.new(|cx| InputState::new(window, cx).placeholder("Type your message..."));
+        let input_filled = cx.new(|cx| InputState::new(window, cx).placeholder("Filled input"));
+        let input_borderless =
+            cx.new(|cx| InputState::new(window, cx).placeholder("Borderless input"));
+        let input_decorated = cx.new(|cx| InputState::new(window, cx).placeholder("Username"));
+        let input_large = cx.new(|cx| InputState::new(window, cx).placeholder("Large input"));
+        let input_error =
+            cx.new(|cx| InputState::new(window, cx).placeholder("Invalid email address"));
+        let input_password = cx.new(|cx| {
+            InputState::new(window, cx)
+                .masked(true)
+                .placeholder("Password")
+        });
+        let input_disabled = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Disabled input")
+                .default_value("Cannot edit")
+        });
         let date_single = cx.new(|cx| DatePickerState::new(window, cx));
         let date_range = cx.new(|cx| DatePickerState::range(window, cx));
-        let date_time = cx.new(|cx| DatePickerState::new(window, cx)
-            .time_precision(TimePrecision::Minute));
+        let date_time =
+            cx.new(|cx| DatePickerState::new(window, cx).time_precision(TimePrecision::Minute));
         let date_disabled = cx.new(|cx| DatePickerState::new(window, cx));
-        let form_name = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("Full name"));
-        let form_email = cx.new(|cx| InputState::new(window, cx)
-            .placeholder("name@example.com"));
-        let form_password = cx.new(|cx| InputState::new(window, cx)
-            .masked(true).placeholder("6 or more characters"));
-        let form_confirm = cx.new(|cx| InputState::new(window, cx)
-            .masked(true).placeholder("Repeat password"));
-        let number_basic=cx.new(|cx|InputState::new(window,cx)
-            .placeholder("Quantity").default_value("25").min(0.).max(100.).step(5.));
-        let number_decimal=cx.new(|cx|InputState::new(window,cx)
-            .placeholder("Amount").default_value("12.5").min(0.).max(200.).step(0.25));
-        let number_disabled=cx.new(|cx|InputState::new(window,cx)
-            .default_value("42").step(1.));
-        let slider_single=cx.new(|_|SliderState::new().min(0.).max(100.)
-            .step(5.).default_value(35.));
-        let slider_range=cx.new(|_|SliderState::new().min(0.).max(100.)
-            .step(1.).default_value(20. .. 80.));
-        let slider_vertical=cx.new(|_|SliderState::new().min(0.).max(100.)
-            .step(10.).default_value(60.));
-        let time_basic=cx.new(|cx|TimeFieldState::new(window,cx));
-        let time_seconds=cx.new(|cx|TimeFieldState::new(window,cx)
-            .precision(TimePrecision::Second));
-        let time_12=cx.new(|cx|TimeFieldState::new(window,cx)
-            .hour_cycle(HourCycle::H12));
-        let time_disabled=cx.new(|cx|TimeFieldState::new(window,cx));
-        let autocomplete_input=cx.new(|cx|InputState::new(window,cx)
-            .placeholder("Try typing Ru").default_value("Ru"));
-        let mut _input_subscriptions=Vec::new();
-        _input_subscriptions.push(cx.subscribe(&slider_single,
-            |this,_,event:&SliderEvent,cx|{
-                if let SliderEvent::Change(value)=event {
-                    this.slider_value=value.start();
+        let form_name = cx.new(|cx| InputState::new(window, cx).placeholder("Full name"));
+        let form_email = cx.new(|cx| InputState::new(window, cx).placeholder("name@example.com"));
+        let form_password = cx.new(|cx| {
+            InputState::new(window, cx)
+                .masked(true)
+                .placeholder("6 or more characters")
+        });
+        let form_confirm = cx.new(|cx| {
+            InputState::new(window, cx)
+                .masked(true)
+                .placeholder("Repeat password")
+        });
+        let number_basic = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Quantity")
+                .default_value("25")
+                .min(0.)
+                .max(100.)
+                .step(5.)
+        });
+        let number_decimal = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Amount")
+                .default_value("12.5")
+                .min(0.)
+                .max(200.)
+                .step(0.25)
+        });
+        let number_disabled = cx.new(|cx| InputState::new(window, cx).default_value("42").step(1.));
+        let slider_single = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(100.)
+                .step(5.)
+                .default_value(35.)
+        });
+        let slider_range = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(100.)
+                .step(1.)
+                .default_value(20. ..80.)
+        });
+        let slider_vertical = cx.new(|_| {
+            SliderState::new()
+                .min(0.)
+                .max(100.)
+                .step(10.)
+                .default_value(60.)
+        });
+        let time_basic = cx.new(|cx| TimeFieldState::new(window, cx));
+        let time_seconds =
+            cx.new(|cx| TimeFieldState::new(window, cx).precision(TimePrecision::Second));
+        let time_12 = cx.new(|cx| TimeFieldState::new(window, cx).hour_cycle(HourCycle::H12));
+        let time_disabled = cx.new(|cx| TimeFieldState::new(window, cx));
+        let autocomplete_input = cx.new(|cx| {
+            InputState::new(window, cx)
+                .placeholder("Try typing Ru")
+                .default_value("Ru")
+        });
+        let mut _input_subscriptions = Vec::new();
+        _input_subscriptions.push(cx.subscribe(
+            &slider_single,
+            |this, _, event: &SliderEvent, cx| {
+                if let SliderEvent::Change(value) = event {
+                    this.slider_value = value.start();
                     cx.notify();
                 }
-            }));
-        _input_subscriptions.push(cx.subscribe(&autocomplete_input,
-            |this,_,event:&InputEvent,cx|{
-                match event{
-                    InputEvent::Change|InputEvent::Focus=>{
-                        this.autocomplete_open=true;
-                        this.autocomplete_active=0;
-                        cx.notify();
-                    },
-                    _=>{},
+            },
+        ));
+        _input_subscriptions.push(cx.subscribe(
+            &autocomplete_input,
+            |this, _, event: &InputEvent, cx| match event {
+                InputEvent::Change | InputEvent::Focus => {
+                    this.autocomplete_open = true;
+                    this.autocomplete_active = 0;
+                    cx.notify();
                 }
-            }));
-        _input_subscriptions.push(cx.subscribe(&time_basic,
-            |_,_,_:&TimeFieldEvent,cx|{cx.notify();}));
-        let mentions_input=cx.new(|cx|InputState::new(window,cx).placeholder("Type @ to mention"));
-        _input_subscriptions.push(cx.subscribe(&mentions_input,|_,_,_:&InputEvent,cx|{cx.notify();}));
-        let calendar_single=cx.new(|cx|CalendarState::new(window,cx));
-        let calendar_range=cx.new(|cx|{
-            let mut state=CalendarState::new(window,cx);
-            state.apply_date(Date::Range(None,None));
+                _ => {}
+            },
+        ));
+        _input_subscriptions.push(cx.subscribe(&time_basic, |_, _, _: &TimeFieldEvent, cx| {
+            cx.notify();
+        }));
+        let mentions_input =
+            cx.new(|cx| InputState::new(window, cx).placeholder("Type @ to mention"));
+        _input_subscriptions.push(cx.subscribe(&mentions_input, |_, _, _: &InputEvent, cx| {
+            cx.notify();
+        }));
+        let calendar_single = cx.new(|cx| CalendarState::new(window, cx));
+        let calendar_range = cx.new(|cx| {
+            let mut state = CalendarState::new(window, cx);
+            state.apply_date(Date::Range(None, None));
             state
         });
-        let calendar_restricted=cx.new(|cx|CalendarState::new(window,cx)
-            .disabled_matcher(vec![0,6]));
-        let mut _calendar_subscriptions=Vec::new();
-        _calendar_subscriptions.push(cx.subscribe(&calendar_single,
-            |this,_,event:&CalendarEvent,cx|{
-                let CalendarEvent::Selected(date)=event;
-                this.calendar_selected=date.to_string();
+        let calendar_restricted =
+            cx.new(|cx| CalendarState::new(window, cx).disabled_matcher(vec![0, 6]));
+        let mut _calendar_subscriptions = Vec::new();
+        _calendar_subscriptions.push(cx.subscribe(
+            &calendar_single,
+            |this, _, event: &CalendarEvent, cx| {
+                let CalendarEvent::Selected(date) = event;
+                this.calendar_selected = date.to_string();
                 cx.notify();
-            }));
-        _calendar_subscriptions.push(cx.subscribe(&calendar_range,
-            |this,_,event:&CalendarEvent,cx|{
-                let CalendarEvent::Selected(date)=event;
-                this.calendar_range_selected=date.to_string();
+            },
+        ));
+        _calendar_subscriptions.push(cx.subscribe(
+            &calendar_range,
+            |this, _, event: &CalendarEvent, cx| {
+                let CalendarEvent::Selected(date) = event;
+                this.calendar_range_selected = date.to_string();
                 cx.notify();
-            }));
-        let theme_override=ThemeLabSpec::parse(&component,dark).map(|spec|spec.theme);
+            },
+        ));
+        let theme_override = ThemeLabSpec::parse(&component, dark).map(|spec| spec.theme);
         Self {
-            component, dark, theme_override, button_clicks: 0, checked: true, radio_selected: Some(0),
-            radio_button_selected: Some(1), switch_on: true,
-            input, input_filled, input_borderless, input_decorated, input_large,
-            input_error, input_password, input_disabled,
-            select_fruit: Some("Apple".into()), select_fruit_open: false,
-            select_lang: None, select_lang_open: false, select_lang_query: SharedString::default(),
-            date_single, date_range, date_time, date_disabled,
-            form_name, form_email, form_password, form_confirm,
-            form_errors: BTreeMap::new(), form_attempted: false, form_success: false,
+            component,
+            dark,
+            theme_override,
+            button_clicks: 0,
+            checked: true,
+            radio_selected: Some(0),
+            radio_button_selected: Some(1),
+            switch_on: true,
+            input,
+            input_filled,
+            input_borderless,
+            input_decorated,
+            input_large,
+            input_error,
+            input_password,
+            input_disabled,
+            select_fruit: Some("Apple".into()),
+            select_fruit_open: false,
+            select_lang: None,
+            select_lang_open: false,
+            select_lang_query: SharedString::default(),
+            date_single,
+            date_range,
+            date_time,
+            date_disabled,
+            form_name,
+            form_email,
+            form_password,
+            form_confirm,
+            form_errors: BTreeMap::new(),
+            form_attempted: false,
+            form_success: false,
             paragraph_expanded: false,
-            tabs_index: 0, tabs_card_index: 1, layout_collapsed: false,
+            tabs_index: 0,
+            tabs_card_index: 1,
+            layout_collapsed: false,
             layout_mobile_open: false,
-            layout_selected: "dashboard".into(), menu_selected:"dashboard".into(),
-            menu_open_keys:BTreeSet::new(),layout_menu_open_keys:BTreeSet::new(),
-            dropdown_selected: "None".into(), popover_open: false,
+            layout_selected: "dashboard".into(),
+            menu_selected: "dashboard".into(),
+            menu_open_keys: BTreeSet::new(),
+            layout_menu_open_keys: BTreeSet::new(),
+            dropdown_selected: "None".into(),
+            popover_open: false,
             modal_result: "No action".into(),
             popconfirm_result: "Awaiting confirmation".into(),
-            pagination_page:4, steps_current:1, rating:3,
-            collapse_keys:BTreeSet::from(["first".to_owned()]),
-            drawer_closed:0,tree_selected:"src/main.rs".to_owned(),
-            tree_expanded:BTreeSet::from(["src".to_owned(),"src/lib".to_owned()]),
-            tree_checked:BTreeSet::from(["src/main.rs".to_owned()]),
-            table_sort_key:"score".to_owned(),table_sort:TableSort::Ascending,
-            table_selected:BTreeSet::new(),table_page:1,
-            table_filters:BTreeMap::new(),timeline_reversed:false,
-            number_basic,number_decimal,number_disabled,
-            slider_single,slider_range,slider_vertical,slider_value:35.,
-            time_basic,time_seconds,time_12,time_disabled,
-            segmented_index:1,autocomplete_input,autocomplete_open:true,
-            autocomplete_active:0,autocomplete_last:"None".into(),_input_subscriptions,
-            calendar_single,calendar_range,calendar_restricted,
-            calendar_selected:"No date selected".to_owned(),
-            calendar_range_selected:"No range selected".to_owned(),_calendar_subscriptions,
-            float_group_open:false,float_clicks:0,float_last_action:"None".to_owned(),
-            mentions_input,anchor_key:"overview".into(),carousel_index:0,image_open:false,
-            tour_index:0,tour_open:true,transfer_target:BTreeSet::new(),
-            transfer_selected:BTreeSet::new(),upload_files:Vec::new(),color_value:0x1677ff,
-            cascader_path:Vec::new(),tree_select_open:false,tree_select_key:String::new(),
+            pagination_page: 4,
+            steps_current: 1,
+            rating: 3,
+            collapse_keys: BTreeSet::from(["first".to_owned()]),
+            drawer_closed: 0,
+            tree_selected: "src/main.rs".to_owned(),
+            tree_expanded: BTreeSet::from(["src".to_owned(), "src/lib".to_owned()]),
+            tree_checked: BTreeSet::from(["src/main.rs".to_owned()]),
+            table_sort_key: "score".to_owned(),
+            table_sort: TableSort::Ascending,
+            table_selected: BTreeSet::new(),
+            table_page: 1,
+            table_filters: BTreeMap::new(),
+            timeline_reversed: false,
+            number_basic,
+            number_decimal,
+            number_disabled,
+            slider_single,
+            slider_range,
+            slider_vertical,
+            slider_value: 35.,
+            time_basic,
+            time_seconds,
+            time_12,
+            time_disabled,
+            segmented_index: 1,
+            autocomplete_input,
+            autocomplete_open: true,
+            autocomplete_active: 0,
+            autocomplete_last: "None".into(),
+            _input_subscriptions,
+            calendar_single,
+            calendar_range,
+            calendar_restricted,
+            calendar_selected: "No date selected".to_owned(),
+            calendar_range_selected: "No range selected".to_owned(),
+            _calendar_subscriptions,
+            float_group_open: false,
+            float_clicks: 0,
+            float_last_action: "None".to_owned(),
+            mentions_input,
+            anchor_key: "overview".into(),
+            carousel_index: 0,
+            image_open: false,
+            tour_index: 0,
+            tour_open: true,
+            transfer_target: BTreeSet::new(),
+            transfer_selected: BTreeSet::new(),
+            upload_files: Vec::new(),
+            color_value: 0x1677ff,
+            color_open: false,
+            cascader_path: Vec::new(),
+            cascader_open: true,
+            tree_select_open: false,
+            tree_select_key: String::new(),
         }
     }
-    fn catalog_demo(&self, name: &str, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+    fn catalog_demo(
+        &self,
+        name: &str,
+        t: AntTheme,
+        cx: &mut Context<Self>,
+    ) -> gpui_kit::AnyElement {
         let anchor = cx.listener(|this, key: &SharedString, _, cx| {
             this.anchor_key = key.to_string();
             cx.notify();
@@ -421,25 +624,41 @@ impl Gallery {
             cx.notify();
         });
         let transfer_select = cx.listener(|this, change: &(String, bool), _, cx| {
-            if change.1 { this.transfer_selected.insert(change.0.clone()); }
-            else { this.transfer_selected.remove(&change.0); }
+            if change.1 {
+                this.transfer_selected.insert(change.0.clone());
+            } else {
+                this.transfer_selected.remove(&change.0);
+            }
             cx.notify();
         });
         let upload_pick = cx.listener(|this, _: &(), _, cx| {
             let name = format!("notes-{}.txt", this.upload_files.len() + 1);
-            this.upload_files.push(AntUploadFile::new(name).status(UploadStatus::Done));
+            this.upload_files
+                .push(AntUploadFile::new(name).status(UploadStatus::Done));
             cx.notify();
         });
         let upload_remove = cx.listener(|this, name: &SharedString, _, cx| {
-            this.upload_files.retain(|file| file.name.as_ref() != name.as_ref());
+            this.upload_files
+                .retain(|file| file.name.as_ref() != name.as_ref());
             cx.notify();
         });
         let color = cx.listener(|this, value: &u32, _, cx| {
             this.color_value = *value;
             cx.notify();
         });
+        let color_open = cx.listener(|this, open: &bool, _, cx| {
+            this.color_open = *open;
+            cx.notify();
+        });
         let cascader = cx.listener(|this, change: &(Vec<String>, bool), _, cx| {
             this.cascader_path = change.0.clone();
+            if change.1 {
+                this.cascader_open = false;
+            }
+            cx.notify();
+        });
+        let cascader_open = cx.listener(|this, open: &bool, _, cx| {
+            this.cascader_open = *open;
             cx.notify();
         });
         let tree_open = cx.listener(|this, open: &bool, _, cx| {
@@ -460,54 +679,122 @@ impl Gallery {
             cx.notify();
         });
         match name {
-            "ConfigProvider" => div().flex().flex_col().gap(px(12.))
-                .child(label("Config is an explicit value. GPUI has no React context.", t))
-                .child(AntConfigProvider::new(AntConfig::new(t).size(ControlSize::Large).direction(AntDirection::Ltr))
-                    .child(AntText::new("Provider surface uses the config theme.").theme(t)))
+            "ConfigProvider" => div()
+                .flex()
+                .flex_col()
+                .gap(px(12.))
+                .child(label(
+                    "Config is an explicit value. GPUI has no React context.",
+                    t,
+                ))
+                .child(
+                    AntConfigProvider::new(
+                        AntConfig::new(t)
+                            .size(ControlSize::Large)
+                            .direction(AntDirection::Ltr),
+                    )
+                    .child(AntText::new("Provider surface uses the config theme.").theme(t)),
+                )
                 .into_any_element(),
             "App" => AntApp::new(AntConfig::new(t))
-                .child(AntText::new("AntApp paints the config surface. Message stays an imperative toast.").theme(t))
+                .child(
+                    AntText::new(
+                        "AntApp paints the config surface. Message stays an imperative toast.",
+                    )
+                    .theme(t),
+                )
                 .into_any_element(),
-            "Affix" => AntAffix::new().theme(t).offset(0.)
+            "Affix" => AntAffix::new()
+                .theme(t)
+                .offset(0.)
                 .child(AntText::new("Pinned in this parent, not the viewport.").theme(t))
-                .body(AntText::new("Scroll content sits under the bar.").theme(t).tone(TextTone::Secondary))
+                .body(
+                    AntText::new("Scroll content sits under the bar.")
+                        .theme(t)
+                        .tone(TextTone::Secondary),
+                )
                 .into_any_element(),
-            "Anchor" => AntAnchor::new("anchor-demo").theme(t).active(self.anchor_key.clone())
+            "Anchor" => AntAnchor::new("anchor-demo")
+                .theme(t)
+                .active(self.anchor_key.clone())
                 .link(AntAnchorLink::new("overview", "Overview"))
                 .link(AntAnchorLink::new("api", "API").disabled(true))
                 .link(AntAnchorLink::new("faq", "FAQ"))
                 .on_click(move |key, window, cx| anchor(&key, window, cx))
                 .into_any_element(),
-            "Watermark" => AntWatermark::new("GPUI Ant Design").theme(t)
-                .child(div().p(px(16.)).child(AntText::new("Content under the watermark.").theme(t)))
+            "Watermark" => AntWatermark::new("GPUI Ant Design")
+                .theme(t)
+                .child(
+                    div()
+                        .p(px(16.))
+                        .child(AntText::new("Content under the watermark.").theme(t)),
+                )
                 .into_any_element(),
-            "BorderBeam" => AntBorderBeam::new().theme(t)
-                .child(AntText::new("Primary beam frame. Motion along the edge is still a parity gap.").theme(t))
+            "BorderBeam" => AntBorderBeam::new()
+                .theme(t)
+                .child(
+                    AntText::new(
+                        "A primary segment travels the top edge and respects reduced motion.",
+                    )
+                    .theme(t),
+                )
                 .into_any_element(),
-            "Splitter" => div().w(px(520.)).child(AntSplitter::new("splitter-demo").theme(t)
-                .first(AntText::new("Left pane").theme(t))
-                .second(AntText::new("Drag the Kit handle. Paint is Ant Design.").theme(t)))
+            "Splitter" => div()
+                .w(px(520.))
+                .child(
+                    AntSplitter::new("splitter-demo")
+                        .theme(t)
+                        .first(AntText::new("Left pane").theme(t))
+                        .second(AntText::new("Drag the Kit handle. Paint is Ant Design.").theme(t)),
+                )
                 .into_any_element(),
-            "Masonry" => AntMasonry::new().theme(t).columns(3)
+            "Masonry" => AntMasonry::new()
+                .theme(t)
+                .columns(3)
                 .item(AntMasonryItem::new("Short", 1))
                 .item(AntMasonryItem::new("Taller card", 3))
                 .item(AntMasonryItem::new("Medium", 2))
                 .item(AntMasonryItem::new("Note", 1))
                 .into_any_element(),
-            "Carousel" => AntCarousel::new("carousel-demo").theme(t).index(self.carousel_index)
+            "Carousel" => AntCarousel::new("carousel-demo")
+                .theme(t)
+                .index(self.carousel_index)
                 .slide(AntCarouselSlide::new("First"))
                 .slide(AntCarouselSlide::new("Second").tone(TextTone::Success))
                 .slide(AntCarouselSlide::new("Third").tone(TextTone::Warning))
                 .on_change(move |index, window, cx| carousel(&index, window, cx))
                 .into_any_element(),
-            "QRCode" => AntQrCode::new("https://ant.design").theme(t).size(128.).into_any_element(),
-            "Tour" => AntTour::new("tour-demo").theme(t).open(self.tour_open).index(self.tour_index)
-                .step(AntTourStep::new("Welcome", "This card is not measured to a target yet."))
-                .step(AntTourStep::new("Next", "Prev and Next request the parent step."))
+            "QRCode" => AntQrCode::new("https://ant.design")
+                .theme(t)
+                .size(128.)
+                .into_any_element(),
+            "Tour" => AntTour::new("tour-demo")
+                .theme(t)
+                .open(self.tour_open)
+                .index(self.tour_index)
+                .target(
+                    div()
+                        .px(px(12.))
+                        .py(px(8.))
+                        .rounded(px(t.border_radius))
+                        .border_1()
+                        .border_color(t.primary)
+                        .child("Feature"),
+                )
+                .step(AntTourStep::new(
+                    "Welcome",
+                    "The card is anchored to Feature by base Popover.",
+                ))
+                .step(AntTourStep::new(
+                    "Next",
+                    "Prev and Next request the parent step.",
+                ))
                 .on_change(move |index, window, cx| tour(&index, window, cx))
                 .on_close(move |window, cx| tour_close(&(), window, cx))
                 .into_any_element(),
-            "Image" => AntImage::new("image-demo", "Preview").theme(t).open(self.image_open)
+            "Image" => AntImage::new("image-demo", "Preview")
+                .theme(t)
+                .open(self.image_open)
                 .on_open(move |open, window, cx| image(&open, window, cx))
                 .into_any_element(),
             "Listy" => {
@@ -516,48 +803,90 @@ impl Gallery {
                     AntListyItem::new("2", "Beta", "Group A"),
                     AntListyItem::new("3", "Gamma", "Group B").disabled(true),
                 ];
-                ant_listy(cx.entity(), "listy-demo", listy_slots(&items), |gallery, slot, _, _| {
-                    let theme = gallery.theme();
-                    match slot {
-                        ListySlot::Header(title) => div().px(px(8.)).py(px(4.))
-                            .child(AntText::new(title.clone()).theme(theme).tone(TextTone::Secondary))
-                            .into_any_element(),
-                        ListySlot::Item { title, disabled, .. } => div().px(px(8.)).py(px(6.))
-                            .border_b_1().border_color(theme.border)
-                            .text_color(if *disabled { theme.disabled_text } else { theme.text })
-                            .child(title.clone()).into_any_element(),
-                    }
-                }).into_any_element()
+                ant_listy(
+                    cx.entity(),
+                    "listy-demo",
+                    listy_slots(&items),
+                    |gallery, slot, _, _| {
+                        let theme = gallery.theme();
+                        match slot {
+                            ListySlot::Header(title) => div()
+                                .px(px(8.))
+                                .py(px(4.))
+                                .child(
+                                    AntText::new(title.clone())
+                                        .theme(theme)
+                                        .tone(TextTone::Secondary),
+                                )
+                                .into_any_element(),
+                            ListySlot::Item {
+                                title, disabled, ..
+                            } => div()
+                                .px(px(8.))
+                                .py(px(6.))
+                                .border_b_1()
+                                .border_color(theme.border)
+                                .text_color(if *disabled {
+                                    theme.disabled_text
+                                } else {
+                                    theme.text
+                                })
+                                .child(title.clone())
+                                .into_any_element(),
+                        }
+                    },
+                )
+                .into_any_element()
             }
-            "Upload" => AntUpload::new("upload-demo").theme(t).accept(".txt")
+            "Upload" => AntUpload::new("upload-demo")
+                .theme(t)
+                .accept(".txt")
                 .files(self.upload_files.clone())
                 .on_pick(move |window, cx| upload_pick(&(), window, cx))
                 .on_remove(move |name, window, cx| upload_remove(&name, window, cx))
                 .into_any_element(),
             "Mentions" => {
                 let text = self.mentions_input.read(cx).value().to_string();
-                div().flex().flex_col().gap(px(8.))
-                    .child(label("Suggestions are ours. The field is InputState so IME stays in Kit.", t))
-                    .child(AntInput::new(&self.mentions_input).theme(t))
-                    .child(AntMentions::new("mentions-demo").theme(t)
-                        .text(text.clone(), text.len())
-                        .option(AntMentionOption::new("ada", "Ada Lovelace"))
-                        .option(AntMentionOption::new("grace", "Grace Hopper"))
-                        .on_select(move |value, window, cx| mention(&value, window, cx)))
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(8.))
+                    .child(
+                        AntMentions::new("mentions-demo")
+                            .theme(t)
+                            .trigger(AntInput::new(&self.mentions_input).theme(t))
+                            .text(text.clone(), text.len())
+                            .option(AntMentionOption::new("ada", "Ada Lovelace"))
+                            .option(AntMentionOption::new("grace", "Grace Hopper"))
+                            .on_select(move |value, window, cx| mention(&value, window, cx)),
+                    )
                     .into_any_element()
             }
-            "ColorPicker" => AntColorPicker::new("color-demo").theme(t).color(self.color_value)
+            "ColorPicker" => AntColorPicker::new("color-demo")
+                .theme(t)
+                .color(self.color_value)
+                .open(self.color_open)
                 .on_change(move |value, window, cx| color(&value, window, cx))
+                .on_open_change(move |open, window, cx| color_open(&open, window, cx))
                 .into_any_element(),
-            "Cascader" => AntCascader::new("cascader-demo").theme(t).path(self.cascader_path.clone())
-                .option(AntCascaderOption::new("zj", "Zhejiang")
-                    .child(AntCascaderOption::new("hz", "Hangzhou"))
-                    .child(AntCascaderOption::new("nb", "Ningbo").disabled(true)))
-                .option(AntCascaderOption::new("js", "Jiangsu")
-                    .child(AntCascaderOption::new("nj", "Nanjing")))
+            "Cascader" => AntCascader::new("cascader-demo")
+                .theme(t)
+                .path(self.cascader_path.clone())
+                .open(self.cascader_open)
+                .option(
+                    AntCascaderOption::new("zj", "Zhejiang")
+                        .child(AntCascaderOption::new("hz", "Hangzhou"))
+                        .child(AntCascaderOption::new("nb", "Ningbo").disabled(true)),
+                )
+                .option(
+                    AntCascaderOption::new("js", "Jiangsu")
+                        .child(AntCascaderOption::new("nj", "Nanjing")),
+                )
                 .on_change(move |path, leaf, window, cx| cascader(&(path, leaf), window, cx))
+                .on_open_change(move |open, window, cx| cascader_open(&open, window, cx))
                 .into_any_element(),
-            "Transfer" => AntTransfer::new("transfer-demo").theme(t)
+            "Transfer" => AntTransfer::new("transfer-demo")
+                .theme(t)
                 .item(AntTransferItem::new("a", "Alpha"))
                 .item(AntTransferItem::new("b", "Beta"))
                 .item(AntTransferItem::new("c", "Gamma").disabled(true))
@@ -568,7 +897,8 @@ impl Gallery {
                     transfer_select(&(key.to_string(), selected), window, cx);
                 })
                 .into_any_element(),
-            "TreeSelect" => AntTreeSelect::new("tree-select-demo").theme(t)
+            "TreeSelect" => AntTreeSelect::new("tree-select-demo")
+                .theme(t)
                 .open(self.tree_select_open)
                 .selected(self.tree_select_key.clone())
                 .node(AntTreeNode::new("src", "src").child(AntTreeNode::new("main", "main.rs")))
@@ -581,109 +911,272 @@ impl Gallery {
     }
     fn theme(&self) -> AntTheme {
         self.theme_override.unwrap_or_else(|| {
-            if self.dark {AntTheme::dark()} else {AntTheme::light()}
+            if self.dark {
+                AntTheme::dark()
+            } else {
+                AntTheme::light()
+            }
         })
     }
     fn theme_lab_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let menu_change=cx.listener(|this,key:&SharedString,_,cx|{
-            this.menu_selected=key.to_string();
+        let menu_change = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
             cx.notify();
         });
-        let tap=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
-            this.button_clicks+=1;
+        let tap = cx.listener(|this, _: &gpui_kit::ClickEvent, _, cx| {
+            this.button_clicks += 1;
             cx.notify();
         });
-        let check_change=cx.listener(|this,value:&bool,_,cx|{
-            this.checked=*value;cx.notify();
+        let check_change = cx.listener(|this, value: &bool, _, cx| {
+            this.checked = *value;
+            cx.notify();
         });
-        let switch_change=cx.listener(|this,value:&bool,_,cx|{
-            this.switch_on=*value;cx.notify();
+        let switch_change = cx.listener(|this, value: &bool, _, cx| {
+            this.switch_on = *value;
+            cx.notify();
         });
-        div().w_full().min_w_0().flex().flex_col().gap(px(t.padding))
+        div()
+            .w_full()
+            .min_w_0()
+            .flex()
+            .flex_col()
+            .gap(px(t.padding))
             .child(AntTitle::new("Native Theme Lab").level(3).theme(t))
-            .child(div().text_size(px(12.)).text_color(t.text_secondary)
-                .child(format!("GPUI-derived tokens · controlHeight {}px · radius {}px · fontSize {}px",
-                    t.control_height,t.border_radius,t.font_size)))
-            .child(AntCard::new().theme(t).title("Buttons · component override")
-                .child(div().flex().flex_wrap().items_center().gap(px(12.))
-                    .child(AntButton::new("lab-primary","Primary").primary()
-                        .theme(t).on_click(tap))
-                    .child(AntButton::new("lab-default","Default").theme(t))
-                    .child(AntButton::new("lab-danger","Danger").primary().danger(true).theme(t))
-                    .child(AntButton::new("lab-disabled","Disabled").disabled(true).theme(t))
-                    .child(AntButton::new("lab-small","Small").primary()
-                        .size(ControlSize::Small).theme(t))
-                    .child(AntButton::new("lab-large","Large").primary()
-                        .size(ControlSize::Large).theme(t))))
-            .child(div().flex().flex_wrap().gap(px(14.))
-                .child(div().flex().flex_col().gap(px(10.))
-                    .child(label("Input · background and radius overrides",t))
-                    .child(AntInput::new(&self.input).theme(t).aria_label("Theme Lab input"))
-                    .child(label("Feedback · semantic Seed colors",t))
-                    .child(AntAlert::new("Saved successfully").tone(Tone::Green).theme(t))
-                    .child(AntAlert::new("Please review warning").tone(Tone::Gold).theme(t))
-                    .child(AntTag::new("Information").tone(Tone::Blue).theme(t)))
-                .child(div().w(px(215.)).flex().flex_col()
-                    .child(label("Menu · selected row override",t))
-                    .child(AntMenu::new("lab-menu").theme(t).dark(self.dark)
-                        .selected_key(self.menu_selected.clone())
-                        .on_select(move |key,window,cx| menu_change(&key,window,cx))
-                        .item(AntMenuItem::new("dashboard","Dashboard")
-                            .icon(AntIconName::DashboardOutlined))
-                        .item(AntMenuItem::new("analytics","Analytics")
-                            .icon(AntIconName::BarChartOutlined))
-                        .item(AntMenuItem::new("settings","Settings")
-                            .icon(AntIconName::SettingOutlined)))))
-            .child(label("Scoped data display and input tokens",t))
-            .child(div().flex().flex_wrap().items_center().gap(px(16.))
-                .child(AntCheckbox::new("lab-checkbox","Checkbox").theme(t)
-                    .checked(self.checked)
-                    .on_change(move |next,window,cx| check_change(&next,window,cx)))
-                .child(AntSwitch::new("lab-switch").theme(t)
-                    .checked(self.switch_on)
-                    .on_change(move |next,window,cx| switch_change(&next,window,cx)))
-                .child(AntBadge::count(12).theme(t))
-                .child(AntTag::new("Tag").theme(t).tone(Tone::Blue))
-                .child(AntTooltip::new("lab-tooltip","Token-aware tooltip").theme(t)
-                    .child(AntButton::new("lab-hover","Hover for Tooltip").theme(t))))
+            .child(
+                div()
+                    .text_size(px(12.))
+                    .text_color(t.text_secondary)
+                    .child(format!(
+                        "GPUI-derived tokens · controlHeight {}px · radius {}px · fontSize {}px",
+                        t.control_height, t.border_radius, t.font_size
+                    )),
+            )
+            .child(
+                AntCard::new()
+                    .theme(t)
+                    .title("Buttons · component override")
+                    .child(
+                        div()
+                            .flex()
+                            .flex_wrap()
+                            .items_center()
+                            .gap(px(12.))
+                            .child(
+                                AntButton::new("lab-primary", "Primary")
+                                    .primary()
+                                    .theme(t)
+                                    .on_click(tap),
+                            )
+                            .child(AntButton::new("lab-default", "Default").theme(t))
+                            .child(
+                                AntButton::new("lab-danger", "Danger")
+                                    .primary()
+                                    .danger(true)
+                                    .theme(t),
+                            )
+                            .child(
+                                AntButton::new("lab-disabled", "Disabled")
+                                    .disabled(true)
+                                    .theme(t),
+                            )
+                            .child(
+                                AntButton::new("lab-small", "Small")
+                                    .primary()
+                                    .size(ControlSize::Small)
+                                    .theme(t),
+                            )
+                            .child(
+                                AntButton::new("lab-large", "Large")
+                                    .primary()
+                                    .size(ControlSize::Large)
+                                    .theme(t),
+                            ),
+                    ),
+            )
+            .child(
+                div()
+                    .flex()
+                    .flex_wrap()
+                    .gap(px(14.))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(10.))
+                            .child(label("Input · background and radius overrides", t))
+                            .child(
+                                AntInput::new(&self.input)
+                                    .theme(t)
+                                    .aria_label("Theme Lab input"),
+                            )
+                            .child(label("Feedback · semantic Seed colors", t))
+                            .child(
+                                AntAlert::new("Saved successfully")
+                                    .tone(Tone::Green)
+                                    .theme(t),
+                            )
+                            .child(
+                                AntAlert::new("Please review warning")
+                                    .tone(Tone::Gold)
+                                    .theme(t),
+                            )
+                            .child(AntTag::new("Information").tone(Tone::Blue).theme(t)),
+                    )
+                    .child(
+                        div()
+                            .w(px(215.))
+                            .flex()
+                            .flex_col()
+                            .child(label("Menu · selected row override", t))
+                            .child(
+                                AntMenu::new("lab-menu")
+                                    .theme(t)
+                                    .dark(self.dark)
+                                    .selected_key(self.menu_selected.clone())
+                                    .on_select(move |key, window, cx| menu_change(&key, window, cx))
+                                    .item(
+                                        AntMenuItem::new("dashboard", "Dashboard")
+                                            .icon(AntIconName::DashboardOutlined),
+                                    )
+                                    .item(
+                                        AntMenuItem::new("analytics", "Analytics")
+                                            .icon(AntIconName::BarChartOutlined),
+                                    )
+                                    .item(
+                                        AntMenuItem::new("settings", "Settings")
+                                            .icon(AntIconName::SettingOutlined),
+                                    ),
+                            ),
+                    ),
+            )
+            .child(label("Scoped data display and input tokens", t))
+            .child(
+                div()
+                    .flex()
+                    .flex_wrap()
+                    .items_center()
+                    .gap(px(16.))
+                    .child(
+                        AntCheckbox::new("lab-checkbox", "Checkbox")
+                            .theme(t)
+                            .checked(self.checked)
+                            .on_change(move |next, window, cx| check_change(&next, window, cx)),
+                    )
+                    .child(
+                        AntSwitch::new("lab-switch")
+                            .theme(t)
+                            .checked(self.switch_on)
+                            .on_change(move |next, window, cx| switch_change(&next, window, cx)),
+                    )
+                    .child(AntBadge::count(12).theme(t))
+                    .child(AntTag::new("Tag").theme(t).tone(Tone::Blue))
+                    .child(
+                        AntTooltip::new("lab-tooltip", "Token-aware tooltip")
+                            .theme(t)
+                            .child(AntButton::new("lab-hover", "Hover for Tooltip").theme(t)),
+                    ),
+            )
             .child(AntProgress::new(72.).theme(t))
             .child(AntDivider::new().theme(t))
-            .child(AntText::new("Typography component color and size overrides.")
-                .theme(t).strong(true))
-            .child(AntCard::new().theme(t).title("Card token override: padding and radius")
-                .child(AntText::new("The body padding and header color come from Card tokens.")
-                    .theme(t)))
-            .child(AntCard::new().theme(t).title("Native Tree / Table / Timeline component tokens")
-                .child(div().flex().flex_col().gap(px(16.))
-                    .child(AntTree::new("lab-tree").theme(t)
-                        .checkable(true).expanded_keys(["tree-root"])
-                        .checked_keys(["tree-a"])
-                        .child(AntTreeNode::new("tree-root","Components")
-                            .child(AntTreeNode::new("tree-a","Button"))
-                            .child(AntTreeNode::new("tree-b","Table"))))
-                    .child(AntTable::new("lab-table").theme(t).pagination(false)
-                        .column(AntTableColumn::new("name","Name").width(150.))
-                        .column(AntTableColumn::new("status","Status").width(150.))
-                        .row(AntTableRow::new("row").cells(["Build","Active"])))
-                    .child(AntTimeline::new().theme(t)
-                        .child(AntTimelineItem::new("Start").tone(TimelineTone::Success))
-                        .child(AntTimelineItem::new("Ready").tone(TimelineTone::Processing)))))
-            .child(AntCard::new().theme(t).title("Calendar and FloatButton component tokens")
-                .child(div().flex().flex_wrap().gap(px(14.))
-                    .child(AntCalendar::new(&self.calendar_single).theme(t)
-                        .size(ControlSize::Small))
-                    .child(div().relative().size(px(155.)).bg(t.surface_secondary)
-                        .rounded(px(t.border_radius))
-                        .child(AntFloatButton::new("lab-float","Token-aware FloatButton")
-                            .theme(t).icon(AntIconName::PlusOutlined).position(14.,14.)))))
-            .child(div().text_size(px(12.)).text_color(t.text_secondary)
-                .child(format!("Primary clicked {} times · menu route {}",
-                    self.button_clicks,self.menu_selected)))
+            .child(
+                AntText::new("Typography component color and size overrides.")
+                    .theme(t)
+                    .strong(true),
+            )
+            .child(
+                AntCard::new()
+                    .theme(t)
+                    .title("Card token override: padding and radius")
+                    .child(
+                        AntText::new("The body padding and header color come from Card tokens.")
+                            .theme(t),
+                    ),
+            )
+            .child(
+                AntCard::new()
+                    .theme(t)
+                    .title("Native Tree / Table / Timeline component tokens")
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(16.))
+                            .child(
+                                AntTree::new("lab-tree")
+                                    .theme(t)
+                                    .checkable(true)
+                                    .expanded_keys(["tree-root"])
+                                    .checked_keys(["tree-a"])
+                                    .child(
+                                        AntTreeNode::new("tree-root", "Components")
+                                            .child(AntTreeNode::new("tree-a", "Button"))
+                                            .child(AntTreeNode::new("tree-b", "Table")),
+                                    ),
+                            )
+                            .child(
+                                AntTable::new("lab-table")
+                                    .theme(t)
+                                    .pagination(false)
+                                    .column(AntTableColumn::new("name", "Name").width(150.))
+                                    .column(AntTableColumn::new("status", "Status").width(150.))
+                                    .row(AntTableRow::new("row").cells(["Build", "Active"])),
+                            )
+                            .child(
+                                AntTimeline::new()
+                                    .theme(t)
+                                    .child(
+                                        AntTimelineItem::new("Start").tone(TimelineTone::Success),
+                                    )
+                                    .child(
+                                        AntTimelineItem::new("Ready")
+                                            .tone(TimelineTone::Processing),
+                                    ),
+                            ),
+                    ),
+            )
+            .child(
+                AntCard::new()
+                    .theme(t)
+                    .title("Calendar and FloatButton component tokens")
+                    .child(
+                        div()
+                            .flex()
+                            .flex_wrap()
+                            .gap(px(14.))
+                            .child(
+                                AntCalendar::new(&self.calendar_single)
+                                    .theme(t)
+                                    .size(ControlSize::Small),
+                            )
+                            .child(
+                                div()
+                                    .relative()
+                                    .size(px(155.))
+                                    .bg(t.surface_secondary)
+                                    .rounded(px(t.border_radius))
+                                    .child(
+                                        AntFloatButton::new("lab-float", "Token-aware FloatButton")
+                                            .theme(t)
+                                            .icon(AntIconName::PlusOutlined)
+                                            .position(14., 14.),
+                                    ),
+                            ),
+                    ),
+            )
+            .child(
+                div()
+                    .text_size(px(12.))
+                    .text_color(t.text_secondary)
+                    .child(format!(
+                        "Primary clicked {} times · menu route {}",
+                        self.button_clicks, self.menu_selected
+                    )),
+            )
             .into_any_element()
     }
 
-    fn theme_tokens_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
-        let tokens=t.resolved_tokens();
+    fn theme_tokens_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        let tokens = t.resolved_tokens();
         div().w_full().min_w_0().flex().flex_col().gap(px(16.))
             .child(AntTitle::new("Resolved Design Tokens").level(3).theme(t))
             .child(AntText::new(
@@ -707,11 +1200,19 @@ impl Gallery {
             this.button_clicks += 1;
             cx.notify();
         });
-        div().flex().flex_col().gap(px(20.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
             .child(label("Button types", t))
             .child(
                 row()
-                    .child(AntButton::new("primary", "Primary Button").primary().theme(t).on_click(on_click))
+                    .child(
+                        AntButton::new("primary", "Primary Button")
+                            .primary()
+                            .theme(t)
+                            .on_click(on_click),
+                    )
                     .child(AntButton::new("default", "Default Button").theme(t))
                     .child(AntButton::new("dashed", "Dashed Button").dashed().theme(t))
                     .child(AntButton::new("text", "Text Button").text().theme(t))
@@ -720,35 +1221,91 @@ impl Gallery {
             .child(label("Sizes", t))
             .child(
                 row()
-                    .child(AntButton::new("large", "Large").primary().size(ControlSize::Large).theme(t))
+                    .child(
+                        AntButton::new("large", "Large")
+                            .primary()
+                            .size(ControlSize::Large)
+                            .theme(t),
+                    )
                     .child(AntButton::new("middle", "Middle").primary().theme(t))
-                    .child(AntButton::new("small", "Small").primary().size(ControlSize::Small).theme(t)),
+                    .child(
+                        AntButton::new("small", "Small")
+                            .primary()
+                            .size(ControlSize::Small)
+                            .theme(t),
+                    ),
             )
             .child(label("States", t))
             .child(
                 row()
-                    .child(AntButton::new("danger", "Danger").primary().danger(true).theme(t))
-                    .child(AntButton::new("loading", "Loading").primary().loading(true).theme(t))
-                    .child(AntButton::new("disabled", "Disabled").disabled(true).theme(t))
-                    .child(AntButton::new("ghost", "Ghost").primary().ghost(true).theme(t)),
+                    .child(
+                        AntButton::new("danger", "Danger")
+                            .primary()
+                            .danger(true)
+                            .theme(t),
+                    )
+                    .child(
+                        AntButton::new("loading", "Loading")
+                            .primary()
+                            .loading(true)
+                            .theme(t),
+                    )
+                    .child(
+                        AntButton::new("disabled", "Disabled")
+                            .disabled(true)
+                            .theme(t),
+                    )
+                    .child(
+                        AntButton::new("ghost", "Ghost")
+                            .primary()
+                            .ghost(true)
+                            .theme(t),
+                    ),
             )
-            .child(div().text_color(t.text_secondary).text_size(px(13.)).child(format!("Primary clicked {} times", self.button_clicks)))
+            .child(
+                div()
+                    .text_color(t.text_secondary)
+                    .text_size(px(13.))
+                    .child(format!("Primary clicked {} times", self.button_clicks)),
+            )
             .into_any_element()
     }
-    fn checkbox_demo(&self, t:AntTheme, cx:&mut Context<Self>) -> gpui_kit::AnyElement {
-        let on_change = cx.listener(|this, next:&bool, _, cx|{
+    fn checkbox_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_change = cx.listener(|this, next: &bool, _, cx| {
             this.checked = *next;
             cx.notify();
         });
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Basic usage",t))
-            .child(row()
-                .child(AntCheckbox::new("checkbox-controlled","Checkbox").checked(self.checked).theme(t)
-                    .on_change(move |checked,window,cx| on_change(&checked,window,cx)))
-                .child(AntCheckbox::new("checkbox-checked","Checked").checked(true).theme(t))
-                .child(AntCheckbox::new("checkbox-empty","Unchecked").theme(t))
-                .child(AntCheckbox::new("checkbox-disabled","Disabled").disabled(true).theme(t)))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary).child(format!("Controlled value: {}",self.checked)))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label("Basic usage", t))
+            .child(
+                row()
+                    .child(
+                        AntCheckbox::new("checkbox-controlled", "Checkbox")
+                            .checked(self.checked)
+                            .theme(t)
+                            .on_change(move |checked, window, cx| on_change(&checked, window, cx)),
+                    )
+                    .child(
+                        AntCheckbox::new("checkbox-checked", "Checked")
+                            .checked(true)
+                            .theme(t),
+                    )
+                    .child(AntCheckbox::new("checkbox-empty", "Unchecked").theme(t))
+                    .child(
+                        AntCheckbox::new("checkbox-disabled", "Disabled")
+                            .disabled(true)
+                            .theme(t),
+                    ),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Controlled value: {}", self.checked)),
+            )
             .into_any_element()
     }
     fn radio_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
@@ -760,8 +1317,14 @@ impl Gallery {
             this.radio_button_selected = Some(*index);
             cx.notify();
         });
-        div().flex().flex_col().gap(px(22.))
-            .child(label("Basic RadioGroup: Arrow keys move selection; Tab enters the group", t))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(22.))
+            .child(label(
+                "Basic RadioGroup: Arrow keys move selection; Tab enters the group",
+                t,
+            ))
             .child(
                 AntRadioGroup::horizontal("delivery-group")
                     .label("Delivery method")
@@ -770,10 +1333,17 @@ impl Gallery {
                     .child(AntRadio::new("delivery-standard", "Standard"))
                     .child(AntRadio::new("delivery-express", "Express"))
                     .child(AntRadio::new("delivery-unavailable", "Unavailable").disabled(true))
-                    .on_change(move |index, window, cx| on_delivery(&index, window, cx))
+                    .on_change(move |index, window, cx| on_delivery(&index, window, cx)),
             )
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Selected delivery option: {:?}", self.radio_selected)))
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!(
+                        "Selected delivery option: {:?}",
+                        self.radio_selected
+                    )),
+            )
             .child(label("Radio button style", t))
             .child(
                 AntRadioGroup::horizontal("layout-group")
@@ -784,7 +1354,7 @@ impl Gallery {
                     .child(AntRadio::new("layout-left", "Left"))
                     .child(AntRadio::new("layout-center", "Center"))
                     .child(AntRadio::new("layout-right", "Right"))
-                    .on_change(move |index, window, cx| on_buttons(&index, window, cx))
+                    .on_change(move |index, window, cx| on_buttons(&index, window, cx)),
             )
             .child(label("Vertical group and disabled controls", t))
             .child(
@@ -794,24 +1364,50 @@ impl Gallery {
                     .selected_index(Some(1))
                     .disabled(true)
                     .child(AntRadio::new("pricing-monthly", "Monthly"))
-                    .child(AntRadio::new("pricing-yearly", "Yearly"))
+                    .child(AntRadio::new("pricing-yearly", "Yearly")),
             )
             .into_any_element()
     }
     fn form_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
         let submit = cx.listener(|this, _: &gpui_kit::ClickEvent, _, cx| {
             let values = BTreeMap::from([
-                ("name".to_owned(), this.form_name.read(cx).value().to_string()),
-                ("email".to_owned(), this.form_email.read(cx).value().to_string()),
-                ("password".to_owned(), this.form_password.read(cx).value().to_string()),
-                ("confirm".to_owned(), this.form_confirm.read(cx).value().to_string()),
+                (
+                    "name".to_owned(),
+                    this.form_name.read(cx).value().to_string(),
+                ),
+                (
+                    "email".to_owned(),
+                    this.form_email.read(cx).value().to_string(),
+                ),
+                (
+                    "password".to_owned(),
+                    this.form_password.read(cx).value().to_string(),
+                ),
+                (
+                    "confirm".to_owned(),
+                    this.form_confirm.read(cx).value().to_string(),
+                ),
             ]);
             let result = FormSchema::new()
-                .field("name", "Full name", [FormRule::Required, FormRule::MinLength(2)])
+                .field(
+                    "name",
+                    "Full name",
+                    [FormRule::Required, FormRule::MinLength(2)],
+                )
                 .field("email", "Email", [FormRule::Required, FormRule::Email])
-                .field("password", "Password", [FormRule::Required, FormRule::MinLength(6)])
-                .field("confirm", "Confirmation",
-                    [FormRule::Required, FormRule::EqualsField("password".to_owned())])
+                .field(
+                    "password",
+                    "Password",
+                    [FormRule::Required, FormRule::MinLength(6)],
+                )
+                .field(
+                    "confirm",
+                    "Confirmation",
+                    [
+                        FormRule::Required,
+                        FormRule::EqualsField("password".to_owned()),
+                    ],
+                )
                 .validate(&values);
             this.form_success = result.is_valid();
             this.form_errors = result.errors;
@@ -819,10 +1415,12 @@ impl Gallery {
             cx.notify();
         });
         let error = |key: &str| self.form_errors.get(key).cloned().map(Into::into);
-        let status = |key: &str| if self.form_errors.contains_key(key) {
-            InputStatus::Error
-        } else {
-            InputStatus::Normal
+        let status = |key: &str| {
+            if self.form_errors.contains_key(key) {
+                InputStatus::Error
+            } else {
+                InputStatus::Normal
+            }
         };
         let message = if !self.form_attempted {
             "Submit this form to see validation feedback."
@@ -831,69 +1429,136 @@ impl Gallery {
         } else {
             "Please review the highlighted fields."
         };
-        div().flex().flex_col().w(px(400.)).gap(px(16.))
+        div()
+            .flex()
+            .flex_col()
+            .w(px(400.))
+            .gap(px(16.))
             .child(
-                AntForm::new().theme(theme).gap(14.)
+                AntForm::new()
+                    .theme(theme)
+                    .gap(14.)
                     .child(
-                        AntFormItem::new("Full name").theme(theme).required(true)
+                        AntFormItem::new("Full name")
+                            .theme(theme)
+                            .required(true)
                             .error(error("name"))
-                            .child(AntInput::new(&self.form_name).theme(theme)
-                                .status(status("name")).aria_label("Full name")),
+                            .child(
+                                AntInput::new(&self.form_name)
+                                    .theme(theme)
+                                    .status(status("name"))
+                                    .aria_label("Full name"),
+                            ),
                     )
                     .child(
-                        AntFormItem::new("Email").theme(theme).required(true)
+                        AntFormItem::new("Email")
+                            .theme(theme)
+                            .required(true)
                             .error(error("email"))
-                            .child(AntInput::new(&self.form_email).theme(theme)
-                                .status(status("email")).aria_label("Email address")),
+                            .child(
+                                AntInput::new(&self.form_email)
+                                    .theme(theme)
+                                    .status(status("email"))
+                                    .aria_label("Email address"),
+                            ),
                     )
                     .child(
-                        AntFormItem::new("Password").theme(theme).required(true)
+                        AntFormItem::new("Password")
+                            .theme(theme)
+                            .required(true)
                             .error(error("password"))
-                            .child(AntInput::new(&self.form_password).theme(theme)
-                                .status(status("password")).password_toggle(true)
-                                .aria_label("Password")),
+                            .child(
+                                AntInput::new(&self.form_password)
+                                    .theme(theme)
+                                    .status(status("password"))
+                                    .password_toggle(true)
+                                    .aria_label("Password"),
+                            ),
                     )
                     .child(
-                        AntFormItem::new("Confirm password").theme(theme).required(true)
+                        AntFormItem::new("Confirm password")
+                            .theme(theme)
+                            .required(true)
                             .error(error("confirm"))
-                            .child(AntInput::new(&self.form_confirm).theme(theme)
-                                .status(status("confirm")).password_toggle(true)
-                                .aria_label("Confirm password")),
+                            .child(
+                                AntInput::new(&self.form_confirm)
+                                    .theme(theme)
+                                    .status(status("confirm"))
+                                    .password_toggle(true)
+                                    .aria_label("Confirm password"),
+                            ),
                     )
-                    .child(AntButton::new("form-submit", "Validate form")
-                        .theme(theme).primary().block(true).on_click(submit)),
+                    .child(
+                        AntButton::new("form-submit", "Validate form")
+                            .theme(theme)
+                            .primary()
+                            .block(true)
+                            .on_click(submit),
+                    ),
             )
-            .child(div().text_size(px(12.)).text_color(if self.form_success {
-                theme.success
-            } else if self.form_attempted {
-                theme.error
-            } else {
-                theme.text_secondary
-            }).child(message))
+            .child(
+                div()
+                    .text_size(px(12.))
+                    .text_color(if self.form_success {
+                        theme.success
+                    } else if self.form_attempted {
+                        theme.error
+                    } else {
+                        theme.text_secondary
+                    })
+                    .child(message),
+            )
             .into_any_element()
     }
     fn date_picker_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(15.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(15.))
             .child(label("Single date", theme))
-            .child(div().w(px(275.)).child(
-                AntDatePicker::new(&self.date_single)
-                    .theme(theme).clearable(true)
-                    .placeholder("Select a date")))
+            .child(
+                div().w(px(275.)).child(
+                    AntDatePicker::new(&self.date_single)
+                        .theme(theme)
+                        .clearable(true)
+                        .placeholder("Select a date"),
+                ),
+            )
             .child(label("Date range · two-month calendar", theme))
-            .child(div().w(px(320.)).child(
-                AntDatePicker::new(&self.date_range)
-                    .theme(theme).clearable(true)
-                    .number_of_months(2).placeholder("Choose a range")))
+            .child(
+                div().w(px(320.)).child(
+                    AntDatePicker::new(&self.date_range)
+                        .theme(theme)
+                        .clearable(true)
+                        .number_of_months(2)
+                        .placeholder("Choose a range"),
+                ),
+            )
             .child(label("Date and time · minute precision", theme))
-            .child(div().w(px(290.)).child(
-                AntDatePicker::new(&self.date_time)
-                    .theme(theme).placeholder("Select date and time")))
+            .child(
+                div().w(px(290.)).child(
+                    AntDatePicker::new(&self.date_time)
+                        .theme(theme)
+                        .placeholder("Select date and time"),
+                ),
+            )
             .child(label("Disabled", theme))
-            .child(div().w(px(275.)).child(
-                AntDatePicker::new(&self.date_disabled)
-                    .theme(theme).disabled(true).placeholder("Unavailable")))
-            .child(div().text_color(theme.text_secondary).text_size(px(12.))
-                .child("The calendar, popup, selection and keyboard interactions run inside GPUI."))
+            .child(
+                div().w(px(275.)).child(
+                    AntDatePicker::new(&self.date_disabled)
+                        .theme(theme)
+                        .disabled(true)
+                        .placeholder("Unavailable"),
+                ),
+            )
+            .child(
+                div()
+                    .text_color(theme.text_secondary)
+                    .text_size(px(12.))
+                    .child(
+                        "The calendar, popup, selection and keyboard interactions run inside GPUI.",
+                    ),
+            )
             .into_any_element()
     }
     fn select_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
@@ -961,94 +1626,218 @@ impl Gallery {
                 .child("Trigger, option list and keyboard live in gpui-antd. Base Popover owns placement, Escape and outside dismissal."))
             .into_any_element()
     }
-    fn switch_demo(&self, t:AntTheme, cx:&mut Context<Self>) -> gpui_kit::AnyElement {
-        let on_change = cx.listener(|this,next:&bool,_,cx|{
-            this.switch_on=*next;
+    fn switch_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_change = cx.listener(|this, next: &bool, _, cx| {
+            this.switch_on = *next;
             cx.notify();
         });
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Switch control",t))
-            .child(row()
-                .child(AntSwitch::new("switch-controlled").checked(self.switch_on).theme(t)
-                    .on_change(move |checked,window,cx| on_change(&checked,window,cx)))
-                .child(AntSwitch::new("switch-off").theme(t))
-                .child(AntSwitch::new("switch-disabled").disabled(true).checked(true).theme(t)))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary).child(format!("Controlled value: {}",self.switch_on)))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label("Switch control", t))
+            .child(
+                row()
+                    .child(
+                        AntSwitch::new("switch-controlled")
+                            .checked(self.switch_on)
+                            .theme(t)
+                            .on_change(move |checked, window, cx| on_change(&checked, window, cx)),
+                    )
+                    .child(AntSwitch::new("switch-off").theme(t))
+                    .child(
+                        AntSwitch::new("switch-disabled")
+                            .disabled(true)
+                            .checked(true)
+                            .theme(t),
+                    ),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Controlled value: {}", self.switch_on)),
+            )
             .into_any_element()
     }
     fn input_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(14.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(14.))
             .child(label("Outlined · Filled · Borderless", t))
-            .child(row()
-                .child(div().w(px(255.)).child(AntInput::new(&self.input)
-                    .theme(t).clearable(true).aria_label("Outlined text input")))
-                .child(div().w(px(255.)).child(AntInput::new(&self.input_filled)
-                    .theme(t).variant(InputVariant::Filled).aria_label("Filled text input")))
-                .child(div().w(px(255.)).child(AntInput::new(&self.input_borderless)
-                    .theme(t).variant(InputVariant::Borderless).aria_label("Borderless text input"))))
+            .child(
+                row()
+                    .child(
+                        div().w(px(255.)).child(
+                            AntInput::new(&self.input)
+                                .theme(t)
+                                .clearable(true)
+                                .aria_label("Outlined text input"),
+                        ),
+                    )
+                    .child(
+                        div().w(px(255.)).child(
+                            AntInput::new(&self.input_filled)
+                                .theme(t)
+                                .variant(InputVariant::Filled)
+                                .aria_label("Filled text input"),
+                        ),
+                    )
+                    .child(
+                        div().w(px(255.)).child(
+                            AntInput::new(&self.input_borderless)
+                                .theme(t)
+                                .variant(InputVariant::Borderless)
+                                .aria_label("Borderless text input"),
+                        ),
+                    ),
+            )
             .child(label("Validation status", t))
-            .child(div().w(px(330.)).child(AntInput::new(&self.input_error)
-                .theme(t).status(InputStatus::Error).aria_label("Error input")))
+            .child(
+                div().w(px(330.)).child(
+                    AntInput::new(&self.input_error)
+                        .theme(t)
+                        .status(InputStatus::Error)
+                        .aria_label("Error input"),
+                ),
+            )
             .child(label("Password and decorations", t))
-            .child(row()
-                .child(div().w(px(260.)).child(AntInput::new(&self.input_password)
-                    .theme(t).password_toggle(true).aria_label("Password input")))
-                .child(div().w(px(260.)).child(AntInput::new(&self.input_decorated)
-                    .theme(t).prefix(div().text_color(t.primary).child("@"))
-                    .suffix(div().text_color(t.text_secondary).child(".com")))))
+            .child(
+                row()
+                    .child(
+                        div().w(px(260.)).child(
+                            AntInput::new(&self.input_password)
+                                .theme(t)
+                                .password_toggle(true)
+                                .aria_label("Password input"),
+                        ),
+                    )
+                    .child(
+                        div().w(px(260.)).child(
+                            AntInput::new(&self.input_decorated)
+                                .theme(t)
+                                .prefix(div().text_color(t.primary).child("@"))
+                                .suffix(div().text_color(t.text_secondary).child(".com")),
+                        ),
+                    ),
+            )
             .child(label("Size and disabled state", t))
-            .child(row()
-                .child(div().w(px(230.)).child(AntInput::new(&self.input_large)
-                    .theme(t).size(ControlSize::Large).aria_label("Large text input")))
-                .child(div().w(px(230.)).child(AntInput::new(&self.input_disabled)
-                    .theme(t).disabled(true).aria_label("Disabled text input"))))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child("GPUI Kit handles real keyboard, IME, caret, selection, copy and paste."))
+            .child(
+                row()
+                    .child(
+                        div().w(px(230.)).child(
+                            AntInput::new(&self.input_large)
+                                .theme(t)
+                                .size(ControlSize::Large)
+                                .aria_label("Large text input"),
+                        ),
+                    )
+                    .child(
+                        div().w(px(230.)).child(
+                            AntInput::new(&self.input_disabled)
+                                .theme(t)
+                                .disabled(true)
+                                .aria_label("Disabled text input"),
+                        ),
+                    ),
+            )
+            .child(
+                div().text_size(px(13.)).text_color(t.text_secondary).child(
+                    "GPUI Kit handles real keyboard, IME, caret, selection, copy and paste.",
+                ),
+            )
             .into_any_element()
     }
-    fn tag_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Presets",t))
-            .child(row()
-                .child(AntTag::new("Default").theme(t))
-                .child(AntTag::new("Processing").tone(Tone::Blue).theme(t))
-                .child(AntTag::new("Success").tone(Tone::Green).theme(t))
-                .child(AntTag::new("Warning").tone(Tone::Gold).theme(t))
-                .child(AntTag::new("Error").tone(Tone::Red).theme(t))
-                .child(AntTag::new("Magenta").tone(Tone::Purple).theme(t)))
+    fn tag_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label("Presets", t))
+            .child(
+                row()
+                    .child(AntTag::new("Default").theme(t))
+                    .child(AntTag::new("Processing").tone(Tone::Blue).theme(t))
+                    .child(AntTag::new("Success").tone(Tone::Green).theme(t))
+                    .child(AntTag::new("Warning").tone(Tone::Gold).theme(t))
+                    .child(AntTag::new("Error").tone(Tone::Red).theme(t))
+                    .child(AntTag::new("Magenta").tone(Tone::Purple).theme(t)),
+            )
             .into_any_element()
     }
-    fn badge_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Count and dot badges",t))
-            .child(row().gap(px(32.))
-                .child(AntBadge::count(5).theme(t))
-                .child(AntBadge::count(29).theme(t))
-                .child(AntBadge::count(123).theme(t))
-                .child(AntBadge::count(0).dot().theme(t))
-                .child(AntBadge::count(2).color(t.success).theme(t)))
+    fn badge_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label("Count and dot badges", t))
+            .child(
+                row()
+                    .gap(px(32.))
+                    .child(AntBadge::count(5).theme(t))
+                    .child(AntBadge::count(29).theme(t))
+                    .child(AntBadge::count(123).theme(t))
+                    .child(AntBadge::count(0).dot().theme(t))
+                    .child(AntBadge::count(2).color(t.success).theme(t)),
+            )
             .into_any_element()
     }
-    fn alert_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(12.)).w_full()
-            .child(AntAlert::new("Info: Helpful context for this operation.").tone(Tone::Blue).theme(t))
-            .child(AntAlert::new("Success: Changes saved successfully.").tone(Tone::Green).theme(t))
-            .child(AntAlert::new("Warning: Please review your changes.").tone(Tone::Gold).theme(t))
-            .child(AntAlert::new("Error: Something went wrong.").tone(Tone::Red).theme(t))
+    fn alert_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(12.))
+            .w_full()
+            .child(
+                AntAlert::new("Info: Helpful context for this operation.")
+                    .tone(Tone::Blue)
+                    .theme(t),
+            )
+            .child(
+                AntAlert::new("Success: Changes saved successfully.")
+                    .tone(Tone::Green)
+                    .theme(t),
+            )
+            .child(
+                AntAlert::new("Warning: Please review your changes.")
+                    .tone(Tone::Gold)
+                    .theme(t),
+            )
+            .child(
+                AntAlert::new("Error: Something went wrong.")
+                    .tone(Tone::Red)
+                    .theme(t),
+            )
             .into_any_element()
     }
-    fn card_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
+    fn card_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         row()
-            .child(div().w(px(320.))
-                .child(AntCard::new().title("Card title").theme(t)
-                    .child(div().flex().flex_col().gap(px(8.))
-                        .child("Card content")
-                        .child("A native GPUI surface styled with Ant Design tokens."))))
-            .child(div().w(px(240.)).child(AntCard::new().theme(t).child("A card without a header.")))
+            .child(
+                div().w(px(320.)).child(
+                    AntCard::new().title("Card title").theme(t).child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(8.))
+                            .child("Card content")
+                            .child("A native GPUI surface styled with Ant Design tokens."),
+                    ),
+                ),
+            )
+            .child(
+                div()
+                    .w(px(240.))
+                    .child(AntCard::new().theme(t).child("A card without a header.")),
+            )
             .into_any_element()
     }
-    fn progress_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
-        div().w(px(400.)).flex().flex_col().gap(px(18.))
+    fn progress_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .w(px(400.))
+            .flex()
+            .flex_col()
+            .gap(px(18.))
             .child(AntProgress::new(30.).theme(t))
             .child(AntProgress::new(62.).tone(Tone::Green).theme(t))
             .child(AntProgress::new(86.).tone(Tone::Gold).theme(t))
@@ -1056,650 +1845,1374 @@ impl Gallery {
             .into_any_element()
     }
     fn avatar_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(22.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(22.))
             .child(label("Circular avatar sizes", theme))
-            .child(AntSpace::new().size(SpaceSize::Middle)
-                .child(AntAvatar::new("Ada Lovelace").size(AvatarSize::Small).theme(theme))
-                .child(AntAvatar::new("Grace Hopper").size(AvatarSize::Middle).theme(theme))
-                .child(AntAvatar::new("Alan Turing").size(AvatarSize::Large).theme(theme))
-                .child(AntAvatar::new("Alex Chen").size(AvatarSize::Custom(56.)).theme(theme)))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Middle)
+                    .child(
+                        AntAvatar::new("Ada Lovelace")
+                            .size(AvatarSize::Small)
+                            .theme(theme),
+                    )
+                    .child(
+                        AntAvatar::new("Grace Hopper")
+                            .size(AvatarSize::Middle)
+                            .theme(theme),
+                    )
+                    .child(
+                        AntAvatar::new("Alan Turing")
+                            .size(AvatarSize::Large)
+                            .theme(theme),
+                    )
+                    .child(
+                        AntAvatar::new("Alex Chen")
+                            .size(AvatarSize::Custom(56.))
+                            .theme(theme),
+                    ),
+            )
             .child(label("Square and custom color", theme))
-            .child(AntSpace::new().size(SpaceSize::Middle)
-                .child(AntAvatar::new("GPUI").shape(AvatarShape::Square).theme(theme)
-                    .size(AvatarSize::Large))
-                .child(AntAvatar::new("Design System").background(theme.error)
-                    .shape(AvatarShape::Square).theme(theme)
-                    .size(AvatarSize::Large))
-                .child(AntAvatar::new("Rust").background(theme.success)
-                    .size(AvatarSize::Custom(48.)).theme(theme)))
-            .child(AntParagraph::new("Native GPUI Base fallback avatars. Pass src() to load an image.")
-                .theme(theme).tone(TextTone::Secondary))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Middle)
+                    .child(
+                        AntAvatar::new("GPUI")
+                            .shape(AvatarShape::Square)
+                            .theme(theme)
+                            .size(AvatarSize::Large),
+                    )
+                    .child(
+                        AntAvatar::new("Design System")
+                            .background(theme.error)
+                            .shape(AvatarShape::Square)
+                            .theme(theme)
+                            .size(AvatarSize::Large),
+                    )
+                    .child(
+                        AntAvatar::new("Rust")
+                            .background(theme.success)
+                            .size(AvatarSize::Custom(48.))
+                            .theme(theme),
+                    ),
+            )
+            .child(
+                AntParagraph::new(
+                    "Native GPUI Base fallback avatars. Pass src() to load an image.",
+                )
+                .theme(theme)
+                .tone(TextTone::Secondary),
+            )
             .into_any_element()
     }
 
     fn statistic_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(22.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(22.))
             .child(label("Statistic summary with formatted numbers", theme))
-            .child(AntSpace::new().size(SpaceSize::Large).wrap(true)
-                .child(AntStatistic::number("Active Users", 112893., 0).theme(theme))
-                .child(AntStatistic::number("Conversion Rate", 23.89, 2)
-                    .theme(theme).suffix("%").tone(TextTone::Success))
-                .child(AntStatistic::number("Revenue", 1057280.5, 2)
-                    .theme(theme).prefix("$")))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Large)
+                    .wrap(true)
+                    .child(AntStatistic::number("Active Users", 112893., 0).theme(theme))
+                    .child(
+                        AntStatistic::number("Conversion Rate", 23.89, 2)
+                            .theme(theme)
+                            .suffix("%")
+                            .tone(TextTone::Success),
+                    )
+                    .child(
+                        AntStatistic::number("Revenue", 1057280.5, 2)
+                            .theme(theme)
+                            .prefix("$"),
+                    ),
+            )
             .child(label("Semantic colors and suffixes", theme))
-            .child(AntSpace::new().size(SpaceSize::Large)
-                .child(AntStatistic::new("Errors", "12")
-                    .theme(theme).tone(TextTone::Danger))
-                .child(AntStatistic::number("Latency", 124.8, 1)
-                    .theme(theme).suffix("ms").tone(TextTone::Warning)))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Large)
+                    .child(
+                        AntStatistic::new("Errors", "12")
+                            .theme(theme)
+                            .tone(TextTone::Danger),
+                    )
+                    .child(
+                        AntStatistic::number("Latency", 124.8, 1)
+                            .theme(theme)
+                            .suffix("ms")
+                            .tone(TextTone::Warning),
+                    ),
+            )
             .into_any_element()
     }
 
     fn empty_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(16.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(16.))
             .child(label("Default empty state", theme))
-            .child(AntEmpty::new().theme(theme)
-                .child(AntButton::new("empty-action", "Create item")
-                    .primary().theme(theme)))
+            .child(
+                AntEmpty::new().theme(theme).child(
+                    AntButton::new("empty-action", "Create item")
+                        .primary()
+                        .theme(theme),
+                ),
+            )
             .child(label("Compact empty state", theme))
-            .child(AntEmpty::new().theme(theme)
-                .description("No search results")
-                .icon(AntIconName::SearchOutlined)
-                .compact(true))
+            .child(
+                AntEmpty::new()
+                    .theme(theme)
+                    .description("No search results")
+                    .icon(AntIconName::SearchOutlined)
+                    .compact(true),
+            )
             .into_any_element()
     }
 
-
-    fn pagination_demo(&self, t:AntTheme, cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let changed=cx.listener(|this,page:&usize,_,cx|{
-            this.pagination_page=*page;cx.notify();
+    fn pagination_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let changed = cx.listener(|this, page: &usize, _, cx| {
+            this.pagination_page = *page;
+            cx.notify();
         });
-        div().w_full().flex().flex_col().gap(px(20.))
-            .child(label("Controlled paging · click a page, the jump button or Prev/Next",t))
-            .child(AntPagination::new("pagination-controlled",126)
-                .page_size(10).current(self.pagination_page).show_total(true).theme(t)
-                .on_change(move |page,_,window,cx|changed(&page,window,cx)))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Selected page: {}",self.pagination_page)))
-            .child(label("Compact simple pager and disabled states",t))
-            .child(AntPagination::new("pagination-simple",145)
-                .current(4).simple(true).size(ControlSize::Small).theme(t))
-            .child(AntPagination::new("pagination-disabled",70)
-                .current(3).disabled(true).theme(t))
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label(
+                "Controlled paging · click a page, the jump button or Prev/Next",
+                t,
+            ))
+            .child(
+                AntPagination::new("pagination-controlled", 126)
+                    .page_size(10)
+                    .current(self.pagination_page)
+                    .show_total(true)
+                    .theme(t)
+                    .on_change(move |page, _, window, cx| changed(&page, window, cx)),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Selected page: {}", self.pagination_page)),
+            )
+            .child(label("Compact simple pager and disabled states", t))
+            .child(
+                AntPagination::new("pagination-simple", 145)
+                    .current(4)
+                    .simple(true)
+                    .size(ControlSize::Small)
+                    .theme(t),
+            )
+            .child(
+                AntPagination::new("pagination-disabled", 70)
+                    .current(3)
+                    .disabled(true)
+                    .theme(t),
+            )
             .into_any_element()
     }
 
-    fn steps_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let changed=cx.listener(|this,step:&usize,_,cx|{
-            this.steps_current=*step;cx.notify();
+    fn steps_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let changed = cx.listener(|this, step: &usize, _, cx| {
+            this.steps_current = *step;
+            cx.notify();
         });
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Clickable, parent-controlled workflow steps",t))
-            .child(AntSteps::new("steps-basic").theme(t).current(self.steps_current)
-                .on_change(move|index,window,cx|changed(&index,window,cx))
-                .child(AntStep::new("Sign in").description("Create account"))
-                .child(AntStep::new("Verify").description("Verify email"))
-                .child(AntStep::new("Finish").description("Completed")))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Current step index: {}",self.steps_current)))
-            .child(label("Vertical steps with disabled and error presentation",t))
-            .child(AntSteps::new("steps-vertical").theme(t).current(2).vertical(true)
-                .child(AntStep::new("Requested"))
-                .child(AntStep::new("Approval").status(StepStatus::Error))
-                .child(AntStep::new("Publish").disabled(true)))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label("Clickable, parent-controlled workflow steps", t))
+            .child(
+                AntSteps::new("steps-basic")
+                    .theme(t)
+                    .current(self.steps_current)
+                    .on_change(move |index, window, cx| changed(&index, window, cx))
+                    .child(AntStep::new("Sign in").description("Create account"))
+                    .child(AntStep::new("Verify").description("Verify email"))
+                    .child(AntStep::new("Finish").description("Completed")),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Current step index: {}", self.steps_current)),
+            )
+            .child(label(
+                "Vertical steps with disabled and error presentation",
+                t,
+            ))
+            .child(
+                AntSteps::new("steps-vertical")
+                    .theme(t)
+                    .current(2)
+                    .vertical(true)
+                    .child(AntStep::new("Requested"))
+                    .child(AntStep::new("Approval").status(StepStatus::Error))
+                    .child(AntStep::new("Publish").disabled(true)),
+            )
             .into_any_element()
     }
 
-    fn rate_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let changed=cx.listener(|this,value:&usize,_,cx|{
-            this.rating=*value;cx.notify();
+    fn rate_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let changed = cx.listener(|this, value: &usize, _, cx| {
+            this.rating = *value;
+            cx.notify();
         });
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Controlled star rating · click the selected star to clear",t))
-            .child(AntRate::new("rating-input").value(self.rating).theme(t)
-                .on_change(move|value,window,cx|changed(&value,window,cx)))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Rating: {} / 5",self.rating)))
-            .child(label("Readonly disabled rating",t))
-            .child(AntRate::new("rating-disabled").value(4).disabled(true).theme(t))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label(
+                "Controlled star rating · click the selected star to clear",
+                t,
+            ))
+            .child(
+                AntRate::new("rating-input")
+                    .value(self.rating)
+                    .theme(t)
+                    .on_change(move |value, window, cx| changed(&value, window, cx)),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Rating: {} / 5", self.rating)),
+            )
+            .child(label("Readonly disabled rating", t))
+            .child(
+                AntRate::new("rating-disabled")
+                    .value(4)
+                    .disabled(true)
+                    .theme(t),
+            )
             .into_any_element()
     }
 
-    fn collapse_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let changed=cx.listener(|this,keys:&BTreeSet<String>,_,cx|{
-            this.collapse_keys=keys.clone();cx.notify();
+    fn collapse_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let changed = cx.listener(|this, keys: &BTreeSet<String>, _, cx| {
+            this.collapse_keys = keys.clone();
+            cx.notify();
         });
-        div().flex().flex_col().gap(px(16.))
-            .child(label("Controlled expansion · multiple panels can stay open",t))
-            .child(AntCollapse::new("collapse-basic").theme(t)
-                .open_keys(self.collapse_keys.iter().map(String::as_str))
-                .on_change(move|keys,window,cx|changed(&keys,window,cx))
-                .child(AntCollapseItem::new("first","What is GPUI Ant Design?")
-                    .child(AntText::new("A single Rust component library running on desktop and in WASM.").theme(t)))
-                .child(AntCollapseItem::new("second","How is expansion handled?")
-                    .child(AntText::new("The application owns open panel keys and listens for changes.").theme(t)))
-                .child(AntCollapseItem::new("locked","Disabled panel").disabled(true)
-                    .child(AntText::new("Not reachable").theme(t))))
-            .child(label("Borderless accordion",t))
-            .child(AntCollapse::new("collapse-accordion").theme(t)
-                .accordion(true).bordered(false).open_keys(["usage"])
-                .child(AntCollapseItem::new("usage","Usage")
-                    .child(AntText::new("One expanded panel at a time.").theme(t)))
-                .child(AntCollapseItem::new("api","API")
-                    .child(AntText::new("Controlled via open_keys.").theme(t))))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(16.))
+            .child(label(
+                "Controlled expansion · multiple panels can stay open",
+                t,
+            ))
+            .child(
+                AntCollapse::new("collapse-basic")
+                    .theme(t)
+                    .open_keys(self.collapse_keys.iter().map(String::as_str))
+                    .on_change(move |keys, window, cx| changed(&keys, window, cx))
+                    .child(
+                        AntCollapseItem::new("first", "What is GPUI Ant Design?").child(
+                            AntText::new(
+                                "A single Rust component library running on desktop and in WASM.",
+                            )
+                            .theme(t),
+                        ),
+                    )
+                    .child(
+                        AntCollapseItem::new("second", "How is expansion handled?").child(
+                            AntText::new(
+                                "The application owns open panel keys and listens for changes.",
+                            )
+                            .theme(t),
+                        ),
+                    )
+                    .child(
+                        AntCollapseItem::new("locked", "Disabled panel")
+                            .disabled(true)
+                            .child(AntText::new("Not reachable").theme(t)),
+                    ),
+            )
+            .child(label("Borderless accordion", t))
+            .child(
+                AntCollapse::new("collapse-accordion")
+                    .theme(t)
+                    .accordion(true)
+                    .bordered(false)
+                    .open_keys(["usage"])
+                    .child(
+                        AntCollapseItem::new("usage", "Usage")
+                            .child(AntText::new("One expanded panel at a time.").theme(t)),
+                    )
+                    .child(
+                        AntCollapseItem::new("api", "API")
+                            .child(AntText::new("Controlled via open_keys.").theme(t)),
+                    ),
+            )
             .into_any_element()
     }
 
-    fn descriptions_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Structured record details",t))
-            .child(AntDescriptions::new().title("Project information").theme(t)
-                .columns(3).bordered(true)
-                .child(AntDescriptionItem::new("Project","gpui-antd"))
-                .child(AntDescriptionItem::new("Language","Rust"))
-                .child(AntDescriptionItem::new("Platform","Desktop / WASM"))
-                .child(AntDescriptionItem::new("Theme","Light + Dark"))
-                .child(AntDescriptionItem::new("License","MIT"))
-                .child(AntDescriptionItem::new("Status","Early alpha")))
-            .child(label("Unbordered description list",t))
-            .child(AntDescriptions::new().columns(2).theme(t)
-                .child(AntDescriptionItem::new("Owner","Application state"))
-                .child(AntDescriptionItem::new("Renderer","Native GPUI")))
+    fn descriptions_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label("Structured record details", t))
+            .child(
+                AntDescriptions::new()
+                    .title("Project information")
+                    .theme(t)
+                    .columns(3)
+                    .bordered(true)
+                    .child(AntDescriptionItem::new("Project", "gpui-antd"))
+                    .child(AntDescriptionItem::new("Language", "Rust"))
+                    .child(AntDescriptionItem::new("Platform", "Desktop / WASM"))
+                    .child(AntDescriptionItem::new("Theme", "Light + Dark"))
+                    .child(AntDescriptionItem::new("License", "MIT"))
+                    .child(AntDescriptionItem::new("Status", "Early alpha")),
+            )
+            .child(label("Unbordered description list", t))
+            .child(
+                AntDescriptions::new()
+                    .columns(2)
+                    .theme(t)
+                    .child(AntDescriptionItem::new("Owner", "Application state"))
+                    .child(AntDescriptionItem::new("Renderer", "Native GPUI")),
+            )
             .into_any_element()
     }
 
-    fn list_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().w_full().flex().flex_col().gap(px(18.))
-            .child(label("Bordered list · native icons and actions",t))
-            .child(AntList::new().theme(t).bordered(true)
-                .header(AntText::new("Team activity").theme(t).strong(true))
-                .item(AntListItem::new("New deployment")
-                    .icon(AntIconName::CloudUploadOutlined)
-                    .description("Production build passed GPUI/WASM verification.")
-                    .action(AntButton::new("list-view-1","View").theme(t).size(ControlSize::Small)))
-                .item(AntListItem::new("Design tokens updated")
-                    .icon(AntIconName::BgColorsOutlined)
-                    .description("Semantic colors and component tokens were refreshed.")
-                    .action(AntButton::new("list-view-2","Details").theme(t).size(ControlSize::Small)))
-                .item(AntListItem::new("Archived workspace")
-                    .icon(AntIconName::FolderOutlined).disabled(true)
-                    .description("This entry is no longer active."))
-                .footer(AntText::new("3 recent activities").theme(t).tone(TextTone::Secondary)))
-            .child(label("Small list without borders",t))
-            .child(AntList::new().theme(t).size(ListSize::Small).split(true)
-                .item(AntListItem::new("Profile").description("Update your account"))
-                .item(AntListItem::new("Security").description("Manage access")))
-            .child(label("Loading and empty states",t))
-            .child(div().flex().flex_wrap().gap(px(18.))
-                .child(div().w(px(260.)).child(AntList::new().theme(t)
-                    .bordered(true).loading(true)))
-                .child(div().w(px(260.)).child(AntList::new().theme(t)
-                    .bordered(true))))
+    fn list_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label("Bordered list · native icons and actions", t))
+            .child(
+                AntList::new()
+                    .theme(t)
+                    .bordered(true)
+                    .header(AntText::new("Team activity").theme(t).strong(true))
+                    .item(
+                        AntListItem::new("New deployment")
+                            .icon(AntIconName::CloudUploadOutlined)
+                            .description("Production build passed GPUI/WASM verification.")
+                            .action(
+                                AntButton::new("list-view-1", "View")
+                                    .theme(t)
+                                    .size(ControlSize::Small),
+                            ),
+                    )
+                    .item(
+                        AntListItem::new("Design tokens updated")
+                            .icon(AntIconName::BgColorsOutlined)
+                            .description("Semantic colors and component tokens were refreshed.")
+                            .action(
+                                AntButton::new("list-view-2", "Details")
+                                    .theme(t)
+                                    .size(ControlSize::Small),
+                            ),
+                    )
+                    .item(
+                        AntListItem::new("Archived workspace")
+                            .icon(AntIconName::FolderOutlined)
+                            .disabled(true)
+                            .description("This entry is no longer active."),
+                    )
+                    .footer(
+                        AntText::new("3 recent activities")
+                            .theme(t)
+                            .tone(TextTone::Secondary),
+                    ),
+            )
+            .child(label("Small list without borders", t))
+            .child(
+                AntList::new()
+                    .theme(t)
+                    .size(ListSize::Small)
+                    .split(true)
+                    .item(AntListItem::new("Profile").description("Update your account"))
+                    .item(AntListItem::new("Security").description("Manage access")),
+            )
+            .child(label("Loading and empty states", t))
+            .child(
+                div()
+                    .flex()
+                    .flex_wrap()
+                    .gap(px(18.))
+                    .child(
+                        div()
+                            .w(px(260.))
+                            .child(AntList::new().theme(t).bordered(true).loading(true)),
+                    )
+                    .child(
+                        div()
+                            .w(px(260.))
+                            .child(AntList::new().theme(t).bordered(true)),
+                    ),
+            )
             .into_any_element()
     }
 
-    fn result_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(18.))
-            .child(label("Success state and native action",t))
-            .child(AntResult::new(ResultStatus::Success).theme(t)
-                .subtitle("Your changes have been saved.")
-                .child(AntButton::new("result-back","Back to dashboard").primary().theme(t)))
-            .child(label("Not found state",t))
-            .child(AntResult::new(ResultStatus::NotFound).theme(t)
-                .subtitle("The requested resource is unavailable."))
+    fn result_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label("Success state and native action", t))
+            .child(
+                AntResult::new(ResultStatus::Success)
+                    .theme(t)
+                    .subtitle("Your changes have been saved.")
+                    .child(
+                        AntButton::new("result-back", "Back to dashboard")
+                            .primary()
+                            .theme(t),
+                    ),
+            )
+            .child(label("Not found state", t))
+            .child(
+                AntResult::new(ResultStatus::NotFound)
+                    .theme(t)
+                    .subtitle("The requested resource is unavailable."),
+            )
             .into_any_element()
     }
 
-    fn skeleton_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Article loading placeholder",t))
+    fn skeleton_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label("Article loading placeholder", t))
             .child(AntSkeleton::new().theme(t).avatar(true).rows(4))
-            .child(label("Text-only placeholder",t))
+            .child(label("Text-only placeholder", t))
             .child(AntSkeleton::new().theme(t).rows(2))
             .into_any_element()
     }
 
-    fn spin_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(22.))
-            .child(label("Native animated progress feedback",t))
+    fn spin_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(22.))
+            .child(label("Native animated progress feedback", t))
             .child(AntSpin::new().theme(t).tip("Loading your data..."))
-            .child(label("Inactive spinner preserves supplied content",t))
-            .child(AntSpin::new().theme(t).spinning(false)
-                .child(AntText::new("Data is ready.").theme(t)))
+            .child(label("Inactive spinner preserves supplied content", t))
+            .child(
+                AntSpin::new()
+                    .theme(t)
+                    .spinning(false)
+                    .child(AntText::new("Data is ready.").theme(t)),
+            )
             .into_any_element()
     }
 
-
-    fn input_number_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(18.))
-            .child(label("Native step buttons, Up/Down, min/max: 0–100 in steps of 5",t))
-            .child(div().w(px(260.)).child(AntInputNumber::new(&self.number_basic)
-                .theme(t).placeholder("Quantity").prefix(AntIcon::new(AntIconName::NumberOutlined))))
-            .child(label("Decimal values and filled visual variant",t))
-            .child(div().w(px(260.)).child(AntInputNumber::new(&self.number_decimal)
-                .theme(t).variant(InputVariant::Filled).prefix(AntText::new("$").theme(t))))
-            .child(label("Disabled numeric input",t))
-            .child(div().w(px(260.)).child(AntInputNumber::new(&self.number_disabled)
-                .theme(t).disabled(true)))
+    fn input_number_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label(
+                "Native step buttons, Up/Down, min/max: 0–100 in steps of 5",
+                t,
+            ))
+            .child(
+                div().w(px(260.)).child(
+                    AntInputNumber::new(&self.number_basic)
+                        .theme(t)
+                        .placeholder("Quantity")
+                        .prefix(AntIcon::new(AntIconName::NumberOutlined)),
+                ),
+            )
+            .child(label("Decimal values and filled visual variant", t))
+            .child(
+                div().w(px(260.)).child(
+                    AntInputNumber::new(&self.number_decimal)
+                        .theme(t)
+                        .variant(InputVariant::Filled)
+                        .prefix(AntText::new("$").theme(t)),
+                ),
+            )
+            .child(label("Disabled numeric input", t))
+            .child(
+                div().w(px(260.)).child(
+                    AntInputNumber::new(&self.number_disabled)
+                        .theme(t)
+                        .disabled(true),
+                ),
+            )
             .into_any_element()
     }
 
-    fn slider_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(20.))
-            .child(label("Pointer/touch drag · Tab then arrows, Home/End, PageUp/PageDown",t))
-            .child(div().w(px(520.)).child(AntSlider::new(&self.slider_single)
-                .theme(t).show_value(true)))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Controlled value from native SliderEvent: {}",self.slider_value)))
-            .child(label("Range slider with independently draggable handles",t))
-            .child(div().w(px(520.)).child(AntSlider::new(&self.slider_range)
-                .theme(t).show_value(true)))
-            .child(label("Vertical and disabled",t))
-            .child(div().flex().gap(px(35.))
-                .child(AntSlider::new(&self.slider_vertical)
-                    .theme(t).vertical(true).height(145.).show_value(true))
-                .child(div().w(px(280.)).child(AntSlider::new(&self.slider_single)
-                    .theme(t).disabled(true))))
+    fn slider_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label(
+                "Pointer/touch drag · Tab then arrows, Home/End, PageUp/PageDown",
+                t,
+            ))
+            .child(
+                div().w(px(520.)).child(
+                    AntSlider::new(&self.slider_single)
+                        .theme(t)
+                        .show_value(true),
+                ),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!(
+                        "Controlled value from native SliderEvent: {}",
+                        self.slider_value
+                    )),
+            )
+            .child(label(
+                "Range slider with independently draggable handles",
+                t,
+            ))
+            .child(
+                div()
+                    .w(px(520.))
+                    .child(AntSlider::new(&self.slider_range).theme(t).show_value(true)),
+            )
+            .child(label("Vertical and disabled", t))
+            .child(
+                div()
+                    .flex()
+                    .gap(px(35.))
+                    .child(
+                        AntSlider::new(&self.slider_vertical)
+                            .theme(t)
+                            .vertical(true)
+                            .height(145.)
+                            .show_value(true),
+                    )
+                    .child(
+                        div()
+                            .w(px(280.))
+                            .child(AntSlider::new(&self.slider_single).theme(t).disabled(true)),
+                    ),
+            )
             .into_any_element()
     }
 
-    fn segmented_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let changed=cx.listener(|this,next:&usize,_,cx|{
-            this.segmented_index=*next;cx.notify();
+    fn segmented_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let changed = cx.listener(|this, next: &usize, _, cx| {
+            this.segmented_index = *next;
+            cx.notify();
         });
-        div().flex().flex_col().gap(px(18.))
-            .child(label("Controlled view switch · Left/Right/Home/End keyboard navigation",t))
-            .child(AntSegmented::new("segmented-views").theme(t)
-                .selected_index(self.segmented_index)
-                .on_change(move|next,window,cx|changed(&next,window,cx))
-                .child(AntSegmentedOption::new("List").icon(AntIconName::BarsOutlined))
-                .child(AntSegmentedOption::new("Grid").icon(AntIconName::AppstoreOutlined))
-                .child(AntSegmentedOption::new("Kanban").icon(AntIconName::ProjectOutlined))
-                .child(AntSegmentedOption::new("Locked").disabled(true)))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Selected view index: {}",self.segmented_index)))
-            .child(label("Block layout and disabled state",t))
-            .child(div().w(px(440.)).child(AntSegmented::new("segmented-block")
-                .theme(t).block(true).selected_index(1)
-                .child(AntSegmentedOption::new("Monthly"))
-                .child(AntSegmentedOption::new("Quarterly"))
-                .child(AntSegmentedOption::new("Yearly"))))
-            .child(AntSegmented::new("segmented-disabled").theme(t).disabled(true)
-                .child(AntSegmentedOption::new("Enabled"))
-                .child(AntSegmentedOption::new("Disabled")))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label(
+                "Controlled view switch · Left/Right/Home/End keyboard navigation",
+                t,
+            ))
+            .child(
+                AntSegmented::new("segmented-views")
+                    .theme(t)
+                    .selected_index(self.segmented_index)
+                    .on_change(move |next, window, cx| changed(&next, window, cx))
+                    .child(AntSegmentedOption::new("List").icon(AntIconName::BarsOutlined))
+                    .child(AntSegmentedOption::new("Grid").icon(AntIconName::AppstoreOutlined))
+                    .child(AntSegmentedOption::new("Kanban").icon(AntIconName::ProjectOutlined))
+                    .child(AntSegmentedOption::new("Locked").disabled(true)),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Selected view index: {}", self.segmented_index)),
+            )
+            .child(label("Block layout and disabled state", t))
+            .child(
+                div().w(px(440.)).child(
+                    AntSegmented::new("segmented-block")
+                        .theme(t)
+                        .block(true)
+                        .selected_index(1)
+                        .child(AntSegmentedOption::new("Monthly"))
+                        .child(AntSegmentedOption::new("Quarterly"))
+                        .child(AntSegmentedOption::new("Yearly")),
+                ),
+            )
+            .child(
+                AntSegmented::new("segmented-disabled")
+                    .theme(t)
+                    .disabled(true)
+                    .child(AntSegmentedOption::new("Enabled"))
+                    .child(AntSegmentedOption::new("Disabled")),
+            )
             .into_any_element()
     }
 
-    fn time_picker_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(18.))
+    fn time_picker_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
             .child(label("Segment editor plus hour/minute column popup", t))
-            .child(row()
-                .child(AntTimePicker::new(&self.time_basic).theme(t))
-                .child(AntTimePicker::new(&self.time_seconds).theme(t)
-                    .show_second(true)
-                    .size(ControlSize::Large)))
+            .child(
+                row()
+                    .child(AntTimePicker::new(&self.time_basic).theme(t))
+                    .child(
+                        AntTimePicker::new(&self.time_seconds)
+                            .theme(t)
+                            .show_second(true)
+                            .size(ControlSize::Large),
+                    ),
+            )
             .child(label("12-hour cycle including AM/PM column", t))
             .child(AntTimePicker::new(&self.time_12).theme(t).hour12(true))
-            .child(label("Disabled and validation statuses",t))
-            .child(row()
-                .child(AntTimePicker::new(&self.time_basic).theme(t)
-                    .status(InputStatus::Warning))
-                .child(AntTimePicker::new(&self.time_disabled).theme(t).disabled(true)))
+            .child(label("Disabled and validation statuses", t))
+            .child(
+                row()
+                    .child(
+                        AntTimePicker::new(&self.time_basic)
+                            .theme(t)
+                            .status(InputStatus::Warning),
+                    )
+                    .child(
+                        AntTimePicker::new(&self.time_disabled)
+                            .theme(t)
+                            .disabled(true),
+                    ),
+            )
             .into_any_element()
     }
 
-    fn autocomplete_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let on_selected=cx.listener(|this,selected:&SharedString,window,cx|{
-            this.autocomplete_input.update(cx,|input,cx|{
-                input.set_value(selected.clone(),window,cx);
+    fn autocomplete_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_selected = cx.listener(|this, selected: &SharedString, window, cx| {
+            this.autocomplete_input.update(cx, |input, cx| {
+                input.set_value(selected.clone(), window, cx);
             });
-            this.autocomplete_last=selected.to_string();
-            this.autocomplete_open=false;
-            this.autocomplete_active=0;
+            this.autocomplete_last = selected.to_string();
+            this.autocomplete_open = false;
+            this.autocomplete_active = 0;
             cx.notify();
         });
-        let on_open=cx.listener(|this,open:&bool,_,cx|{
-            this.autocomplete_open=*open;cx.notify();
-        });
-        let on_active=cx.listener(|this,index:&usize,_,cx|{
-            this.autocomplete_active=*index;cx.notify();
-        });
-        let open_again=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
-            this.autocomplete_open=true;cx.notify();
-        });
-        div().flex().flex_col().gap(px(20.)).w_full()
-            .child(label("Free-text input with filtered Rust/GPUI suggestions",t))
-            .child(div().h(px(252.)).flex().flex_col().gap(px(8.))
-                .child(AntAutoComplete::new("autocomplete-language",&self.autocomplete_input)
-                    .theme(t).open(self.autocomplete_open).active_index(self.autocomplete_active)
-                    .options(["Rust","Ruby","R","React","Python","Java","TypeScript","Go","Scala"])
-                    .on_select(move|value,window,cx|on_selected(&value,window,cx))
-                    .on_active_change(move|index,window,cx|on_active(&index,window,cx))
-                    .on_open_change(move|open,window,cx|on_open(&open,window,cx)))
-                .child(div().text_size(px(12.)).text_color(t.text_secondary)
-                    .child("Type to filter; Up/Down choose a suggestion, Enter accepts, Esc closes."))
-                .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                    .child(format!("Last selected: {}",self.autocomplete_last))))
-            .child(AntButton::new("autocomplete-open","Show suggestions").theme(t)
-                .on_click(open_again))
-            .into_any_element()
-    }
-
-
-    fn drawer_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let on_closed=cx.listener(|this,_:&(),_,cx|{
-            this.drawer_closed+=1;cx.notify();
-        });
-        div().flex().flex_col().gap(px(18.))
-            .child(label("Real GPUI Kit Sheet · Escape, mask dismiss and focus restoration",t))
-            .child(row()
-                .child(AntDrawer::new("drawer-right","Open right Drawer")
-                    .title("Edit profile").body("Your changes stay in a native GPUI Sheet.")
-                    .theme(t).placement(DrawerPlacement::Right)
-                    .on_close(move|window,cx|on_closed(&(),window,cx))
-                    .content(move|_,_|div().flex().flex_col().gap(px(12.))
-                        .child(AntText::new("Native panel content with Ant Design colors.").theme(t))
-                        .child(AntTag::new("In progress").tone(Tone::Blue).theme(t))
-                        .into_any_element()))
-                .child(AntDrawer::new("drawer-left","Open left")
-                    .theme(t).placement(DrawerPlacement::Left)
-                    .title("Navigation drawer").body("Left-side navigation panel."))
-                .child(AntDrawer::new("drawer-bottom","Open bottom")
-                    .theme(t).placement(DrawerPlacement::Bottom).size(260.)
-                    .title("Bottom sheet").body("Responsive action sheet.")))
-            .child(label("Resizable Sheet and overlay options",t))
-            .child(row()
-                .child(AntDrawer::new("drawer-resize","Resizable").theme(t)
-                    .resizable(true).size(400.)
-                    .body("Drag the edge to resize this GPUI Sheet."))
-                .child(AntDrawer::new("drawer-no-mask","Without mask").theme(t)
-                    .mask(false).body("No modal backdrop.")))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Drawer closed {} times",self.drawer_closed)))
-            .into_any_element()
-    }
-
-    fn message_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(18.))
-            .child(label("Global in-app toast queue · native GPU, top center",t))
-            .child(row()
-                .child(AntButton::new("message-success","Success").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntMessage::success("Changes saved successfully").show(window,cx);
-                    }))
-                .child(AntButton::new("message-info","Info").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntMessage::new("Your settings are synchronized").show(window,cx);
-                    }))
-                .child(AntButton::new("message-warning","Warning").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntMessage::warning("Please review the selected values").show(window,cx);
-                    }))
-                .child(AntButton::new("message-error","Error").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntMessage::error("Unable to save changes").show(window,cx);
-                    })))
-            .child(label("Replace a keyed message instead of creating duplicates",t))
-            .child(row()
-                .child(AntButton::new("message-loading-start","Start").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntMessage::new("Operation running").key("demo-task")
-                            .persistent(true).show(window,cx);
-                    }))
-                .child(AntButton::new("message-loading-done","Complete").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntMessage::success("Operation complete").key("demo-task")
-                            .show(window,cx);
-                    })))
-            .into_any_element()
-    }
-
-    fn notification_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().flex().flex_col().gap(px(18.))
-            .child(label("Kit Root notification stack, top right by default",t))
-            .child(row()
-                .child(AntButton::new("notification-info","Information").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntNotification::new("New version","A new native build is ready.")
-                            .show(window,cx);
-                    }))
-                .child(AntButton::new("notification-success","Success").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntNotification::new("Upload complete","All assets were validated.")
-                            .tone(NoticeTone::Success).show(window,cx);
-                    }))
-                .child(AntButton::new("notification-error","Error").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntNotification::new("Connection lost","Try reconnecting to the service.")
-                            .tone(NoticeTone::Error).persistent(true).show(window,cx);
-                    })))
-            .child(label("Independent placement and update by key",t))
-            .child(row()
-                .child(AntButton::new("notification-bottom","Bottom left").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntNotification::new("Alternative placement","Bottom left notifications")
-                            .placement(gpui_kit::Anchor::BottomLeft).show(window,cx);
-                    }))
-                .child(AntButton::new("notification-persistent","Persistent").theme(t)
-                    .on_click(|_,window,cx|{
-                        AntNotification::new("Job status","Job 42 is still running.")
-                            .key("job42").persistent(true).show(window,cx);
-                    })))
-            .into_any_element()
-    }
-
-    fn tree_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let selected=cx.listener(|this,key:&SharedString,_,cx|{
-            this.tree_selected=key.to_string();cx.notify();
-        });
-        let expanded=cx.listener(|this,(key,opened):&(SharedString,bool),_,cx|{
-            if *opened{this.tree_expanded.insert(key.to_string());}
-            else{this.tree_expanded.remove(key.as_ref());}
+        let on_open = cx.listener(|this, open: &bool, _, cx| {
+            this.autocomplete_open = *open;
             cx.notify();
         });
-        let checked=cx.listener(|this,keys:&BTreeSet<String>,_,cx|{
-            this.tree_checked=keys.clone();
+        let on_active = cx.listener(|this, index: &usize, _, cx| {
+            this.autocomplete_active = *index;
             cx.notify();
         });
-        let nodes=vec![
-            AntTreeNode::new("src","src").icon(AntIconName::FolderOutlined)
-                .child(AntTreeNode::new("src/lib","lib")
-                    .child(AntTreeNode::new("src/lib/components.rs","components.rs"))
-                    .child(AntTreeNode::new("src/lib/theme.rs","theme.rs")))
-                .child(AntTreeNode::new("src/main.rs","main.rs"))
-                .child(AntTreeNode::new("src/protected.rs","protected.rs").disabled(true)),
-            AntTreeNode::new("docs","docs").icon(AntIconName::FolderOutlined)
-                .child(AntTreeNode::new("docs/api.md","api.md"))
-                .child(AntTreeNode::new("docs/guide.md","guide.md")),
-            AntTreeNode::new("Cargo.toml","Cargo.toml"),
-        ];
-        let states=gpui_antd::tree_check_states(&nodes,&self.tree_checked,false);
-        let half=states.values().filter(|status|**status==gpui_antd::TreeCheckState::Indeterminate).count();
-        div().flex().flex_col().gap(px(12.))
-            .child(label("Native GPUI tree · check parents to cascade; mixed branches show half-checks",t))
-            .child(div().w(px(440.)).border_1().border_color(t.border)
-                .rounded(px(8.)).child(AntTree::new("tree-example")
-                    .theme(t).children(nodes).checkable(true)
-                    .expanded_keys(self.tree_expanded.iter().map(String::as_str))
-                    .checked_keys(self.tree_checked.iter().map(String::as_str))
-                    .selected_key(self.tree_selected.clone())
-                    .on_select(move|key,window,cx|selected(&key,window,cx))
-                    .on_expand(move|key,value,window,cx|expanded(&(key,value),window,cx))
-                    .on_checked_keys_change(move|keys,window,cx|checked(&keys,window,cx))))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Selected: {} · Checked: {} · Partially checked: {}",
-                    self.tree_selected,self.tree_checked.len(),half)))
+        let open_again = cx.listener(|this, _: &gpui_kit::ClickEvent, _, cx| {
+            this.autocomplete_open = true;
+            cx.notify();
+        });
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .w_full()
+            .child(label(
+                "Free-text input with filtered Rust/GPUI suggestions",
+                t,
+            ))
+            .child(
+                div()
+                    .h(px(252.))
+                    .flex()
+                    .flex_col()
+                    .gap(px(8.))
+                    .child(
+                        AntAutoComplete::new("autocomplete-language", &self.autocomplete_input)
+                            .theme(t)
+                            .open(self.autocomplete_open)
+                            .active_index(self.autocomplete_active)
+                            .options([
+                                "Rust",
+                                "Ruby",
+                                "R",
+                                "React",
+                                "Python",
+                                "Java",
+                                "TypeScript",
+                                "Go",
+                                "Scala",
+                            ])
+                            .on_select(move |value, window, cx| on_selected(&value, window, cx))
+                            .on_active_change(move |index, window, cx| {
+                                on_active(&index, window, cx)
+                            })
+                            .on_open_change(move |open, window, cx| on_open(&open, window, cx)),
+                    )
+                    .child(div().text_size(px(12.)).text_color(t.text_secondary).child(
+                        "Type to filter; Up/Down choose a suggestion, Enter accepts, Esc closes.",
+                    ))
+                    .child(
+                        div()
+                            .text_size(px(13.))
+                            .text_color(t.text_secondary)
+                            .child(format!("Last selected: {}", self.autocomplete_last)),
+                    ),
+            )
+            .child(
+                AntButton::new("autocomplete-open", "Show suggestions")
+                    .theme(t)
+                    .on_click(open_again),
+            )
             .into_any_element()
     }
 
-    fn table_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let sorted=cx.listener(|this,(key,order):&(SharedString,TableSort),_,cx|{
-            this.table_sort_key=key.to_string();
-            this.table_sort=*order;
-            this.table_page=1;cx.notify();
+    fn drawer_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let on_closed = cx.listener(|this, _: &(), _, cx| {
+            this.drawer_closed += 1;
+            cx.notify();
         });
-        let selection=cx.listener(|this,keys:&BTreeSet<String>,_,cx|{
-            this.table_selected=keys.clone();cx.notify();
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label(
+                "Real GPUI Kit Sheet · Escape, mask dismiss and focus restoration",
+                t,
+            ))
+            .child(
+                row()
+                    .child(
+                        AntDrawer::new("drawer-right", "Open right Drawer")
+                            .title("Edit profile")
+                            .body("Your changes stay in a native GPUI Sheet.")
+                            .theme(t)
+                            .placement(DrawerPlacement::Right)
+                            .on_close(move |window, cx| on_closed(&(), window, cx))
+                            .content(move |_, _| {
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(12.))
+                                    .child(
+                                        AntText::new(
+                                            "Native panel content with Ant Design colors.",
+                                        )
+                                        .theme(t),
+                                    )
+                                    .child(AntTag::new("In progress").tone(Tone::Blue).theme(t))
+                                    .into_any_element()
+                            }),
+                    )
+                    .child(
+                        AntDrawer::new("drawer-left", "Open left")
+                            .theme(t)
+                            .placement(DrawerPlacement::Left)
+                            .title("Navigation drawer")
+                            .body("Left-side navigation panel."),
+                    )
+                    .child(
+                        AntDrawer::new("drawer-bottom", "Open bottom")
+                            .theme(t)
+                            .placement(DrawerPlacement::Bottom)
+                            .size(260.)
+                            .title("Bottom sheet")
+                            .body("Responsive action sheet."),
+                    ),
+            )
+            .child(label("Resizable Sheet and overlay options", t))
+            .child(
+                row()
+                    .child(
+                        AntDrawer::new("drawer-resize", "Resizable")
+                            .theme(t)
+                            .resizable(true)
+                            .size(400.)
+                            .body("Drag the edge to resize this GPUI Sheet."),
+                    )
+                    .child(
+                        AntDrawer::new("drawer-no-mask", "Without mask")
+                            .theme(t)
+                            .mask(false)
+                            .body("No modal backdrop."),
+                    ),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Drawer closed {} times", self.drawer_closed)),
+            )
+            .into_any_element()
+    }
+
+    fn message_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label(
+                "Global in-app toast queue · native GPU, top center",
+                t,
+            ))
+            .child(
+                row()
+                    .child(
+                        AntButton::new("message-success", "Success")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntMessage::success("Changes saved successfully").show(window, cx);
+                            }),
+                    )
+                    .child(AntButton::new("message-info", "Info").theme(t).on_click(
+                        |_, window, cx| {
+                            AntMessage::new("Your settings are synchronized").show(window, cx);
+                        },
+                    ))
+                    .child(
+                        AntButton::new("message-warning", "Warning")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntMessage::warning("Please review the selected values")
+                                    .show(window, cx);
+                            }),
+                    )
+                    .child(AntButton::new("message-error", "Error").theme(t).on_click(
+                        |_, window, cx| {
+                            AntMessage::error("Unable to save changes").show(window, cx);
+                        },
+                    )),
+            )
+            .child(label(
+                "Replace a keyed message instead of creating duplicates",
+                t,
+            ))
+            .child(
+                row()
+                    .child(
+                        AntButton::new("message-loading-start", "Start")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntMessage::new("Operation running")
+                                    .key("demo-task")
+                                    .persistent(true)
+                                    .show(window, cx);
+                            }),
+                    )
+                    .child(
+                        AntButton::new("message-loading-done", "Complete")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntMessage::success("Operation complete")
+                                    .key("demo-task")
+                                    .show(window, cx);
+                            }),
+                    ),
+            )
+            .into_any_element()
+    }
+
+    fn notification_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label(
+                "Kit Root notification stack, top right by default",
+                t,
+            ))
+            .child(
+                row()
+                    .child(
+                        AntButton::new("notification-info", "Information")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntNotification::new("New version", "A new native build is ready.")
+                                    .show(window, cx);
+                            }),
+                    )
+                    .child(
+                        AntButton::new("notification-success", "Success")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntNotification::new(
+                                    "Upload complete",
+                                    "All assets were validated.",
+                                )
+                                .tone(NoticeTone::Success)
+                                .show(window, cx);
+                            }),
+                    )
+                    .child(
+                        AntButton::new("notification-error", "Error")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntNotification::new(
+                                    "Connection lost",
+                                    "Try reconnecting to the service.",
+                                )
+                                .tone(NoticeTone::Error)
+                                .persistent(true)
+                                .show(window, cx);
+                            }),
+                    ),
+            )
+            .child(label("Independent placement and update by key", t))
+            .child(
+                row()
+                    .child(
+                        AntButton::new("notification-bottom", "Bottom left")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntNotification::new(
+                                    "Alternative placement",
+                                    "Bottom left notifications",
+                                )
+                                .placement(gpui_kit::Anchor::BottomLeft)
+                                .show(window, cx);
+                            }),
+                    )
+                    .child(
+                        AntButton::new("notification-persistent", "Persistent")
+                            .theme(t)
+                            .on_click(|_, window, cx| {
+                                AntNotification::new("Job status", "Job 42 is still running.")
+                                    .key("job42")
+                                    .persistent(true)
+                                    .show(window, cx);
+                            }),
+                    ),
+            )
+            .into_any_element()
+    }
+
+    fn tree_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let selected = cx.listener(|this, key: &SharedString, _, cx| {
+            this.tree_selected = key.to_string();
+            cx.notify();
         });
-        let page_change=cx.listener(|this,page:&usize,_,cx|{
-            this.table_page=*page;cx.notify();
-        });
-        let filter_change=cx.listener(|this,(key,value):&(SharedString,Option<SharedString>),_,cx|{
-            if let Some(value)=value{
-                this.table_filters.insert(key.to_string(),value.to_string());
-            }else{
-                this.table_filters.remove(key.as_ref());
+        let expanded = cx.listener(|this, (key, opened): &(SharedString, bool), _, cx| {
+            if *opened {
+                this.tree_expanded.insert(key.to_string());
+            } else {
+                this.tree_expanded.remove(key.as_ref());
             }
-            this.table_page=1;
             cx.notify();
         });
-        let data=(1..=24).map(|i|{
-            AntTableRow::new(format!("user-{i:02}"))
-                .cells([format!("User {i:02}"),format!("{}",(i*7)%101),
-                    if i%3==0{"Pending".to_owned()}else{"Active".to_owned()}])
+        let checked = cx.listener(|this, keys: &BTreeSet<String>, _, cx| {
+            this.tree_checked = keys.clone();
+            cx.notify();
         });
-        div().w_full().flex().flex_col().gap(px(14.))
-            .child(label("Native table · sort Score, filter Status, select all on the current page",t))
-            .child(AntTable::new("table-demo").theme(t)
-                .column(AntTableColumn::new("name","Name").sortable(true).width(180.))
-                .column(AntTableColumn::new("score","Score").sortable(true).numeric(true).width(140.))
-                .column(AntTableColumn::new("status","Status").width(220.)
-                    .filters(["Active","Pending"]))
-                .rows(data).selectable(true).striped(true)
-                .selected_keys(self.table_selected.iter().map(String::as_str))
-                .sort_by(self.table_sort_key.clone(),self.table_sort)
-                .active_filters(self.table_filters.iter().map(|(key,value)|
-                    (key.as_str(),value.as_str())))
-                .page(self.table_page).page_size(5)
-                .on_sort(move|key,order,window,cx|sorted(&(key,order),window,cx))
-                .on_selection(move|keys,window,cx|selection(&keys,window,cx))
-                .on_page_change(move|page,window,cx|page_change(&page,window,cx))
-                .on_filter_change(move|key,value,window,cx|{
-                    filter_change(&(key,value),window,cx)
-                }))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Page {} · Sorted: {:?} · Filter: {} · Selected rows: {}",
+        let nodes = vec![
+            AntTreeNode::new("src", "src")
+                .icon(AntIconName::FolderOutlined)
+                .child(
+                    AntTreeNode::new("src/lib", "lib")
+                        .child(AntTreeNode::new("src/lib/components.rs", "components.rs"))
+                        .child(AntTreeNode::new("src/lib/theme.rs", "theme.rs")),
+                )
+                .child(AntTreeNode::new("src/main.rs", "main.rs"))
+                .child(AntTreeNode::new("src/protected.rs", "protected.rs").disabled(true)),
+            AntTreeNode::new("docs", "docs")
+                .icon(AntIconName::FolderOutlined)
+                .child(AntTreeNode::new("docs/api.md", "api.md"))
+                .child(AntTreeNode::new("docs/guide.md", "guide.md")),
+            AntTreeNode::new("Cargo.toml", "Cargo.toml"),
+        ];
+        let states = gpui_antd::tree_check_states(&nodes, &self.tree_checked, false);
+        let half = states
+            .values()
+            .filter(|status| **status == gpui_antd::TreeCheckState::Indeterminate)
+            .count();
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(12.))
+            .child(label(
+                "Native GPUI tree · check parents to cascade; mixed branches show half-checks",
+                t,
+            ))
+            .child(
+                div()
+                    .w(px(440.))
+                    .border_1()
+                    .border_color(t.border)
+                    .rounded(px(8.))
+                    .child(
+                        AntTree::new("tree-example")
+                            .theme(t)
+                            .children(nodes)
+                            .checkable(true)
+                            .expanded_keys(self.tree_expanded.iter().map(String::as_str))
+                            .checked_keys(self.tree_checked.iter().map(String::as_str))
+                            .selected_key(self.tree_selected.clone())
+                            .on_select(move |key, window, cx| selected(&key, window, cx))
+                            .on_expand(move |key, value, window, cx| {
+                                expanded(&(key, value), window, cx)
+                            })
+                            .on_checked_keys_change(move |keys, window, cx| {
+                                checked(&keys, window, cx)
+                            }),
+                    ),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!(
+                        "Selected: {} · Checked: {} · Partially checked: {}",
+                        self.tree_selected,
+                        self.tree_checked.len(),
+                        half
+                    )),
+            )
+            .into_any_element()
+    }
+
+    fn table_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let sorted = cx.listener(|this, (key, order): &(SharedString, TableSort), _, cx| {
+            this.table_sort_key = key.to_string();
+            this.table_sort = *order;
+            this.table_page = 1;
+            cx.notify();
+        });
+        let selection = cx.listener(|this, keys: &BTreeSet<String>, _, cx| {
+            this.table_selected = keys.clone();
+            cx.notify();
+        });
+        let page_change = cx.listener(|this, page: &usize, _, cx| {
+            this.table_page = *page;
+            cx.notify();
+        });
+        let filter_change = cx.listener(
+            |this, (key, value): &(SharedString, Option<SharedString>), _, cx| {
+                if let Some(value) = value {
+                    this.table_filters
+                        .insert(key.to_string(), value.to_string());
+                } else {
+                    this.table_filters.remove(key.as_ref());
+                }
+                this.table_page = 1;
+                cx.notify();
+            },
+        );
+        let data = (1..=24).map(|i| {
+            AntTableRow::new(format!("user-{i:02}")).cells([
+                format!("User {i:02}"),
+                format!("{}", (i * 7) % 101),
+                if i % 3 == 0 {
+                    "Pending".to_owned()
+                } else {
+                    "Active".to_owned()
+                },
+            ])
+        });
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .gap(px(14.))
+            .child(label(
+                "Native table · sort Score, filter Status, select all on the current page",
+                t,
+            ))
+            .child(
+                AntTable::new("table-demo")
+                    .theme(t)
+                    .column(
+                        AntTableColumn::new("name", "Name")
+                            .sortable(true)
+                            .width(180.),
+                    )
+                    .column(
+                        AntTableColumn::new("score", "Score")
+                            .sortable(true)
+                            .numeric(true)
+                            .width(140.),
+                    )
+                    .column(
+                        AntTableColumn::new("status", "Status")
+                            .width(220.)
+                            .filters(["Active", "Pending"]),
+                    )
+                    .rows(data)
+                    .selectable(true)
+                    .striped(true)
+                    .selected_keys(self.table_selected.iter().map(String::as_str))
+                    .sort_by(self.table_sort_key.clone(), self.table_sort)
+                    .active_filters(
+                        self.table_filters
+                            .iter()
+                            .map(|(key, value)| (key.as_str(), value.as_str())),
+                    )
+                    .page(self.table_page)
+                    .page_size(5)
+                    .on_sort(move |key, order, window, cx| sorted(&(key, order), window, cx))
+                    .on_selection(move |keys, window, cx| selection(&keys, window, cx))
+                    .on_page_change(move |page, window, cx| page_change(&page, window, cx))
+                    .on_filter_change(move |key, value, window, cx| {
+                        filter_change(&(key, value), window, cx)
+                    }),
+            )
+            .child(div().text_size(px(13.)).text_color(t.text_secondary).child(
+                format!("Page {} · Sorted: {:?} · Filter: {} · Selected rows: {}",
                     self.table_page,self.table_sort,
                     self.table_filters.get("status").map(String::as_str).unwrap_or("All"),
-                    self.table_selected.len())))
+                    self.table_selected.len()),
+            ))
             .into_any_element()
     }
 
-
-    fn timeline_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let reverse=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
-            this.timeline_reversed=!this.timeline_reversed;
+    fn timeline_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let reverse = cx.listener(|this, _: &gpui_kit::ClickEvent, _, cx| {
+            this.timeline_reversed = !this.timeline_reversed;
             cx.notify();
         });
-        div().w_full().flex().flex_col().gap(px(18.))
-            .child(label("Chronological events · toggle native Rust order",t))
-            .child(AntButton::new("timeline-reverse","Reverse timeline")
-                .theme(t).on_click(reverse))
-            .child(div().w(px(650.)).child(AntTimeline::new().theme(t)
-                .mode(TimelineMode::Alternate).reverse(self.timeline_reversed)
-                .child(AntTimelineItem::new("Build created")
-                    .timestamp("09:10")
-                    .description("Source fetched from the latest main branch.")
-                    .tone(TimelineTone::Success))
-                .child(AntTimelineItem::new("WASM compilation")
-                    .timestamp("09:12")
-                    .description("The same Rust component compiles to native and WASM.")
-                    .icon(AntIconName::CodeOutlined)
-                    .tone(TimelineTone::Processing))
-                .child(AntTimelineItem::new("Visual regression")
-                    .timestamp("09:14").description("Chromium validates rendered GPUI pixels.")
-                    .tone(TimelineTone::Warning))
-                .pending("Deploying to GitHub Pages")))
-            .child(label("Left-aligned completed steps",t))
-            .child(AntTimeline::new().theme(t)
-                .child(AntTimelineItem::new("Start").tone(TimelineTone::Success))
-                .child(AntTimelineItem::new("Validated").tone(TimelineTone::Success))
-                .child(AntTimelineItem::new("Failed step").tone(TimelineTone::Error)))
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label("Chronological events · toggle native Rust order", t))
+            .child(
+                AntButton::new("timeline-reverse", "Reverse timeline")
+                    .theme(t)
+                    .on_click(reverse),
+            )
+            .child(
+                div().w(px(650.)).child(
+                    AntTimeline::new()
+                        .theme(t)
+                        .mode(TimelineMode::Alternate)
+                        .reverse(self.timeline_reversed)
+                        .child(
+                            AntTimelineItem::new("Build created")
+                                .timestamp("09:10")
+                                .description("Source fetched from the latest main branch.")
+                                .tone(TimelineTone::Success),
+                        )
+                        .child(
+                            AntTimelineItem::new("WASM compilation")
+                                .timestamp("09:12")
+                                .description("The same Rust component compiles to native and WASM.")
+                                .icon(AntIconName::CodeOutlined)
+                                .tone(TimelineTone::Processing),
+                        )
+                        .child(
+                            AntTimelineItem::new("Visual regression")
+                                .timestamp("09:14")
+                                .description("Chromium validates rendered GPUI pixels.")
+                                .tone(TimelineTone::Warning),
+                        )
+                        .pending("Deploying to GitHub Pages"),
+                ),
+            )
+            .child(label("Left-aligned completed steps", t))
+            .child(
+                AntTimeline::new()
+                    .theme(t)
+                    .child(AntTimelineItem::new("Start").tone(TimelineTone::Success))
+                    .child(AntTimelineItem::new("Validated").tone(TimelineTone::Success))
+                    .child(AntTimelineItem::new("Failed step").tone(TimelineTone::Error)),
+            )
             .into_any_element()
     }
 
-
-    fn calendar_demo(&self,t:AntTheme)->gpui_kit::AnyElement{
-        div().w_full().flex().flex_col().gap(px(18.))
-            .child(label("Native month / year navigation and keyboard-selectable dates",t))
+    fn calendar_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label(
+                "Native month / year navigation and keyboard-selectable dates",
+                t,
+            ))
             .child(AntCalendar::new(&self.calendar_single).theme(t))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Selected single date: {}",self.calendar_selected)))
-            .child(label("Range selection across two adjacent months",t))
-            .child(AntCalendar::new(&self.calendar_range).theme(t)
-                .size(ControlSize::Small).months(2))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Selected range: {}",self.calendar_range_selected)))
-            .child(label("Business days only · Saturdays and Sundays disabled",t))
-            .child(AntCalendar::new(&self.calendar_restricted)
-                .theme(t).size(ControlSize::Small).bordered(false))
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Selected single date: {}", self.calendar_selected)),
+            )
+            .child(label("Range selection across two adjacent months", t))
+            .child(
+                AntCalendar::new(&self.calendar_range)
+                    .theme(t)
+                    .size(ControlSize::Small)
+                    .months(2),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!("Selected range: {}", self.calendar_range_selected)),
+            )
+            .child(label(
+                "Business days only · Saturdays and Sundays disabled",
+                t,
+            ))
+            .child(
+                AntCalendar::new(&self.calendar_restricted)
+                    .theme(t)
+                    .size(ControlSize::Small)
+                    .bordered(false),
+            )
             .into_any_element()
     }
 
-    fn float_button_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement{
-        let clicked=cx.listener(|this,_:&gpui_kit::ClickEvent,_,cx|{
-            this.float_clicks+=1;cx.notify();
+    fn float_button_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let clicked = cx.listener(|this, _: &gpui_kit::ClickEvent, _, cx| {
+            this.float_clicks += 1;
+            cx.notify();
         });
-        let open=cx.listener(|this,open:&bool,_,cx|{
-            this.float_group_open=*open;cx.notify();
+        let open = cx.listener(|this, open: &bool, _, cx| {
+            this.float_group_open = *open;
+            cx.notify();
         });
-        let selected=cx.listener(|this,key:&SharedString,_,cx|{
-            this.float_last_action=key.to_string();cx.notify();
+        let selected = cx.listener(|this, key: &SharedString, _, cx| {
+            this.float_last_action = key.to_string();
+            cx.notify();
         });
-        div().flex().flex_col().gap(px(18.)).w_full()
-            .child(label("Floating actions use native GPUI buttons and keyboard focus",t))
-            .child(div().relative().w(px(520.)).h(px(180.))
-                .border_1().border_color(t.border).rounded(px(t.border_radius))
-                .bg(t.surface_secondary)
-                .child(div().p(px(16.))
-                    .child(AntText::new("Standalone primary action · 7 unread").theme(t)))
-                .child(AntFloatButton::new("floating-primary","Add item")
-                    .theme(t).variant(FloatVariant::Primary).shape(FloatShape::Circle)
-                    .icon(AntIconName::PlusOutlined).badge(7).position(18.,18.)
-                    .on_click(clicked)))
-            .child(div().text_size(px(13.)).text_color(t.text_secondary)
-                .child(format!("Standalone action clicked {} times",self.float_clicks)))
-            .child(label("Controlled FloatButton.Group · expand and choose action",t))
-            .child(div().relative().w(px(520.)).h(px(275.))
-                .border_1().border_color(t.border).rounded(px(t.border_radius))
-                .bg(t.surface_secondary)
-                .child(div().p(px(16.)).text_color(t.text_secondary)
-                    .child(format!("Last selected: {}",self.float_last_action)))
-                .child(AntFloatButtonGroup::new("floating-group","Quick actions")
-                    .theme(t).open(self.float_group_open)
-                    .position(18.,18.)
-                    .action(AntFloatAction::new("edit","Edit",AntIconName::EditOutlined))
-                    .action(AntFloatAction::new("share","Share",AntIconName::ShareAltOutlined))
-                    .action(AntFloatAction::new("delete","Delete",AntIconName::DeleteOutlined)
-                        .danger(true).disabled(true))
-                    .on_open_change(move|expanded,window,cx|open(&expanded,window,cx))
-                    .on_select(move|key,window,cx|selected(&key,window,cx))))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .w_full()
+            .child(label(
+                "Floating actions use native GPUI buttons and keyboard focus",
+                t,
+            ))
+            .child(
+                div()
+                    .relative()
+                    .w(px(520.))
+                    .h(px(180.))
+                    .border_1()
+                    .border_color(t.border)
+                    .rounded(px(t.border_radius))
+                    .bg(t.surface_secondary)
+                    .child(
+                        div()
+                            .p(px(16.))
+                            .child(AntText::new("Standalone primary action · 7 unread").theme(t)),
+                    )
+                    .child(
+                        AntFloatButton::new("floating-primary", "Add item")
+                            .theme(t)
+                            .variant(FloatVariant::Primary)
+                            .shape(FloatShape::Circle)
+                            .icon(AntIconName::PlusOutlined)
+                            .badge(7)
+                            .position(18., 18.)
+                            .on_click(clicked),
+                    ),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(t.text_secondary)
+                    .child(format!(
+                        "Standalone action clicked {} times",
+                        self.float_clicks
+                    )),
+            )
+            .child(label(
+                "Controlled FloatButton.Group · expand and choose action",
+                t,
+            ))
+            .child(
+                div()
+                    .relative()
+                    .w(px(520.))
+                    .h(px(275.))
+                    .border_1()
+                    .border_color(t.border)
+                    .rounded(px(t.border_radius))
+                    .bg(t.surface_secondary)
+                    .child(
+                        div()
+                            .p(px(16.))
+                            .text_color(t.text_secondary)
+                            .child(format!("Last selected: {}", self.float_last_action)),
+                    )
+                    .child(
+                        AntFloatButtonGroup::new("floating-group", "Quick actions")
+                            .theme(t)
+                            .open(self.float_group_open)
+                            .position(18., 18.)
+                            .action(AntFloatAction::new(
+                                "edit",
+                                "Edit",
+                                AntIconName::EditOutlined,
+                            ))
+                            .action(AntFloatAction::new(
+                                "share",
+                                "Share",
+                                AntIconName::ShareAltOutlined,
+                            ))
+                            .action(
+                                AntFloatAction::new(
+                                    "delete",
+                                    "Delete",
+                                    AntIconName::DeleteOutlined,
+                                )
+                                .danger(true)
+                                .disabled(true),
+                            )
+                            .on_open_change(move |expanded, window, cx| open(&expanded, window, cx))
+                            .on_select(move |key, window, cx| selected(&key, window, cx)),
+                    ),
+            )
             .into_any_element()
     }
 
     fn breadcrumb_demo(&self, theme: AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(20.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
             .child(label("Breadcrumb hierarchy", theme))
-            .child(AntBreadcrumb::new().theme(theme)
-                .child(AntBreadcrumbItem::new("Home").href("https://ant.design/"))
-                .child(AntBreadcrumbItem::new("Components").href("https://ant.design/components/overview"))
-                .child(AntBreadcrumbItem::new("Breadcrumb")))
-            .child(label("Custom separator and disabled intermediate item", theme))
-            .child(AntBreadcrumb::new().theme(theme).separator(">")
-                .child(AntBreadcrumbItem::new("Home").href("https://ant.design/"))
-                .child(AntBreadcrumbItem::new("Section").disabled(true))
-                .child(AntBreadcrumbItem::new("Current page")))
+            .child(
+                AntBreadcrumb::new()
+                    .theme(theme)
+                    .child(AntBreadcrumbItem::new("Home").href("https://ant.design/"))
+                    .child(
+                        AntBreadcrumbItem::new("Components")
+                            .href("https://ant.design/components/overview"),
+                    )
+                    .child(AntBreadcrumbItem::new("Breadcrumb")),
+            )
+            .child(label(
+                "Custom separator and disabled intermediate item",
+                theme,
+            ))
+            .child(
+                AntBreadcrumb::new()
+                    .theme(theme)
+                    .separator(">")
+                    .child(AntBreadcrumbItem::new("Home").href("https://ant.design/"))
+                    .child(AntBreadcrumbItem::new("Section").disabled(true))
+                    .child(AntBreadcrumbItem::new("Current page")),
+            )
             .into_any_element()
     }
 
     fn icon_single_demo(&self, t: AntTheme, raw: &str) -> gpui_kit::AnyElement {
         let preview = IconPreview::parse(raw);
         let selected = AntIconName::from_ant_name(&preview.name);
-        div().w_full().flex().flex_col().items_center()
-            .justify_center().gap(px(16.)).p(px(18.))
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .items_center()
+            .justify_center()
+            .gap(px(16.))
+            .p(px(18.))
             .when_some(selected, |this, name| {
                 let mut icon = AntIcon::new(name)
-                    .size(preview.size).theme(t).spin(preview.spin);
+                    .size(preview.size)
+                    .theme(t)
+                    .spin(preview.spin);
                 if name.style() == "twotone" {
                     if preview.primary.is_some() || preview.secondary.is_some() {
                         icon = icon.two_tone_colors(
@@ -1711,11 +3224,23 @@ impl Gallery {
                     icon = icon.color(gpui_antd::color(primary));
                 }
                 this.child(icon)
-                    .child(div().text_color(t.text).text_size(px(18.))
-                        .child(preview.name.clone()))
-                    .child(div().text_color(t.text_secondary).text_size(px(12.))
-                        .child(format!("Official SVG · {} · {}px{}", name.style(),
-                            preview.size, if preview.spin { " · rotating" } else { "" })))
+                    .child(
+                        div()
+                            .text_color(t.text)
+                            .text_size(px(18.))
+                            .child(preview.name.clone()),
+                    )
+                    .child(
+                        div()
+                            .text_color(t.text_secondary)
+                            .text_size(px(12.))
+                            .child(format!(
+                                "Official SVG · {} · {}px{}",
+                                name.style(),
+                                preview.size,
+                                if preview.spin { " · rotating" } else { "" }
+                            )),
+                    )
             })
             .when(selected.is_none(), |this| {
                 this.child(div().text_color(t.error).child("Unknown Ant Design icon"))
@@ -1727,36 +3252,71 @@ impl Gallery {
         let catalog = |style: &'static str| {
             // One horizontal native GPUI scroll strip per icon variant:
             // no deep wrapped rows masked by a fixed-height WASM iframe.
-            div().w_full().min_w_0().flex().gap(px(12.))
-                .overflow_x_scrollbar().id(format!("icon-strip-{style}")).pb(px(12.))
-                .children(AntIconName::ALL.iter()
-                    .filter(move |icon| icon.style() == style)
-                    // Keep the WASM showcase bounded; the full 848-name
-                    // catalog is searchable in the docs and each selected
-                    // icon can be previewed in its own Rust GPUI view.
-                    .take(24)
-                    .map(move |name| {
-                        // Long PascalCase enum names have no natural word-break
-                        // opportunities in GPUI text. Show the official name
-                        // as two complete lines (base + style), not ellipsis.
-                        let full=name.ant_name();
-                        let style_name=match name.style() {
-                            "outlined"=>"Outlined",
-                            "filled"=>"Filled",
-                            _=>"TwoTone",
-                        };
-                        let base_name=full.strip_suffix(style_name).unwrap_or(full);
-                        div().w(px(156.)).h(px(112.)).flex_none()
-                            .flex().flex_col().items_center().justify_center().gap(px(8.))
-                            .p(px(10.))
-                            .rounded(px(8.)).border_1().border_color(t.border)
-                            .child(AntIcon::new(*name).size(32.).theme(t))
-                            .child(div().w_full().flex().flex_col().items_center().gap(px(2.))
-                                .child(div().text_size(px(11.))
-                                    .text_color(t.text).text_center().child(base_name))
-                                .child(div().text_size(px(10.))
-                                    .text_color(t.text_secondary).text_center().child(style_name)))
-                    }))
+            div()
+                .w_full()
+                .min_w_0()
+                .flex()
+                .gap(px(12.))
+                .overflow_x_scrollbar()
+                .id(format!("icon-strip-{style}"))
+                .pb(px(12.))
+                .children(
+                    AntIconName::ALL
+                        .iter()
+                        .filter(move |icon| icon.style() == style)
+                        // Keep the WASM showcase bounded; the full 848-name
+                        // catalog is searchable in the docs and each selected
+                        // icon can be previewed in its own Rust GPUI view.
+                        .take(24)
+                        .map(move |name| {
+                            // Long PascalCase enum names have no natural word-break
+                            // opportunities in GPUI text. Show the official name
+                            // as two complete lines (base + style), not ellipsis.
+                            let full = name.ant_name();
+                            let style_name = match name.style() {
+                                "outlined" => "Outlined",
+                                "filled" => "Filled",
+                                _ => "TwoTone",
+                            };
+                            let base_name = full.strip_suffix(style_name).unwrap_or(full);
+                            div()
+                                .w(px(156.))
+                                .h(px(112.))
+                                .flex_none()
+                                .flex()
+                                .flex_col()
+                                .items_center()
+                                .justify_center()
+                                .gap(px(8.))
+                                .p(px(10.))
+                                .rounded(px(8.))
+                                .border_1()
+                                .border_color(t.border)
+                                .child(AntIcon::new(*name).size(32.).theme(t))
+                                .child(
+                                    div()
+                                        .w_full()
+                                        .flex()
+                                        .flex_col()
+                                        .items_center()
+                                        .gap(px(2.))
+                                        .child(
+                                            div()
+                                                .text_size(px(11.))
+                                                .text_color(t.text)
+                                                .text_center()
+                                                .child(base_name),
+                                        )
+                                        .child(
+                                            div()
+                                                .text_size(px(10.))
+                                                .text_color(t.text_secondary)
+                                                .text_center()
+                                                .child(style_name),
+                                        ),
+                                )
+                        }),
+                )
         };
         div().w_full().min_w_0().flex().flex_col().gap(px(16.))
             .child(div().text_size(px(12.)).text_color(t.text_secondary)
@@ -1812,33 +3372,65 @@ impl Gallery {
     // and stores every page as a reviewable screenshot artifact.
     fn icon_audit_demo(&self, t: AntTheme, page: &str) -> gpui_kit::AnyElement {
         const PAGE_SIZE: usize = 24;
-        let page = page.parse::<usize>().unwrap_or(0)
+        let page = page
+            .parse::<usize>()
+            .unwrap_or(0)
             .min((AntIconName::ALL.len() - 1) / PAGE_SIZE);
-        let icons = AntIconName::ALL.iter().skip(page * PAGE_SIZE)
-            .take(PAGE_SIZE).copied().collect::<Vec<_>>();
-        div().w_full().flex().flex_col()
+        let icons = AntIconName::ALL
+            .iter()
+            .skip(page * PAGE_SIZE)
+            .take(PAGE_SIZE)
+            .copied()
+            .collect::<Vec<_>>();
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
             .children(icons.chunks(6).map(|row| {
-                div().flex().gap(px(0.))
-                    .children(row.iter().map(|name| {
-                        div().w(px(136.)).h(px(112.)).flex_none()
-                            .flex().flex_col().items_center().pt(px(12.))
-                            .child(AntIcon::new(*name).size(60.).theme(t))
-                            .child(div().text_size(px(9.)).text_color(t.text_secondary)
-                                .mt(px(8.)).child(name.ant_name()))
-                    }))
+                div().flex().gap(px(0.)).children(row.iter().map(|name| {
+                    div()
+                        .w(px(136.))
+                        .h(px(112.))
+                        .flex_none()
+                        .flex()
+                        .flex_col()
+                        .items_center()
+                        .pt(px(12.))
+                        .child(AntIcon::new(*name).size(60.).theme(t))
+                        .child(
+                            div()
+                                .text_size(px(9.))
+                                .text_color(t.text_secondary)
+                                .mt(px(8.))
+                                .child(name.ant_name()),
+                        )
+                }))
             }))
             .into_any_element()
     }
 
     // Dedicated real-GPUI preview used for full-color custom-palette pixel tests.
     fn icon_palette_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
-        div().w_full().flex().flex_col().items_center()
-            .justify_center().gap(px(16.)).p(px(18.))
-            .child(AntIcon::new(AntIconName::CheckCircleTwoTone)
-                .size(64.).theme(t).two_tone_colors(
-                    gpui_antd::color(0x52c41a), gpui_antd::color(0xf6ffed)))
-            .child(div().text_color(t.text).text_size(px(18.))
-                .child("CheckCircleTwoTone: custom green"))
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .items_center()
+            .justify_center()
+            .gap(px(16.))
+            .p(px(18.))
+            .child(
+                AntIcon::new(AntIconName::CheckCircleTwoTone)
+                    .size(64.)
+                    .theme(t)
+                    .two_tone_colors(gpui_antd::color(0x52c41a), gpui_antd::color(0xf6ffed)),
+            )
+            .child(
+                div()
+                    .text_color(t.text)
+                    .text_size(px(18.))
+                    .child("CheckCircleTwoTone: custom green"),
+            )
             .into_any_element()
     }
 
@@ -1888,60 +3480,111 @@ impl Gallery {
     }
 
     fn space_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
-        div().flex().flex_col().gap(px(22.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(22.))
             .child(label("Space Small · 8px", t))
-            .child(AntSpace::new().size(SpaceSize::Small)
-                .child(AntButton::new("space-small-1", "Cancel").theme(t))
-                .child(AntButton::new("space-small-2", "Save").theme(t).primary()))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Small)
+                    .child(AntButton::new("space-small-1", "Cancel").theme(t))
+                    .child(AntButton::new("space-small-2", "Save").theme(t).primary()),
+            )
             .child(label("Space Middle · 16px", t))
-            .child(AntSpace::new().size(SpaceSize::Middle)
-                .child(AntTag::new("Design").tone(Tone::Blue).theme(t))
-                .child(AntTag::new("Components").tone(Tone::Green).theme(t))
-                .child(AntTag::new("Rust").tone(Tone::Purple).theme(t)))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Middle)
+                    .child(AntTag::new("Design").tone(Tone::Blue).theme(t))
+                    .child(AntTag::new("Components").tone(Tone::Green).theme(t))
+                    .child(AntTag::new("Rust").tone(Tone::Purple).theme(t)),
+            )
             .child(label("Space Large · 24px (vertical)", t))
-            .child(AntSpace::new().size(SpaceSize::Large).vertical(true).align(FlexAlign::Start)
-                .child(AntText::new("First item").theme(t))
-                .child(AntText::new("Second item").theme(t))
-                .child(AntText::new("Third item").theme(t)))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Large)
+                    .vertical(true)
+                    .align(FlexAlign::Start)
+                    .child(AntText::new("First item").theme(t))
+                    .child(AntText::new("Second item").theme(t))
+                    .child(AntText::new("Third item").theme(t)),
+            )
             .child(label("Wrap and custom size", t))
-            .child(AntSpace::new().size(SpaceSize::Custom(9.)).wrap(true)
-                .child(AntTag::new("Alpha").theme(t))
-                .child(AntTag::new("Beta").tone(Tone::Blue).theme(t))
-                .child(AntTag::new("Gamma").tone(Tone::Green).theme(t))
-                .child(AntTag::new("Delta").tone(Tone::Gold).theme(t)))
+            .child(
+                AntSpace::new()
+                    .size(SpaceSize::Custom(9.))
+                    .wrap(true)
+                    .child(AntTag::new("Alpha").theme(t))
+                    .child(AntTag::new("Beta").tone(Tone::Blue).theme(t))
+                    .child(AntTag::new("Gamma").tone(Tone::Green).theme(t))
+                    .child(AntTag::new("Delta").tone(Tone::Gold).theme(t)),
+            )
             .into_any_element()
     }
 
     fn flex_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         let chip = |name: &'static str| {
-            div().rounded(px(6.)).bg(t.info_bg).border_1().border_color(t.primary)
-                .text_color(t.primary).px(px(14.)).py(px(9.)).child(name)
+            div()
+                .rounded(px(6.))
+                .bg(t.info_bg)
+                .border_1()
+                .border_color(t.primary)
+                .text_color(t.primary)
+                .px(px(14.))
+                .py(px(9.))
+                .child(name)
         };
-        div().flex().flex_col().gap(px(20.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
             .child(label("Horizontal / SpaceBetween", t))
-            .child(AntFlex::new().gap(12.).fill(true)
-                .justify(FlexJustify::SpaceBetween)
-                .child(chip("Left")).child(chip("Center")).child(chip("Right")))
+            .child(
+                AntFlex::new()
+                    .gap(12.)
+                    .fill(true)
+                    .justify(FlexJustify::SpaceBetween)
+                    .child(chip("Left"))
+                    .child(chip("Center"))
+                    .child(chip("Right")),
+            )
             .child(label("Centered", t))
-            .child(AntFlex::new().gap(14.).fill(true)
-                .justify(FlexJustify::Center)
-                .child(chip("A")).child(chip("B")).child(chip("C")))
+            .child(
+                AntFlex::new()
+                    .gap(14.)
+                    .fill(true)
+                    .justify(FlexJustify::Center)
+                    .child(chip("A"))
+                    .child(chip("B"))
+                    .child(chip("C")),
+            )
             .child(label("Vertical, aligned start", t))
-            .child(AntFlex::new().vertical(true).gap(9.).align(FlexAlign::Start)
-                .child(chip("Row one"))
-                .child(chip("Row two"))
-                .child(chip("Row three")))
+            .child(
+                AntFlex::new()
+                    .vertical(true)
+                    .gap(9.)
+                    .align(FlexAlign::Start)
+                    .child(chip("Row one"))
+                    .child(chip("Row two"))
+                    .child(chip("Row three")),
+            )
             .child(label("Wrapping children", t))
-            .child(AntFlex::new().wrap(true).gap(11.).fill(true)
-                .child(chip("Tag one")).child(chip("Tag two")).child(chip("Tag three"))
-                .child(chip("Tag four")))
+            .child(
+                AntFlex::new()
+                    .wrap(true)
+                    .gap(11.)
+                    .fill(true)
+                    .child(chip("Tag one"))
+                    .child(chip("Tag two"))
+                    .child(chip("Tag three"))
+                    .child(chip("Tag four")),
+            )
             .into_any_element()
     }
 
-
     fn dropdown_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let on_select=cx.listener(|this, key: &SharedString, _, cx| {
-            this.dropdown_selected=key.to_string();
+        let on_select = cx.listener(|this, key: &SharedString, _, cx| {
+            this.dropdown_selected = key.to_string();
             cx.notify();
         });
         div().w_full().flex().flex_col().gap(px(20.))
@@ -1970,8 +3613,8 @@ impl Gallery {
     }
 
     fn popover_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let on_change=cx.listener(|this, open: &bool, _, cx| {
-            this.popover_open=*open;
+        let on_change = cx.listener(|this, open: &bool, _, cx| {
+            this.popover_open = *open;
             cx.notify();
         });
         div().w_full().flex().flex_col().gap(px(20.))
@@ -2000,8 +3643,8 @@ impl Gallery {
     }
 
     fn modal_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let view=cx.entity().downgrade();
-        let cancel_view=view.clone();
+        let view = cx.entity().downgrade();
+        let cancel_view = view.clone();
         div().w_full().flex().flex_col().gap(px(20.))
             .child(label("Native modal Dialog · focus trap, Escape, background overlay",t))
             .child(row()
@@ -2036,8 +3679,8 @@ impl Gallery {
     }
 
     fn popconfirm_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let yes=cx.entity().downgrade();
-        let no=cx.entity().downgrade();
+        let yes = cx.entity().downgrade();
+        let no = cx.entity().downgrade();
         div().w_full().flex().flex_col().gap(px(20.))
             .child(label("Anchored confirmation popover (not a modal alert)",t))
             .child(row()
@@ -2068,117 +3711,230 @@ impl Gallery {
     }
 
     fn menu_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let on_light=cx.listener(|this, key:&SharedString, _, cx|{
-            this.menu_selected=key.to_string();
+        let on_light = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
             cx.notify();
         });
-        let on_dark=cx.listener(|this, key:&SharedString, _, cx|{
-            this.menu_selected=key.to_string();
+        let on_dark = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
             cx.notify();
         });
-        let on_collapsed=cx.listener(|this, key:&SharedString, _, cx|{
-            this.menu_selected=key.to_string();
+        let on_collapsed = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
             cx.notify();
         });
-        div().w_full().flex().flex_col().gap(px(20.))
-            .child(label("GPUI Base-backed controlled navigation · click to select",theme))
-            .child(div().flex().flex_wrap().gap(px(16.))
-                .child(div().w(px(240.)).border_1().border_color(theme.border)
-                    .rounded(px(7.))
-                    .child(AntMenu::new("menu-light").theme(theme)
-                        .selected_key(self.menu_selected.clone())
-                        .on_select(move |key,window,cx| on_light(&key,window,cx))
-                        .item(AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined))
-                        .item(AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined))
-                        .item(AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined))
-                        .item(AntMenuItem::new("locked","Restricted").icon(AntIconName::LockOutlined).disabled(true))
-                        .item(AntMenuItem::new("delete","Delete").icon(AntIconName::DeleteOutlined).danger(true))))
-                .child(div().w(px(240.))
-                    .child(AntMenu::new("menu-dark").theme(theme).dark(true)
-                        .selected_key(self.menu_selected.clone())
-                        .on_select(move |key,window,cx| on_dark(&key,window,cx))
-                        .item(AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined))
-                        .item(AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined))
-                        .item(AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined))))
-                .child(div().w(px(66.))
-                    .child(AntMenu::new("menu-collapsed").theme(theme).dark(true)
-                        .inline_collapsed(true)
-                        .selected_key(self.menu_selected.clone())
-                        .on_select(move |key,window,cx| on_collapsed(&key,window,cx))
-                        .item(AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined))
-                        .item(AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined))
-                        .item(AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined)))))
-            .child(div().text_size(px(13.)).text_color(theme.text_secondary)
-                .child(format!("Selected menu key: {}",self.menu_selected)))
-            .child(self.menu_tree_demo(theme,cx))
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .gap(px(20.))
+            .child(label(
+                "GPUI Base-backed controlled navigation · click to select",
+                theme,
+            ))
+            .child(
+                div()
+                    .flex()
+                    .flex_wrap()
+                    .gap(px(16.))
+                    .child(
+                        div()
+                            .w(px(240.))
+                            .border_1()
+                            .border_color(theme.border)
+                            .rounded(px(7.))
+                            .child(
+                                AntMenu::new("menu-light")
+                                    .theme(theme)
+                                    .selected_key(self.menu_selected.clone())
+                                    .on_select(move |key, window, cx| on_light(&key, window, cx))
+                                    .item(
+                                        AntMenuItem::new("dashboard", "Dashboard")
+                                            .icon(AntIconName::DashboardOutlined),
+                                    )
+                                    .item(
+                                        AntMenuItem::new("analytics", "Analytics")
+                                            .icon(AntIconName::BarChartOutlined),
+                                    )
+                                    .item(
+                                        AntMenuItem::new("settings", "Settings")
+                                            .icon(AntIconName::SettingOutlined),
+                                    )
+                                    .item(
+                                        AntMenuItem::new("locked", "Restricted")
+                                            .icon(AntIconName::LockOutlined)
+                                            .disabled(true),
+                                    )
+                                    .item(
+                                        AntMenuItem::new("delete", "Delete")
+                                            .icon(AntIconName::DeleteOutlined)
+                                            .danger(true),
+                                    ),
+                            ),
+                    )
+                    .child(
+                        div().w(px(240.)).child(
+                            AntMenu::new("menu-dark")
+                                .theme(theme)
+                                .dark(true)
+                                .selected_key(self.menu_selected.clone())
+                                .on_select(move |key, window, cx| on_dark(&key, window, cx))
+                                .item(
+                                    AntMenuItem::new("dashboard", "Dashboard")
+                                        .icon(AntIconName::DashboardOutlined),
+                                )
+                                .item(
+                                    AntMenuItem::new("analytics", "Analytics")
+                                        .icon(AntIconName::BarChartOutlined),
+                                )
+                                .item(
+                                    AntMenuItem::new("settings", "Settings")
+                                        .icon(AntIconName::SettingOutlined),
+                                ),
+                        ),
+                    )
+                    .child(
+                        div().w(px(66.)).child(
+                            AntMenu::new("menu-collapsed")
+                                .theme(theme)
+                                .dark(true)
+                                .inline_collapsed(true)
+                                .selected_key(self.menu_selected.clone())
+                                .on_select(move |key, window, cx| on_collapsed(&key, window, cx))
+                                .item(
+                                    AntMenuItem::new("dashboard", "Dashboard")
+                                        .icon(AntIconName::DashboardOutlined),
+                                )
+                                .item(
+                                    AntMenuItem::new("analytics", "Analytics")
+                                        .icon(AntIconName::BarChartOutlined),
+                                )
+                                .item(
+                                    AntMenuItem::new("settings", "Settings")
+                                        .icon(AntIconName::SettingOutlined),
+                                ),
+                        ),
+                    ),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .text_color(theme.text_secondary)
+                    .child(format!("Selected menu key: {}", self.menu_selected)),
+            )
+            .child(self.menu_tree_demo(theme, cx))
             .into_any_element()
     }
 
     /// Horizontal and vertical popup modes share real controlled GPUI state.
     /// Native Popup placement and keyboard focus belong to AntMenu itself.
-    fn menu_modes_demo(&self,t:AntTheme,cx:&mut Context<Self>)->gpui_kit::AnyElement {
-        let select_top=cx.listener(|this,key:&SharedString,_,cx|{
-            this.menu_selected=key.to_string();cx.notify();
-        });
-        let open_top=cx.listener(|this,change:&(SharedString,bool),_,cx|{
-            let (key,open)=change;
-            if *open {this.menu_open_keys.insert(key.to_string());}
-            else {this.menu_open_keys.remove(key.as_ref());}
+    fn menu_modes_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+        let select_top = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
             cx.notify();
         });
-        let select_side=cx.listener(|this,key:&SharedString,_,cx|{
-            this.menu_selected=key.to_string();cx.notify();
-        });
-        let open_side=cx.listener(|this,change:&(SharedString,bool),_,cx|{
-            let (key,open)=change;
-            if *open {this.menu_open_keys.insert(key.to_string());}
-            else {this.menu_open_keys.remove(key.as_ref());}
+        let open_top = cx.listener(|this, change: &(SharedString, bool), _, cx| {
+            let (key, open) = change;
+            if *open {
+                this.menu_open_keys.insert(key.to_string());
+            } else {
+                this.menu_open_keys.remove(key.as_ref());
+            }
             cx.notify();
         });
-        div().w_full().min_h(px(510.)).flex().flex_col().gap(px(18.))
-            .child(label("Horizontal · Left/Right rove, Down opens submenu, Escape dismisses",t))
-            .child(AntMenu::new("top-horizontal-nav").theme(t)
-                .mode(AntMenuMode::Horizontal)
-                .selected_key(self.menu_selected.clone())
-                .open_keys(self.menu_open_keys.iter())
-                .on_select(move |key,window,cx|select_top(&key,window,cx))
-                .on_open_change(move |key,open,window,cx|{
-                    open_top(&(key,open),window,cx)
-                })
-                .item(AntMenuItem::submenu("reports","Reports")
-                    .icon(AntIconName::BarChartOutlined)
-                    .child(AntMenuItem::new("daily","Daily report"))
-                    .child(AntMenuItem::new("monthly","Monthly report")))
-                .item(AntMenuItem::new("dashboard","Dashboard")
-                    .icon(AntIconName::DashboardOutlined))
-                .item(AntMenuItem::submenu("workspace","Workspace")
-                    .icon(AntIconName::FolderOutlined)
-                    .child(AntMenuItem::new("settings","Settings"))
-                    .child(AntMenuItem::submenu("more","More")
-                        .child(AntMenuItem::new("team","Team"))))
-                .item(AntMenuItem::new("locked","Restricted").disabled(true)))
-            .child(label("Vertical · native right-hand submenu flyouts",t))
-            .child(div().w(px(240.)).border_1().border_color(t.border)
-                .child(AntMenu::new("vertical-popup-nav").theme(t)
-                    .mode(AntMenuMode::Vertical)
+        let select_side = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
+            cx.notify();
+        });
+        let open_side = cx.listener(|this, change: &(SharedString, bool), _, cx| {
+            let (key, open) = change;
+            if *open {
+                this.menu_open_keys.insert(key.to_string());
+            } else {
+                this.menu_open_keys.remove(key.as_ref());
+            }
+            cx.notify();
+        });
+        div()
+            .w_full()
+            .min_h(px(510.))
+            .flex()
+            .flex_col()
+            .gap(px(18.))
+            .child(label(
+                "Horizontal · Left/Right rove, Down opens submenu, Escape dismisses",
+                t,
+            ))
+            .child(
+                AntMenu::new("top-horizontal-nav")
+                    .theme(t)
+                    .mode(AntMenuMode::Horizontal)
                     .selected_key(self.menu_selected.clone())
                     .open_keys(self.menu_open_keys.iter())
-                    .on_select(move |key,window,cx|select_side(&key,window,cx))
-                    .on_open_change(move |key,open,window,cx|{
-                        open_side(&(key,open),window,cx)
-                    })
-                    .item(AntMenuItem::new("dashboard","Dashboard")
-                        .icon(AntIconName::DashboardOutlined))
-                    .item(AntMenuItem::submenu("reports","Reports")
-                        .icon(AntIconName::BarChartOutlined)
-                        .child(AntMenuItem::new("daily","Daily report"))
-                        .child(AntMenuItem::new("monthly","Monthly report")))
-                    .item(AntMenuItem::new("settings","Settings")
-                        .icon(AntIconName::SettingOutlined))))
-            .child(AntText::new(format!("Selected: {} · Open: {}",
-                self.menu_selected,
-                self.menu_open_keys.iter().cloned().collect::<Vec<_>>().join(", ")))
-                .theme(t).tone(TextTone::Secondary))
+                    .on_select(move |key, window, cx| select_top(&key, window, cx))
+                    .on_open_change(move |key, open, window, cx| open_top(&(key, open), window, cx))
+                    .item(
+                        AntMenuItem::submenu("reports", "Reports")
+                            .icon(AntIconName::BarChartOutlined)
+                            .child(AntMenuItem::new("daily", "Daily report"))
+                            .child(AntMenuItem::new("monthly", "Monthly report")),
+                    )
+                    .item(
+                        AntMenuItem::new("dashboard", "Dashboard")
+                            .icon(AntIconName::DashboardOutlined),
+                    )
+                    .item(
+                        AntMenuItem::submenu("workspace", "Workspace")
+                            .icon(AntIconName::FolderOutlined)
+                            .child(AntMenuItem::new("settings", "Settings"))
+                            .child(
+                                AntMenuItem::submenu("more", "More")
+                                    .child(AntMenuItem::new("team", "Team")),
+                            ),
+                    )
+                    .item(AntMenuItem::new("locked", "Restricted").disabled(true)),
+            )
+            .child(label("Vertical · native right-hand submenu flyouts", t))
+            .child(
+                div().w(px(240.)).border_1().border_color(t.border).child(
+                    AntMenu::new("vertical-popup-nav")
+                        .theme(t)
+                        .mode(AntMenuMode::Vertical)
+                        .selected_key(self.menu_selected.clone())
+                        .open_keys(self.menu_open_keys.iter())
+                        .on_select(move |key, window, cx| select_side(&key, window, cx))
+                        .on_open_change(move |key, open, window, cx| {
+                            open_side(&(key, open), window, cx)
+                        })
+                        .item(
+                            AntMenuItem::new("dashboard", "Dashboard")
+                                .icon(AntIconName::DashboardOutlined),
+                        )
+                        .item(
+                            AntMenuItem::submenu("reports", "Reports")
+                                .icon(AntIconName::BarChartOutlined)
+                                .child(AntMenuItem::new("daily", "Daily report"))
+                                .child(AntMenuItem::new("monthly", "Monthly report")),
+                        )
+                        .item(
+                            AntMenuItem::new("settings", "Settings")
+                                .icon(AntIconName::SettingOutlined),
+                        ),
+                ),
+            )
+            .child(
+                AntText::new(format!(
+                    "Selected: {} · Open: {}",
+                    self.menu_selected,
+                    self.menu_open_keys
+                        .iter()
+                        .cloned()
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ))
+                .theme(t)
+                .tone(TextTone::Secondary),
+            )
             .into_any_element()
     }
 
@@ -2188,11 +3944,12 @@ impl Gallery {
     /// A click outside or Escape dismisses the popover; clicking a leaf both
     /// selects the route and closes the flyout.
     fn menu_collapsed_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let on_select=cx.listener(|this,key:&SharedString,_,cx|{
-            this.menu_selected=key.to_string();cx.notify();
+        let on_select = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
+            cx.notify();
         });
-        let on_open=cx.listener(|this,change:&(SharedString,bool),_,cx|{
-            let (key,open)=change;
+        let on_open = cx.listener(|this, change: &(SharedString, bool), _, cx| {
+            let (key, open) = change;
             if *open {
                 this.menu_open_keys.insert(key.to_string());
             } else {
@@ -2246,12 +4003,12 @@ impl Gallery {
     }
 
     fn menu_tree_demo(&self, theme: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let on_select=cx.listener(|this, key: &SharedString, _, cx| {
-            this.menu_selected=key.to_string();
+        let on_select = cx.listener(|this, key: &SharedString, _, cx| {
+            this.menu_selected = key.to_string();
             cx.notify();
         });
-        let on_open=cx.listener(|this, change: &(SharedString,bool), _, cx| {
-            let (key,open)=change;
+        let on_open = cx.listener(|this, change: &(SharedString, bool), _, cx| {
+            let (key, open) = change;
             if *open {
                 this.menu_open_keys.insert(key.to_string());
             } else {
@@ -2298,26 +4055,35 @@ impl Gallery {
             .into_any_element()
     }
 
-    fn layout_demo(&self, t: AntTheme, window: &Window, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
-        let responsive=window.viewport_size().width < px(768.);
-        let compact=if responsive {!self.layout_mobile_open} else {self.layout_collapsed};
-        let on_collapse=cx.listener(|this, next: &bool, window, cx| {
+    fn layout_demo(
+        &self,
+        t: AntTheme,
+        window: &Window,
+        cx: &mut Context<Self>,
+    ) -> gpui_kit::AnyElement {
+        let responsive = window.viewport_size().width < px(768.);
+        let compact = if responsive {
+            !self.layout_mobile_open
+        } else {
+            self.layout_collapsed
+        };
+        let on_collapse = cx.listener(|this, next: &bool, window, cx| {
             // Apply the next EFFECTIVE collapse state in its own mode.
             // Narrow expansion must not be immediately canceled by the
             // breakpoint, and should not alter the desktop collapse choice.
             if window.viewport_size().width < px(768.) {
-                this.layout_mobile_open=!*next;
+                this.layout_mobile_open = !*next;
             } else {
-                this.layout_collapsed=*next;
+                this.layout_collapsed = *next;
             }
             cx.notify();
         });
-        let on_nav=cx.listener(|this, key: &SharedString, _, cx| {
-            this.layout_selected=key.to_string();
+        let on_nav = cx.listener(|this, key: &SharedString, _, cx| {
+            this.layout_selected = key.to_string();
             cx.notify();
         });
-        let on_nav_open=cx.listener(|this, change: &(SharedString,bool), _, cx| {
-            let (key,open)=change;
+        let on_nav_open = cx.listener(|this, change: &(SharedString, bool), _, cx| {
+            let (key, open) = change;
             if *open {
                 this.layout_menu_open_keys.insert(key.to_string());
             } else {
@@ -2325,9 +4091,13 @@ impl Gallery {
             }
             cx.notify();
         });
-        let metric=|title: &'static str, value: f64, tone: TextTone| {
-            div().p(px(12.)).border_1().border_color(t.border)
-                .rounded(px(7.)).bg(t.surface)
+        let metric = |title: &'static str, value: f64, tone: TextTone| {
+            div()
+                .p(px(12.))
+                .border_1()
+                .border_color(t.border)
+                .rounded(px(7.))
+                .bg(t.surface)
                 .child(AntStatistic::number(title, value, 0).theme(t).tone(tone))
         };
         div().w_full().flex().flex_col().gap(px(14.))
@@ -2406,25 +4176,32 @@ impl Gallery {
     /// Narrow Layout route: GPUI Kit Sheet owns the modal navigation surface,
     /// backdrop dismissal, keyboard Escape, and focus restoration.
     fn layout_drawer_demo(
-        &self,t:AntTheme,window:&Window,cx:&mut Context<Self>
-    )->gpui_kit::AnyElement {
-        let mobile=window.viewport_size().width < px(768.);
-        let selected=self.layout_selected.clone();
-        let selected_for_sheet=selected.clone();
-        let on_select=Rc::new(cx.listener(|this,key:&SharedString,_,cx|{
-            this.layout_selected=key.to_string();cx.notify();
+        &self,
+        t: AntTheme,
+        window: &Window,
+        cx: &mut Context<Self>,
+    ) -> gpui_kit::AnyElement {
+        let mobile = window.viewport_size().width < px(768.);
+        let selected = self.layout_selected.clone();
+        let selected_for_sheet = selected.clone();
+        let on_select = Rc::new(cx.listener(|this, key: &SharedString, _, cx| {
+            this.layout_selected = key.to_string();
+            cx.notify();
         }));
-        let desktop_select=on_select.clone();
-        let drawer_select=on_select.clone();
-        let drawer_open=cx.listener(|this,open:&bool,_,cx|{
-            this.layout_mobile_open=*open;cx.notify();
+        let desktop_select = on_select.clone();
+        let drawer_select = on_select.clone();
+        let drawer_open = cx.listener(|this, open: &bool, _, cx| {
+            this.layout_mobile_open = *open;
+            cx.notify();
         });
-        let links=|| [
-            AntMenuItem::new("dashboard","Dashboard").icon(AntIconName::DashboardOutlined),
-            AntMenuItem::new("analytics","Analytics").icon(AntIconName::BarChartOutlined),
-            AntMenuItem::new("documents","Documents").icon(AntIconName::FileTextOutlined),
-            AntMenuItem::new("settings","Settings").icon(AntIconName::SettingOutlined),
-        ];
+        let links = || {
+            [
+                AntMenuItem::new("dashboard", "Dashboard").icon(AntIconName::DashboardOutlined),
+                AntMenuItem::new("analytics", "Analytics").icon(AntIconName::BarChartOutlined),
+                AntMenuItem::new("documents", "Documents").icon(AntIconName::FileTextOutlined),
+                AntMenuItem::new("settings", "Settings").icon(AntIconName::SettingOutlined),
+            ]
+        };
         div().w_full().flex().flex_col().gap(px(14.))
             .child(label("Native left Sheet · resize below md to open Drawer",t))
             .child(div().w_full().border_1().border_color(t.border)
@@ -2503,36 +4280,65 @@ impl Gallery {
 
     fn grid_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
         let cell = |label: &'static str| {
-            div().w_full().h(px(42.))
-                .flex().items_center().justify_center()
-                .rounded(px(5.)).bg(t.info_bg)
-                .border_1().border_color(t.primary)
-                .text_color(t.primary).child(label)
+            div()
+                .w_full()
+                .h(px(42.))
+                .flex()
+                .items_center()
+                .justify_center()
+                .rounded(px(5.))
+                .bg(t.info_bg)
+                .border_1()
+                .border_color(t.primary)
+                .text_color(t.primary)
+                .child(label)
         };
-        div().flex().flex_col().gap(px(19.))
+        div()
+            .flex()
+            .flex_col()
+            .gap(px(19.))
             .child(label("24-column responsive composition", t))
-            .child(AntRow::new().gutter(12.)
-                .child(AntCol::new(24).child(cell("col-24"))))
-            .child(AntRow::new().gutter(12.)
-                .child(AntCol::new(12).child(cell("col-12")))
-                .child(AntCol::new(12).child(cell("col-12"))))
-            .child(AntRow::new().gutter(12.)
-                .child(AntCol::new(8).child(cell("col-8")))
-                .child(AntCol::new(8).child(cell("col-8")))
-                .child(AntCol::new(8).child(cell("col-8"))))
-            .child(AntRow::new().gutter(12.)
-                .child(AntCol::new(6).child(cell("col-6")))
-                .child(AntCol::new(6).child(cell("col-6")))
-                .child(AntCol::new(6).child(cell("col-6")))
-                .child(AntCol::new(6).child(cell("col-6"))))
-            .child(AntRow::new().gutter(12.)
-                .child(AntCol::new(8).offset(8).child(cell("offset-8 col-8"))))
+            .child(
+                AntRow::new()
+                    .gutter(12.)
+                    .child(AntCol::new(24).child(cell("col-24"))),
+            )
+            .child(
+                AntRow::new()
+                    .gutter(12.)
+                    .child(AntCol::new(12).child(cell("col-12")))
+                    .child(AntCol::new(12).child(cell("col-12"))),
+            )
+            .child(
+                AntRow::new()
+                    .gutter(12.)
+                    .child(AntCol::new(8).child(cell("col-8")))
+                    .child(AntCol::new(8).child(cell("col-8")))
+                    .child(AntCol::new(8).child(cell("col-8"))),
+            )
+            .child(
+                AntRow::new()
+                    .gutter(12.)
+                    .child(AntCol::new(6).child(cell("col-6")))
+                    .child(AntCol::new(6).child(cell("col-6")))
+                    .child(AntCol::new(6).child(cell("col-6")))
+                    .child(AntCol::new(6).child(cell("col-6"))),
+            )
+            .child(
+                AntRow::new()
+                    .gutter(12.)
+                    .child(AntCol::new(8).offset(8).child(cell("offset-8 col-8"))),
+            )
             .child(label("Responsive: xs=24 / sm=12 / md=8 / lg=6", t))
-            .child(AntRow::new().gutter(12.).vertical_gutter(12.)
-                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item A")))
-                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item B")))
-                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item C")))
-                .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item D"))))
+            .child(
+                AntRow::new()
+                    .gutter(12.)
+                    .vertical_gutter(12.)
+                    .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item A")))
+                    .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item B")))
+                    .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item C")))
+                    .child(AntCol::new(24).sm(12).md(8).lg(6).child(cell("Item D"))),
+            )
             .into_any_element()
     }
 
@@ -2645,8 +4451,12 @@ impl Gallery {
             .into_any_element()
     }
 
-    fn divider_demo(&self,t:AntTheme)->gpui_kit::AnyElement {
-        div().flex().flex_col().w_full().gap(px(18.))
+    fn divider_demo(&self, t: AntTheme) -> gpui_kit::AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .w_full()
+            .gap(px(18.))
             .child("Text above")
             .child(AntDivider::new().theme(t))
             .child("Text below")
@@ -2654,118 +4464,153 @@ impl Gallery {
     }
 }
 
-fn row()->gpui_kit::Div {
+fn row() -> gpui_kit::Div {
     div().flex().flex_wrap().items_center().gap(px(12.))
 }
-fn label(text:&'static str,t:AntTheme)->gpui_kit::Div {
-    div().text_size(px(13.)).font_medium().text_color(t.text_secondary).child(text)
+fn label(text: &'static str, t: AntTheme) -> gpui_kit::Div {
+    div()
+        .text_size(px(13.))
+        .font_medium()
+        .text_color(t.text_secondary)
+        .child(text)
 }
 
-fn render_resolved_token(token:AntResolvedToken,t:AntTheme)->gpui_kit::AnyElement {
-    let value=match token.value {
-        AntTokenValue::Color(value)=>div().size(px(26.)).flex_none()
-            .rounded(px(5.)).border_1().border_color(t.border).bg(value)
+fn render_resolved_token(token: AntResolvedToken, t: AntTheme) -> gpui_kit::AnyElement {
+    let value = match token.value {
+        AntTokenValue::Color(value) => div()
+            .size(px(26.))
+            .flex_none()
+            .rounded(px(5.))
+            .border_1()
+            .border_color(t.border)
+            .bg(value)
             .into_any_element(),
-        AntTokenValue::Number(value)=>div().text_size(px(12.))
-            .text_color(t.text_secondary).child(format!("{value:.1} px"))
+        AntTokenValue::Number(value) => div()
+            .text_size(px(12.))
+            .text_color(t.text_secondary)
+            .child(format!("{value:.1} px"))
             .into_any_element(),
-        AntTokenValue::Boolean(value)=>div().text_size(px(12.))
-            .text_color(t.text_secondary).child(if value {"on"} else {"off"})
+        AntTokenValue::Boolean(value) => div()
+            .text_size(px(12.))
+            .text_color(t.text_secondary)
+            .child(if value { "on" } else { "off" })
             .into_any_element(),
     };
-    div().flex().items_center().justify_between().gap(px(8.))
-        .flex_1().min_w(px(174.)).h(px(56.))
-        .rounded(px(6.)).border_1().border_color(t.border)
-        .bg(t.surface_secondary).px(px(11.))
-        .child(div().min_w_0().text_color(t.text).text_size(px(12.))
-            .child(token.name))
+    div()
+        .flex()
+        .items_center()
+        .justify_between()
+        .gap(px(8.))
+        .flex_1()
+        .min_w(px(174.))
+        .h(px(56.))
+        .rounded(px(6.))
+        .border_1()
+        .border_color(t.border)
+        .bg(t.surface_secondary)
+        .px(px(11.))
+        .child(
+            div()
+                .min_w_0()
+                .text_color(t.text)
+                .text_size(px(12.))
+                .child(token.name),
+        )
         .child(value)
         .into_any_element()
 }
 
 impl Render for Gallery {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let t=self.theme();
+        let t = self.theme();
         // Resolve the single-component Theme Studio scene into the *same*
         // Rust demo renderer used by the regular gallery. This preserves
         // state/callbacks and avoids a second fake or DOM implementation.
-        let route=theme_preview_target(self.component.as_str())
-            .unwrap_or(self.component.as_str());
-        let demo=match route {
-            "Button"=>self.button_demo(t,cx),
-            name if name.starts_with("ThemeLab") &&
-                name.split('|').any(|part|part=="scene=tokens") => self.theme_tokens_demo(t),
-            name if name.starts_with("ThemeLab") => self.theme_lab_demo(t,cx),
-            "Input"=>self.input_demo(t),
-            "Select"=>self.select_demo(t, cx),
-            "DatePicker"=>self.date_picker_demo(t),
-            "Form"=>self.form_demo(t,cx),
-            "Checkbox"=>self.checkbox_demo(t,cx),
-            "Radio"=>self.radio_demo(t,cx),
-            "Switch"=>self.switch_demo(t,cx),
-            "Tag"=>self.tag_demo(t),
-            "Badge"=>self.badge_demo(t),
-            "Alert"=>self.alert_demo(t),
-            "Card"=>self.card_demo(t),
-            "Progress"=>self.progress_demo(t),
-            "Divider"=>self.divider_demo(t),
-            "Tabs"=>self.tabs_demo(t,cx),
-            "Tooltip"=>self.tooltip_demo(t),
-            "Icons"=>self.icons_demo(t),
+        let route =
+            theme_preview_target(self.component.as_str()).unwrap_or(self.component.as_str());
+        let demo = match route {
+            "Button" => self.button_demo(t, cx),
+            name if name.starts_with("ThemeLab")
+                && name.split('|').any(|part| part == "scene=tokens") =>
+            {
+                self.theme_tokens_demo(t)
+            }
+            name if name.starts_with("ThemeLab") => self.theme_lab_demo(t, cx),
+            "Input" => self.input_demo(t),
+            "Select" => self.select_demo(t, cx),
+            "DatePicker" => self.date_picker_demo(t),
+            "Form" => self.form_demo(t, cx),
+            "Checkbox" => self.checkbox_demo(t, cx),
+            "Radio" => self.radio_demo(t, cx),
+            "Switch" => self.switch_demo(t, cx),
+            "Tag" => self.tag_demo(t),
+            "Badge" => self.badge_demo(t),
+            "Alert" => self.alert_demo(t),
+            "Card" => self.card_demo(t),
+            "Progress" => self.progress_demo(t),
+            "Divider" => self.divider_demo(t),
+            "Tabs" => self.tabs_demo(t, cx),
+            "Tooltip" => self.tooltip_demo(t),
+            "Icons" => self.icons_demo(t),
             // Internal icon-palette screenshot route; not a separate public component.
-            "IconPalette"=>self.icon_palette_demo(t),
-            name if name.starts_with("Icon:") =>
-                self.icon_single_demo(t, name.trim_start_matches("Icon:")),
-            name if name.starts_with("IconAudit:") =>
-                self.icon_audit_demo(t, name.trim_start_matches("IconAudit:")),
-            "Typography"=>self.typography_demo(t,cx),
-            "Space"=>self.space_demo(t),
-            "Flex"=>self.flex_demo(t),
-            "Grid"=>self.grid_demo(t),
-            "Layout"=>self.layout_demo(t,window,cx),
-            "LayoutDrawer"=>self.layout_drawer_demo(t,window,cx),
-            "Menu"=>self.menu_demo(t,cx),
-            "MenuTree"=>self.menu_tree_demo(t,cx),
-            "MenuCollapsed"=>self.menu_collapsed_demo(t,cx),
-            "MenuModes"=>self.menu_modes_demo(t,cx),
-            "Dropdown"=>self.dropdown_demo(t,cx),
-            "Popover"=>self.popover_demo(t,cx),
-            "Modal"=>self.modal_demo(t,cx),
-            "Popconfirm"=>self.popconfirm_demo(t,cx),
-            "Avatar"=>self.avatar_demo(t),
-            "Statistic"=>self.statistic_demo(t),
-            "Empty"=>self.empty_demo(t),
-            "Breadcrumb"=>self.breadcrumb_demo(t),
-            "Pagination"=>self.pagination_demo(t,cx),
-            "Steps"=>self.steps_demo(t,cx),
-            "Rate"=>self.rate_demo(t,cx),
-            "Collapse"=>self.collapse_demo(t,cx),
-            "Descriptions"=>self.descriptions_demo(t),
-            "Result"=>self.result_demo(t),
-            "Skeleton"=>self.skeleton_demo(t),
-            "Spin"=>self.spin_demo(t),
-            "InputNumber"=>self.input_number_demo(t),
-            "Slider"=>self.slider_demo(t),
-            "Segmented"=>self.segmented_demo(t,cx),
-            "TimePicker"=>self.time_picker_demo(t),
-            "AutoComplete"=>self.autocomplete_demo(t,cx),
-            "Drawer"=>self.drawer_demo(t,cx),
-            "Message"=>self.message_demo(t),
-            "Notification"=>self.notification_demo(t),
-            "Tree"=>self.tree_demo(t,cx),
-            "Table"=>self.table_demo(t,cx),
-            "Timeline"=>self.timeline_demo(t,cx),
-            "List"=>self.list_demo(t),
-            "Calendar"=>self.calendar_demo(t),
-            "FloatButton"=>self.float_button_demo(t,cx),
-            "Affix"|"Anchor"|"App"|"BorderBeam"|"Carousel"|"Cascader"|"ColorPicker"
-                |"ConfigProvider"|"Image"|"Listy"|"Masonry"|"Mentions"|"QRCode"
-                |"Splitter"|"Tour"|"Transfer"|"TreeSelect"|"Upload"|"Watermark"
-                =>self.catalog_demo(route,t,cx),
-            _=>self.button_demo(t,cx)
+            "IconPalette" => self.icon_palette_demo(t),
+            name if name.starts_with("Icon:") => {
+                self.icon_single_demo(t, name.trim_start_matches("Icon:"))
+            }
+            name if name.starts_with("IconAudit:") => {
+                self.icon_audit_demo(t, name.trim_start_matches("IconAudit:"))
+            }
+            "Typography" => self.typography_demo(t, cx),
+            "Space" => self.space_demo(t),
+            "Flex" => self.flex_demo(t),
+            "Grid" => self.grid_demo(t),
+            "Layout" => self.layout_demo(t, window, cx),
+            "LayoutDrawer" => self.layout_drawer_demo(t, window, cx),
+            "Menu" => self.menu_demo(t, cx),
+            "MenuTree" => self.menu_tree_demo(t, cx),
+            "MenuCollapsed" => self.menu_collapsed_demo(t, cx),
+            "MenuModes" => self.menu_modes_demo(t, cx),
+            "Dropdown" => self.dropdown_demo(t, cx),
+            "Popover" => self.popover_demo(t, cx),
+            "Modal" => self.modal_demo(t, cx),
+            "Popconfirm" => self.popconfirm_demo(t, cx),
+            "Avatar" => self.avatar_demo(t),
+            "Statistic" => self.statistic_demo(t),
+            "Empty" => self.empty_demo(t),
+            "Breadcrumb" => self.breadcrumb_demo(t),
+            "Pagination" => self.pagination_demo(t, cx),
+            "Steps" => self.steps_demo(t, cx),
+            "Rate" => self.rate_demo(t, cx),
+            "Collapse" => self.collapse_demo(t, cx),
+            "Descriptions" => self.descriptions_demo(t),
+            "Result" => self.result_demo(t),
+            "Skeleton" => self.skeleton_demo(t),
+            "Spin" => self.spin_demo(t),
+            "InputNumber" => self.input_number_demo(t),
+            "Slider" => self.slider_demo(t),
+            "Segmented" => self.segmented_demo(t, cx),
+            "TimePicker" => self.time_picker_demo(t),
+            "AutoComplete" => self.autocomplete_demo(t, cx),
+            "Drawer" => self.drawer_demo(t, cx),
+            "Message" => self.message_demo(t),
+            "Notification" => self.notification_demo(t),
+            "Tree" => self.tree_demo(t, cx),
+            "Table" => self.table_demo(t, cx),
+            "Timeline" => self.timeline_demo(t, cx),
+            "List" => self.list_demo(t),
+            "Calendar" => self.calendar_demo(t),
+            "FloatButton" => self.float_button_demo(t, cx),
+            "Affix" | "Anchor" | "App" | "BorderBeam" | "Carousel" | "Cascader" | "ColorPicker"
+            | "ConfigProvider" | "Image" | "Listy" | "Masonry" | "Mentions" | "QRCode"
+            | "Splitter" | "Tour" | "Transfer" | "TreeSelect" | "Upload" | "Watermark" => {
+                self.catalog_demo(route, t, cx)
+            }
+            _ => self.button_demo(t, cx),
         };
-        div().id("gallery-root")
-            .size_full().overflow_y_scroll()
+        div()
+            .id("gallery-root")
+            .size_full()
+            .overflow_y_scroll()
             .bg(t.surface)
             .text_color(t.text)
             .font_family("IBM Plex Sans")
@@ -2774,25 +4619,26 @@ impl Render for Gallery {
     }
 }
 
-#[cfg(not(target_family="wasm"))]
+#[cfg(not(target_family = "wasm"))]
 pub fn run_desktop() {
     gpui_kit::application()
-         .with_assets(GalleryAssets::new())
+        .with_assets(GalleryAssets::new())
         .run(|cx| {
             gpui_kit::init(cx);
-            gpui_kit::open_window(WindowOptions::default(),cx,|window,cx|{
-                cx.new(|cx| Gallery::new("Button".to_owned(),false,window,cx))
-            }).expect("Failed to open gallery window");
+            gpui_kit::open_window(WindowOptions::default(), cx, |window, cx| {
+                cx.new(|cx| Gallery::new("Button".to_owned(), false, window, cx))
+            })
+            .expect("Failed to open gallery window");
             cx.activate(true);
         });
 }
 
-#[cfg(target_family="wasm")]
+#[cfg(target_family = "wasm")]
 mod browser {
     use super::*;
-    use gpui_kit::{Application, ApplicationHandle};
     use gpui_kit::web::{CanvasFontFallback, WebBackendPreference, WebPlatform};
-    use std::{borrow::Cow,cell::RefCell,rc::Rc,sync::Arc};
+    use gpui_kit::{Application, ApplicationHandle};
+    use std::{borrow::Cow, cell::RefCell, rc::Rc, sync::Arc};
     use wasm_bindgen::prelude::*;
 
     thread_local! {
@@ -2800,32 +4646,38 @@ mod browser {
     }
 
     fn web_application() -> Application {
-        let platform=Rc::new(WebPlatform::new_with_backend_and_font_fallback(
-            false,WebBackendPreference::Auto,CanvasFontFallback::EmojiAndCjk));
-        let client=Arc::new(platform.fetch_http_client());
+        let platform = Rc::new(WebPlatform::new_with_backend_and_font_fallback(
+            false,
+            WebBackendPreference::Auto,
+            CanvasFontFallback::EmojiAndCjk,
+        ));
+        let client = Arc::new(platform.fetch_http_client());
         Application::with_platform(platform).with_http_client(client)
     }
 
     /// Main entry point invoked by the docs page after loading WASM bindings.
     #[wasm_bindgen]
-    pub fn run(component:Option<String>,dark:Option<bool>)->Result<(),JsValue> {
+    pub fn run(component: Option<String>, dark: Option<bool>) -> Result<(), JsValue> {
         console_error_panic_hook::set_once();
-        let _=console_log::init_with_level(log::Level::Info);
+        let _ = console_log::init_with_level(log::Level::Info);
         gpui_kit::platform::web_init();
 
-        let app=web_application().with_assets(GalleryAssets::new());
-        let component=component.unwrap_or_else(||"Button".to_owned());
-        let dark=dark.unwrap_or(false);
-        APPLICATION.with(|app_handle|{
-            *app_handle.borrow_mut()=Some(app.run_embedded(move |cx: &mut App|{
+        let app = web_application().with_assets(GalleryAssets::new());
+        let component = component.unwrap_or_else(|| "Button".to_owned());
+        let dark = dark.unwrap_or(false);
+        APPLICATION.with(|app_handle| {
+            *app_handle.borrow_mut() = Some(app.run_embedded(move |cx: &mut App| {
                 gpui_kit::init(cx);
-                cx.text_system().add_fonts(vec![Cow::Borrowed(
-                    include_bytes!("../fonts/IBMPlexSans-Regular.ttf").as_slice()
-                )]).expect("Unable to load WASM gallery font");
+                cx.text_system()
+                    .add_fonts(vec![Cow::Borrowed(
+                        include_bytes!("../fonts/IBMPlexSans-Regular.ttf").as_slice(),
+                    )])
+                    .expect("Unable to load WASM gallery font");
 
-                gpui_kit::open_window(WindowOptions::default(),cx,move |window,cx|{
-                    cx.new(|cx| Gallery::new(component,dark,window,cx))
-                }).expect("Unable to open WASM gallery window");
+                gpui_kit::open_window(WindowOptions::default(), cx, move |window, cx| {
+                    cx.new(|cx| Gallery::new(component, dark, window, cx))
+                })
+                .expect("Unable to open WASM gallery window");
                 cx.activate(true);
             }));
         });
@@ -2840,21 +4692,33 @@ mod icon_preview_tests {
     #[test]
     fn theme_studio_routes_single_component_to_existing_native_gallery() {
         for name in COMPONENTS {
-            let route=format!("ThemeLab|colorPrimary=1677ff|scene=single|preview={name}");
-            assert_eq!(theme_preview_target(&route),Some(*name));
+            let route = format!("ThemeLab|colorPrimary=1677ff|scene=single|preview={name}");
+            assert_eq!(theme_preview_target(&route), Some(*name));
         }
-        assert_eq!(theme_preview_target("ThemeLab|scene=single|preview=NotAComponent"),None);
-        assert_eq!(theme_preview_target("ThemeLab|preview=Menu"),None);
-        assert_eq!(theme_preview_target("ThemeLab|scene=tokens|preview=Tabs"),None);
-        assert_eq!(theme_preview_target("ThemeLab|scene=single|scene=tokens|preview=Tabs"),None);
-        assert_eq!(theme_preview_target("Menu|scene=single|preview=Tabs"),None);
-        assert_eq!(theme_preview_target("ThemeLab|scene=single|preview=IconAudit:0"),None);
+        assert_eq!(
+            theme_preview_target("ThemeLab|scene=single|preview=NotAComponent"),
+            None
+        );
+        assert_eq!(theme_preview_target("ThemeLab|preview=Menu"), None);
+        assert_eq!(
+            theme_preview_target("ThemeLab|scene=tokens|preview=Tabs"),
+            None
+        );
+        assert_eq!(
+            theme_preview_target("ThemeLab|scene=single|scene=tokens|preview=Tabs"),
+            None
+        );
+        assert_eq!(theme_preview_target("Menu|scene=single|preview=Tabs"), None);
+        assert_eq!(
+            theme_preview_target("ThemeLab|scene=single|preview=IconAudit:0"),
+            None
+        );
     }
 
     #[test]
     fn display_parameter_parser_clamps_and_rejects_bad_colors() {
-        let p = IconPreview::parse(
-            "CheckCircleTwoTone|size=96|spin=1|primary=52c41a|secondary=f6ffed");
+        let p =
+            IconPreview::parse("CheckCircleTwoTone|size=96|spin=1|primary=52c41a|secondary=f6ffed");
         assert_eq!(p.name, "CheckCircleTwoTone");
         assert_eq!(p.size, 96.);
         assert!(p.spin);
@@ -2862,7 +4726,8 @@ mod icon_preview_tests {
         assert_eq!(p.secondary, Some(0xf6ffed));
 
         let bad = IconPreview::parse(
-            "CheckCircleTwoTone|size=nan|spin=x|primary=ZZZZZZ|secondary=1234567|unknown=x");
+            "CheckCircleTwoTone|size=nan|spin=x|primary=ZZZZZZ|secondary=1234567|unknown=x",
+        );
         assert_eq!(bad.size, 64.);
         assert!(!bad.spin);
         assert_eq!(bad.primary, None);

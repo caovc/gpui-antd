@@ -39,15 +39,14 @@
 
 use std::rc::Rc;
 
-use gpui_kit::{
-    Anchor, App, ElementId, Hsla, InteractiveElement as _, IntoElement, KeyDownEvent,
-    MouseButton, ParentElement as _, RenderOnce, Role, SharedString,
-    StatefulInteractiveElement as _, Styled as _, Transformation, Window, div, px,
-    percentage,
-};
 use gpui_kit::base::{Popover as BasePopover, StyledExt as _};
-use gpui_kit::component::{Icon as KitIcon, Size, Sizable as _};
+use gpui_kit::component::{Icon as KitIcon, Sizable as _, Size};
 use gpui_kit::prelude::FluentBuilder as _;
+use gpui_kit::{
+    Anchor, App, ElementId, Hsla, InteractiveElement as _, IntoElement, KeyDownEvent, MouseButton,
+    ParentElement as _, RenderOnce, Role, SharedString, StatefulInteractiveElement as _,
+    Styled as _, Transformation, Window, div, percentage, px,
+};
 
 use crate::ControlSize;
 use crate::design_tokens::AntComponent;
@@ -364,13 +363,7 @@ impl AntSelect {
 impl RenderOnce for AntSelect {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let theme = self.theme;
-        let chrome = select_chrome(
-            &theme,
-            self.size,
-            self.variant,
-            self.status,
-            self.disabled,
-        );
+        let chrome = select_chrome(&theme, self.size, self.variant, self.status, self.disabled);
         let disabled = self.disabled;
         let clearable = self.clearable;
         let searchable = self.searchable;
@@ -409,11 +402,8 @@ impl RenderOnce for AntSelect {
         highlight_state.update(cx, |state, _| {
             if open {
                 if !state.was_open {
-                    state.index = selected_filtered.or(if filtered.is_empty() {
-                        None
-                    } else {
-                        Some(0)
-                    });
+                    state.index =
+                        selected_filtered.or(if filtered.is_empty() { None } else { Some(0) });
                 } else if let Some(index) = state.index {
                     if filtered.is_empty() {
                         state.index = None;
@@ -430,9 +420,7 @@ impl RenderOnce for AntSelect {
         });
         let highlight = highlight_state.read(cx).index;
 
-        let value_label = selected
-            .clone()
-            .unwrap_or_else(|| placeholder.clone());
+        let value_label = selected.clone().unwrap_or_else(|| placeholder.clone());
         let showing_placeholder = selected.is_none();
         let value_color = if disabled {
             theme.disabled_text
@@ -727,8 +715,7 @@ impl RenderOnce for AntSelect {
                             let value = options[option_index].clone();
                             let is_selected = selected.as_ref() == Some(&value);
                             let is_active = highlight == Some(filtered_index);
-                            let row_id =
-                                format!("ant-select-opt-{}-{}", id_debug, value.as_ref());
+                            let row_id = format!("ant-select-opt-{}-{}", id_debug, value.as_ref());
                             let on_select = on_select.clone();
                             let on_open = on_open.clone();
                             let commit = value.clone();
@@ -965,18 +952,9 @@ mod tests {
 
     #[test]
     fn highlight_movement_wraps_and_handles_empty() {
-        assert_eq!(
-            move_select_highlight(None, 0, SelectMove::Next),
-            None
-        );
-        assert_eq!(
-            move_select_highlight(None, 3, SelectMove::Next),
-            Some(0)
-        );
-        assert_eq!(
-            move_select_highlight(Some(2), 3, SelectMove::Next),
-            Some(0)
-        );
+        assert_eq!(move_select_highlight(None, 0, SelectMove::Next), None);
+        assert_eq!(move_select_highlight(None, 3, SelectMove::Next), Some(0));
+        assert_eq!(move_select_highlight(Some(2), 3, SelectMove::Next), Some(0));
         assert_eq!(
             move_select_highlight(Some(0), 3, SelectMove::Previous),
             Some(2)
@@ -985,10 +963,7 @@ mod tests {
             move_select_highlight(Some(1), 3, SelectMove::First),
             Some(0)
         );
-        assert_eq!(
-            move_select_highlight(Some(1), 3, SelectMove::Last),
-            Some(2)
-        );
+        assert_eq!(move_select_highlight(Some(1), 3, SelectMove::Last), Some(2));
         assert_eq!(select_move_for_key("up"), Some(SelectMove::Previous));
         assert_eq!(select_move_for_key("down"), Some(SelectMove::Next));
         assert_eq!(select_move_for_key("home"), Some(SelectMove::First));

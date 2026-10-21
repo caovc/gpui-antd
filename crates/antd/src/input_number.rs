@@ -85,13 +85,31 @@ impl AntInputNumber {
             addon_after: None,
         }
     }
-    pub fn theme(mut self, t: AntTheme) -> Self { self.theme = t; self }
-    pub fn size(mut self, s: ControlSize) -> Self { self.size = s; self }
-    pub fn variant(mut self, v: InputVariant) -> Self { self.variant = v; self }
-    pub fn status(mut self, s: InputStatus) -> Self { self.status = s; self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
+    pub fn theme(mut self, t: AntTheme) -> Self {
+        self.theme = t;
+        self
+    }
+    pub fn size(mut self, s: ControlSize) -> Self {
+        self.size = s;
+        self
+    }
+    pub fn variant(mut self, v: InputVariant) -> Self {
+        self.variant = v;
+        self
+    }
+    pub fn status(mut self, s: InputStatus) -> Self {
+        self.status = s;
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
     /// Show the antd stacked Up/Down handler column (default true).
-    pub fn controls(mut self, show: bool) -> Self { self.controls = show; self }
+    pub fn controls(mut self, show: bool) -> Self {
+        self.controls = show;
+        self
+    }
     /// Override the hint in the parent-owned InputState. Omit this builder to
     /// keep the placeholder configured on the state.
     pub fn placeholder(mut self, p: impl Into<SharedString>) -> Self {
@@ -196,7 +214,11 @@ impl RenderOnce for AntInputNumber {
             .when_some(suffix, |this, el| this.suffix(el))
             .w_full()
             .text_size(px(font_size))
-            .text_color(if disabled { theme.disabled_text } else { theme.text });
+            .text_color(if disabled {
+                theme.disabled_text
+            } else {
+                theme.text
+            });
 
         // Antd stacked handlers via verified base NumberInput::controls_right.
         // Button faces are ours (AntIcon); stepping is Kit's default on_step.
@@ -307,7 +329,15 @@ impl RenderOnce for AntInputNumber {
                             .child(before),
                     )
                 })
-                .child(div().flex_1().min_w_0().px(px(11.)).flex().items_center().child(body))
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .px(px(11.))
+                        .flex()
+                        .items_center()
+                        .child(body),
+                )
                 .when_some(addon_after, |this, after| {
                     this.child(
                         div()
@@ -379,7 +409,10 @@ mod tests {
         let theme = AntTheme::light();
         let comp = theme.component(AntComponent::InputNumber);
         assert_eq!(input_control_height(ControlSize::Small, &theme, &comp), 24.);
-        assert_eq!(input_control_height(ControlSize::Middle, &theme, &comp), 32.);
+        assert_eq!(
+            input_control_height(ControlSize::Middle, &theme, &comp),
+            32.
+        );
         assert_eq!(input_control_height(ControlSize::Large, &theme, &comp), 40.);
     }
 
@@ -392,7 +425,11 @@ mod tests {
         assert!(input_paints_border(InputVariant::Outlined));
         assert!(!input_paints_border(InputVariant::Borderless));
         assert_eq!(
-            input_hover_border(InputStatus::Error, &theme, &theme.component(AntComponent::InputNumber)),
+            input_hover_border(
+                InputStatus::Error,
+                &theme,
+                &theme.component(AntComponent::InputNumber)
+            ),
             theme.error
         );
     }

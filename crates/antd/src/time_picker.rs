@@ -10,25 +10,27 @@
 //!
 //! ## Gaps
 //! - No `clearable` — TimeField has no clear API in 0.7.3.
-//! - Selected values are not automatically scrolled into view.
+//! - Selected rows scroll into view when the value changes. The column list
+//!   itself scrolls, so later minutes and seconds stay reachable.
 //! - Ranges / time-range picker not implemented.
 //! - Gallery must pass `.show_second(true)` / `.hour12(true)` to match states
 //!   configured with `TimePrecision::Second` / `HourCycle::H12`.
 
 use std::rc::Rc;
 
+use crate::design_tokens::AntComponent;
+use crate::{AntIcon, AntIconName, AntTheme, ControlSize, InputStatus, InputVariant, color};
 use chrono::{NaiveTime, Timelike};
-use gpui_kit::base::{Button as BaseButton, Popover as BasePopover, StyledExt as _, TestSupportExt as _};
+use gpui_kit::base::{
+    Button as BaseButton, Popover as BasePopover, StyledExt as _, TestSupportExt as _,
+};
 use gpui_kit::component::time_field::{TimeField, TimeFieldState};
+use gpui_kit::component::{Disableable as _, Sizable as _, Size};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     Anchor, App, Entity, Hsla, InteractiveElement as _, IntoElement, ParentElement as _,
-    RenderOnce, SharedString, StatefulInteractiveElement as _, Styled as _, Window, div, px,
-};
-use gpui_kit::component::{Disableable as _, Sizable as _, Size};
-use crate::design_tokens::AntComponent;
-use crate::{
-    AntIcon, AntIconName, AntTheme, ControlSize, InputStatus, InputVariant, color,
+    RenderOnce, ScrollHandle, SharedString, StatefulInteractiveElement as _, Styled as _, Window,
+    div, px,
 };
 
 type OpenChange = Rc<dyn Fn(bool, &mut Window, &mut App)>;
@@ -210,10 +212,7 @@ impl AntTimePicker {
         self.open = Some(open);
         self
     }
-    pub fn on_open_change(
-        mut self,
-        f: impl Fn(bool, &mut Window, &mut App) + 'static,
-    ) -> Self {
+    pub fn on_open_change(mut self, f: impl Fn(bool, &mut Window, &mut App) + 'static) -> Self {
         self.on_open_change = Some(Rc::new(f));
         self
     }
@@ -309,12 +308,37 @@ impl RenderOnce for AntTimePicker {
                 this.on_open_change(move |open, window, cx| cb(*open, window, cx))
             })
             .trigger_with(move |is_open, _, _| build_frame(is_open))
-            .content(move |_, _, cx| {
+            .content(move |_, window, cx| {
                 let time = panel_state.read(cx).time();
                 let hour_sel = selected_hour_index(time, hour12);
                 let minute_sel = selected_minute_index(time);
                 let second_sel = selected_second_index(time);
                 let period_sel = selected_period_index(time);
+                let scroll_key = panel_state.entity_id();
+                let hour_scroll = column_scroll(
+                    window,
+                    cx,
+                    format!("ant-time-scroll-{scroll_key:?}-h"),
+                    hour_sel,
+                );
+                let minute_scroll = column_scroll(
+                    window,
+                    cx,
+                    format!("ant-time-scroll-{scroll_key:?}-m"),
+                    minute_sel,
+                );
+                let second_scroll = column_scroll(
+                    window,
+                    cx,
+                    format!("ant-time-scroll-{scroll_key:?}-s"),
+                    second_sel,
+                );
+                let period_scroll = column_scroll(
+                    window,
+                    cx,
+                    format!("ant-time-scroll-{scroll_key:?}-p"),
+                    period_sel,
+                );
 
                 let mut columns = div().flex().gap(px(4.)).p(px(8.));
 
@@ -336,6 +360,7 @@ impl RenderOnce for AntTimePicker {
                         .collect(),
                     theme,
                     panel_state.clone(),
+                    hour_scroll,
                     move |t, value| apply_hour(t, value, hour12),
                 ));
 
@@ -350,6 +375,7 @@ impl RenderOnce for AntTimePicker {
                         .collect(),
                     theme,
                     panel_state.clone(),
+                    minute_scroll,
                     apply_minute,
                 ));
 
@@ -364,6 +390,7 @@ impl RenderOnce for AntTimePicker {
                             .collect(),
                         theme,
                         panel_state.clone(),
+                        second_scroll,
                         apply_second,
                     ));
                 }
@@ -378,6 +405,7 @@ impl RenderOnce for AntTimePicker {
                         items,
                         theme,
                         panel_state.clone(),
+                        period_scroll,
                         |t, value| apply_period(t, value == 1),
                     ));
                 }
@@ -395,19 +423,40 @@ impl RenderOnce for AntTimePicker {
     }
 }
 
+#[derive(Clone)]
+struct ColumnScroll {
+    handle: ScrollHandle,
+    shown: Option<usize>,
+}
+
+fn column_scroll(
+    window: &mut Window,
+    cx: &mut App,
+    key: impl Into<gpui_kit::ElementId>,
+    index: usize,
+) -> ScrollHandle {
+    let slot = window.use_keyed_state(key, cx, |_, _| ColumnScroll {
+        handle: ScrollHandle::new(),
+        shown: None,
+    });
+    slot.update(cx, |slot, _| {
+        if slot.shown != Some(index) {
+            slot.handle.scroll_to_item(index);
+            slot.shown = Some(index);
+        }
+    });
+    slot.read(cx).handle.clone()
+}
+
 fn time_column(
     heading: &'static str,
     items: Vec<(usize, u32, SharedString, bool)>,
     theme: AntTheme,
     state: Entity<TimeFieldState>,
+    scroll: ScrollHandle,
     apply: impl Fn(NaiveTime, u32) -> NaiveTime + Clone + 'static,
 ) -> impl IntoElement {
-    let mut col = div()
-        .flex()
-        .flex_col()
-        .w(px(56.))
-        .max_h(px(220.))
-        .overflow_hidden();
+    let mut col = div().flex().flex_col().w(px(56.));
     if !heading.is_empty() {
         col = col.child(
             div()
@@ -424,14 +473,18 @@ fn time_column(
         .min_h_0()
         .max_h(px(200.))
         .overflow_y_scroll()
-        .flex().flex_col().gap(px(2.));
+        .track_scroll(&scroll)
+        .flex()
+        .flex_col()
+        .gap(px(2.));
     for (idx, value, label, selected) in items {
         let apply = apply.clone();
         let st = state.clone();
         list = list.child(
             BaseButton::new(format!("ant-time-cell-{heading}-{idx}"))
                 .w_full()
-                .h(px(28.)).flex_shrink_0()
+                .h(px(28.))
+                .flex_shrink_0()
                 .rounded(px(theme.border_radius_sm))
                 .text_size(px(13.))
                 .text_color(if selected {

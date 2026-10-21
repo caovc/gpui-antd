@@ -4,19 +4,18 @@
 //! Asset keys are namespaced under "antd-icons/" to coexist with GPUI Kit.
 //! Bundled two-tone artwork remains unmodified; runtime palettes are optional.
 
-use std::{borrow::Cow, time::Duration};
-use gpui_kit::{
-    Animation, AnimationExt as _, App, AssetSource, Hsla, IntoElement, RenderOnce, Result,
-    SharedString, ParentElement as _, Styled as _, Transformation, Window,
-    div, img, svg, percentage, px,
-    prelude::FluentBuilder as _,
+use crate::icon_palette::{
+    TwoToneLayer, layer_asset_key, normalize_two_tone_svg, palette_asset_key,
+    parse_layer_asset_key, parse_palette_asset_key, recolor_svg, svg_layer_mask,
 };
 use crate::tokens::AntTheme;
-use crate::icon_palette::{
-    TwoToneLayer, layer_asset_key, palette_asset_key, parse_layer_asset_key,
-    parse_palette_asset_key, recolor_svg, normalize_two_tone_svg, svg_layer_mask,
+use gpui_kit::component::{Icon as KitIcon, Sizable as _, Size};
+use gpui_kit::{
+    Animation, AnimationExt as _, App, AssetSource, Hsla, IntoElement, ParentElement as _,
+    RenderOnce, Result, SharedString, Styled as _, Transformation, Window, div, img, percentage,
+    prelude::FluentBuilder as _, px, svg,
 };
-use gpui_kit::component::{Icon as KitIcon, Size, Sizable as _};
+use std::{borrow::Cow, time::Duration};
 
 /// Every official Ant Design SVG icon, generated from a pinned upstream revision.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -5155,13 +5154,28 @@ pub struct AntIcon {
 
 impl AntIcon {
     pub fn new(name: AntIconName) -> Self {
-        Self { name, size: 16., color: None, two_tone_secondary: None, theme: AntTheme::default(), spin: false }
+        Self {
+            name,
+            size: 16.,
+            color: None,
+            two_tone_secondary: None,
+            theme: AntTheme::default(),
+            spin: false,
+        }
     }
-    pub fn loading() -> Self { Self::new(AntIconName::LoadingOutlined).spin(true) }
-    pub fn size(mut self, size: f32) -> Self { self.size = size.max(0.); self }
+    pub fn loading() -> Self {
+        Self::new(AntIconName::LoadingOutlined).spin(true)
+    }
+    pub fn size(mut self, size: f32) -> Self {
+        self.size = size.max(0.);
+        self
+    }
     /// Tint Outlined/Filled icons; for TwoTone, set the primary SVG fill.
     /// The TwoTone secondary fill follows `theme.info_bg` unless overridden.
-    pub fn color(mut self, color: Hsla) -> Self { self.color = Some(color); self }
+    pub fn color(mut self, color: Hsla) -> Self {
+        self.color = Some(color);
+        self
+    }
 
     /// Override both colors of official TwoTone artwork without altering SVG files.
     /// On Outlined/Filled icons, only the primary color is used as a tint.
@@ -5171,11 +5185,19 @@ impl AntIcon {
         self.two_tone_secondary = Some(secondary);
         self
     }
-    pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
+    pub fn theme(mut self, theme: AntTheme) -> Self {
+        self.theme = theme;
+        self
+    }
     /// Rotate an icon, including a TwoTone icon's two color layers in sync.
     /// Respects GPUI's reduced-motion setting automatically.
-    pub fn spin(mut self, spin: bool) -> Self { self.spin = spin; self }
-    pub fn name(&self) -> AntIconName { self.name }
+    pub fn spin(mut self, spin: bool) -> Self {
+        self.spin = spin;
+        self
+    }
+    pub fn name(&self) -> AntIconName {
+        self.name
+    }
 }
 impl RenderOnce for AntIcon {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
@@ -5196,22 +5218,30 @@ impl RenderOnce for AntIcon {
                     .with_animation(
                         format!("ant-icon-twotone-spin-{path}-primary"),
                         animation(),
-                        |icon, delta| icon.with_transformation(
-                            Transformation::rotate(percentage(delta))),
+                        |icon, delta| {
+                            icon.with_transformation(Transformation::rotate(percentage(delta)))
+                        },
                     );
                 let secondary_mask = svg()
                     .path(layer_asset_key(path, TwoToneLayer::Secondary))
-                    .absolute().top(px(0.)).left(px(0.))
+                    .absolute()
+                    .top(px(0.))
+                    .left(px(0.))
                     .size(px(self.size))
                     .text_color(secondary)
                     .with_animation(
                         format!("ant-icon-twotone-spin-{path}-secondary"),
                         animation(),
-                        |icon, delta| icon.with_transformation(
-                            Transformation::rotate(percentage(delta))),
+                        |icon, delta| {
+                            icon.with_transformation(Transformation::rotate(percentage(delta)))
+                        },
                     );
-                return div().relative().size(px(self.size)).flex_shrink_0()
-                    .child(secondary_mask).child(primary_mask)
+                return div()
+                    .relative()
+                    .size(px(self.size))
+                    .flex_shrink_0()
+                    .child(secondary_mask)
+                    .child(primary_mask)
                     .into_any_element();
             }
             // svg()/KitIcon use single-color alpha masks and would discard
@@ -5231,7 +5261,8 @@ impl RenderOnce for AntIcon {
                 "ant-icon-spin",
                 Animation::new(Duration::from_millis(900)).repeat(),
                 |this, delta| this.transform(Transformation::rotate(percentage(delta))),
-            ).into_any_element()
+            )
+            .into_any_element()
         } else {
             icon.into_any_element()
         }
@@ -5245,8 +5276,15 @@ impl RenderOnce for AntIcon {
 const TWO_TONE_IMAGE_DIMENSIONS: &[u8] = b" width=\"128\" height=\"128\"";
 
 fn two_tone_image_svg(bytes: &'static [u8]) -> Cow<'static, [u8]> {
-    let start = bytes.windows(4).position(|part| part == b"<svg").expect("SVG root");
-    let end = start + bytes[start..].iter().position(|byte| *byte == b'>').expect("SVG root end");
+    let start = bytes
+        .windows(4)
+        .position(|part| part == b"<svg")
+        .expect("SVG root");
+    let end = start
+        + bytes[start..]
+            .iter()
+            .position(|byte| *byte == b'>')
+            .expect("SVG root end");
     let root = &bytes[start..end];
     if root.windows(7).any(|part| part == b" width=")
         || root.windows(8).any(|part| part == b" height=")
@@ -5278,854 +5316,2553 @@ impl AssetSource for AntIconAssets {
             }
         };
         let svg: Option<&'static [u8]> = match asset_path {
-            "antd-icons/outlined/account-book.svg" => Some(include_bytes!("../assets/antd-icons/outlined/account-book.svg").as_slice()),
-            "antd-icons/outlined/aim.svg" => Some(include_bytes!("../assets/antd-icons/outlined/aim.svg").as_slice()),
-            "antd-icons/outlined/alert.svg" => Some(include_bytes!("../assets/antd-icons/outlined/alert.svg").as_slice()),
-            "antd-icons/outlined/alibaba.svg" => Some(include_bytes!("../assets/antd-icons/outlined/alibaba.svg").as_slice()),
-            "antd-icons/outlined/align-center.svg" => Some(include_bytes!("../assets/antd-icons/outlined/align-center.svg").as_slice()),
-            "antd-icons/outlined/align-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/align-left.svg").as_slice()),
-            "antd-icons/outlined/align-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/align-right.svg").as_slice()),
-            "antd-icons/outlined/alipay-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/alipay-circle.svg").as_slice()),
-            "antd-icons/outlined/alipay.svg" => Some(include_bytes!("../assets/antd-icons/outlined/alipay.svg").as_slice()),
-            "antd-icons/outlined/aliwangwang.svg" => Some(include_bytes!("../assets/antd-icons/outlined/aliwangwang.svg").as_slice()),
-            "antd-icons/outlined/aliyun.svg" => Some(include_bytes!("../assets/antd-icons/outlined/aliyun.svg").as_slice()),
-            "antd-icons/outlined/amazon.svg" => Some(include_bytes!("../assets/antd-icons/outlined/amazon.svg").as_slice()),
-            "antd-icons/outlined/android.svg" => Some(include_bytes!("../assets/antd-icons/outlined/android.svg").as_slice()),
-            "antd-icons/outlined/ant-cloud.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ant-cloud.svg").as_slice()),
-            "antd-icons/outlined/ant-design.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ant-design.svg").as_slice()),
-            "antd-icons/outlined/apartment.svg" => Some(include_bytes!("../assets/antd-icons/outlined/apartment.svg").as_slice()),
-            "antd-icons/outlined/api.svg" => Some(include_bytes!("../assets/antd-icons/outlined/api.svg").as_slice()),
-            "antd-icons/outlined/apple.svg" => Some(include_bytes!("../assets/antd-icons/outlined/apple.svg").as_slice()),
-            "antd-icons/outlined/appstore-add.svg" => Some(include_bytes!("../assets/antd-icons/outlined/appstore-add.svg").as_slice()),
-            "antd-icons/outlined/appstore.svg" => Some(include_bytes!("../assets/antd-icons/outlined/appstore.svg").as_slice()),
-            "antd-icons/outlined/area-chart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/area-chart.svg").as_slice()),
-            "antd-icons/outlined/arrow-down.svg" => Some(include_bytes!("../assets/antd-icons/outlined/arrow-down.svg").as_slice()),
-            "antd-icons/outlined/arrow-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/arrow-left.svg").as_slice()),
-            "antd-icons/outlined/arrow-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/arrow-right.svg").as_slice()),
-            "antd-icons/outlined/arrow-up.svg" => Some(include_bytes!("../assets/antd-icons/outlined/arrow-up.svg").as_slice()),
-            "antd-icons/outlined/arrows-alt.svg" => Some(include_bytes!("../assets/antd-icons/outlined/arrows-alt.svg").as_slice()),
-            "antd-icons/outlined/audio-muted.svg" => Some(include_bytes!("../assets/antd-icons/outlined/audio-muted.svg").as_slice()),
-            "antd-icons/outlined/audio.svg" => Some(include_bytes!("../assets/antd-icons/outlined/audio.svg").as_slice()),
-            "antd-icons/outlined/audit.svg" => Some(include_bytes!("../assets/antd-icons/outlined/audit.svg").as_slice()),
-            "antd-icons/outlined/backward.svg" => Some(include_bytes!("../assets/antd-icons/outlined/backward.svg").as_slice()),
-            "antd-icons/outlined/baidu.svg" => Some(include_bytes!("../assets/antd-icons/outlined/baidu.svg").as_slice()),
-            "antd-icons/outlined/bank.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bank.svg").as_slice()),
-            "antd-icons/outlined/bar-chart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bar-chart.svg").as_slice()),
-            "antd-icons/outlined/barcode.svg" => Some(include_bytes!("../assets/antd-icons/outlined/barcode.svg").as_slice()),
-            "antd-icons/outlined/bars.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bars.svg").as_slice()),
-            "antd-icons/outlined/behance-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/behance-square.svg").as_slice()),
-            "antd-icons/outlined/behance.svg" => Some(include_bytes!("../assets/antd-icons/outlined/behance.svg").as_slice()),
-            "antd-icons/outlined/bell.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bell.svg").as_slice()),
-            "antd-icons/outlined/bg-colors.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bg-colors.svg").as_slice()),
-            "antd-icons/outlined/bilibili.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bilibili.svg").as_slice()),
-            "antd-icons/outlined/block.svg" => Some(include_bytes!("../assets/antd-icons/outlined/block.svg").as_slice()),
-            "antd-icons/outlined/bold.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bold.svg").as_slice()),
-            "antd-icons/outlined/book.svg" => Some(include_bytes!("../assets/antd-icons/outlined/book.svg").as_slice()),
-            "antd-icons/outlined/border-bottom.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-bottom.svg").as_slice()),
-            "antd-icons/outlined/border-horizontal.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-horizontal.svg").as_slice()),
-            "antd-icons/outlined/border-inner.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-inner.svg").as_slice()),
-            "antd-icons/outlined/border-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-left.svg").as_slice()),
-            "antd-icons/outlined/border-outer.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-outer.svg").as_slice()),
-            "antd-icons/outlined/border-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-right.svg").as_slice()),
-            "antd-icons/outlined/border-top.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-top.svg").as_slice()),
-            "antd-icons/outlined/border-verticle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border-verticle.svg").as_slice()),
-            "antd-icons/outlined/border.svg" => Some(include_bytes!("../assets/antd-icons/outlined/border.svg").as_slice()),
-            "antd-icons/outlined/borderless-table.svg" => Some(include_bytes!("../assets/antd-icons/outlined/borderless-table.svg").as_slice()),
-            "antd-icons/outlined/box-plot.svg" => Some(include_bytes!("../assets/antd-icons/outlined/box-plot.svg").as_slice()),
-            "antd-icons/outlined/branches.svg" => Some(include_bytes!("../assets/antd-icons/outlined/branches.svg").as_slice()),
-            "antd-icons/outlined/bug.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bug.svg").as_slice()),
-            "antd-icons/outlined/build.svg" => Some(include_bytes!("../assets/antd-icons/outlined/build.svg").as_slice()),
-            "antd-icons/outlined/bulb.svg" => Some(include_bytes!("../assets/antd-icons/outlined/bulb.svg").as_slice()),
-            "antd-icons/outlined/calculator.svg" => Some(include_bytes!("../assets/antd-icons/outlined/calculator.svg").as_slice()),
-            "antd-icons/outlined/calendar.svg" => Some(include_bytes!("../assets/antd-icons/outlined/calendar.svg").as_slice()),
-            "antd-icons/outlined/camera.svg" => Some(include_bytes!("../assets/antd-icons/outlined/camera.svg").as_slice()),
-            "antd-icons/outlined/car.svg" => Some(include_bytes!("../assets/antd-icons/outlined/car.svg").as_slice()),
-            "antd-icons/outlined/caret-down.svg" => Some(include_bytes!("../assets/antd-icons/outlined/caret-down.svg").as_slice()),
-            "antd-icons/outlined/caret-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/caret-left.svg").as_slice()),
-            "antd-icons/outlined/caret-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/caret-right.svg").as_slice()),
-            "antd-icons/outlined/caret-up.svg" => Some(include_bytes!("../assets/antd-icons/outlined/caret-up.svg").as_slice()),
-            "antd-icons/outlined/carry-out.svg" => Some(include_bytes!("../assets/antd-icons/outlined/carry-out.svg").as_slice()),
-            "antd-icons/outlined/check-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/check-circle.svg").as_slice()),
-            "antd-icons/outlined/check-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/check-square.svg").as_slice()),
-            "antd-icons/outlined/check.svg" => Some(include_bytes!("../assets/antd-icons/outlined/check.svg").as_slice()),
-            "antd-icons/outlined/chrome.svg" => Some(include_bytes!("../assets/antd-icons/outlined/chrome.svg").as_slice()),
-            "antd-icons/outlined/ci-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ci-circle.svg").as_slice()),
-            "antd-icons/outlined/ci.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ci.svg").as_slice()),
-            "antd-icons/outlined/clear.svg" => Some(include_bytes!("../assets/antd-icons/outlined/clear.svg").as_slice()),
-            "antd-icons/outlined/clock-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/clock-circle.svg").as_slice()),
-            "antd-icons/outlined/close-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/close-circle.svg").as_slice()),
-            "antd-icons/outlined/close-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/close-square.svg").as_slice()),
-            "antd-icons/outlined/close.svg" => Some(include_bytes!("../assets/antd-icons/outlined/close.svg").as_slice()),
-            "antd-icons/outlined/cloud-download.svg" => Some(include_bytes!("../assets/antd-icons/outlined/cloud-download.svg").as_slice()),
-            "antd-icons/outlined/cloud-server.svg" => Some(include_bytes!("../assets/antd-icons/outlined/cloud-server.svg").as_slice()),
-            "antd-icons/outlined/cloud-sync.svg" => Some(include_bytes!("../assets/antd-icons/outlined/cloud-sync.svg").as_slice()),
-            "antd-icons/outlined/cloud-upload.svg" => Some(include_bytes!("../assets/antd-icons/outlined/cloud-upload.svg").as_slice()),
-            "antd-icons/outlined/cloud.svg" => Some(include_bytes!("../assets/antd-icons/outlined/cloud.svg").as_slice()),
-            "antd-icons/outlined/cluster.svg" => Some(include_bytes!("../assets/antd-icons/outlined/cluster.svg").as_slice()),
-            "antd-icons/outlined/code-sandbox.svg" => Some(include_bytes!("../assets/antd-icons/outlined/code-sandbox.svg").as_slice()),
-            "antd-icons/outlined/code.svg" => Some(include_bytes!("../assets/antd-icons/outlined/code.svg").as_slice()),
-            "antd-icons/outlined/codepen-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/codepen-circle.svg").as_slice()),
-            "antd-icons/outlined/codepen.svg" => Some(include_bytes!("../assets/antd-icons/outlined/codepen.svg").as_slice()),
-            "antd-icons/outlined/coffee.svg" => Some(include_bytes!("../assets/antd-icons/outlined/coffee.svg").as_slice()),
-            "antd-icons/outlined/column-height.svg" => Some(include_bytes!("../assets/antd-icons/outlined/column-height.svg").as_slice()),
-            "antd-icons/outlined/column-width.svg" => Some(include_bytes!("../assets/antd-icons/outlined/column-width.svg").as_slice()),
-            "antd-icons/outlined/comment.svg" => Some(include_bytes!("../assets/antd-icons/outlined/comment.svg").as_slice()),
-            "antd-icons/outlined/compass.svg" => Some(include_bytes!("../assets/antd-icons/outlined/compass.svg").as_slice()),
-            "antd-icons/outlined/compress.svg" => Some(include_bytes!("../assets/antd-icons/outlined/compress.svg").as_slice()),
-            "antd-icons/outlined/console-sql.svg" => Some(include_bytes!("../assets/antd-icons/outlined/console-sql.svg").as_slice()),
-            "antd-icons/outlined/contacts.svg" => Some(include_bytes!("../assets/antd-icons/outlined/contacts.svg").as_slice()),
-            "antd-icons/outlined/container.svg" => Some(include_bytes!("../assets/antd-icons/outlined/container.svg").as_slice()),
-            "antd-icons/outlined/control.svg" => Some(include_bytes!("../assets/antd-icons/outlined/control.svg").as_slice()),
-            "antd-icons/outlined/copy.svg" => Some(include_bytes!("../assets/antd-icons/outlined/copy.svg").as_slice()),
-            "antd-icons/outlined/copyright-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/copyright-circle.svg").as_slice()),
-            "antd-icons/outlined/copyright.svg" => Some(include_bytes!("../assets/antd-icons/outlined/copyright.svg").as_slice()),
-            "antd-icons/outlined/credit-card.svg" => Some(include_bytes!("../assets/antd-icons/outlined/credit-card.svg").as_slice()),
-            "antd-icons/outlined/crown.svg" => Some(include_bytes!("../assets/antd-icons/outlined/crown.svg").as_slice()),
-            "antd-icons/outlined/customer-service.svg" => Some(include_bytes!("../assets/antd-icons/outlined/customer-service.svg").as_slice()),
-            "antd-icons/outlined/dash.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dash.svg").as_slice()),
-            "antd-icons/outlined/dashboard.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dashboard.svg").as_slice()),
-            "antd-icons/outlined/database.svg" => Some(include_bytes!("../assets/antd-icons/outlined/database.svg").as_slice()),
-            "antd-icons/outlined/delete-column.svg" => Some(include_bytes!("../assets/antd-icons/outlined/delete-column.svg").as_slice()),
-            "antd-icons/outlined/delete-row.svg" => Some(include_bytes!("../assets/antd-icons/outlined/delete-row.svg").as_slice()),
-            "antd-icons/outlined/delete.svg" => Some(include_bytes!("../assets/antd-icons/outlined/delete.svg").as_slice()),
-            "antd-icons/outlined/delivered-procedure.svg" => Some(include_bytes!("../assets/antd-icons/outlined/delivered-procedure.svg").as_slice()),
-            "antd-icons/outlined/deployment-unit.svg" => Some(include_bytes!("../assets/antd-icons/outlined/deployment-unit.svg").as_slice()),
-            "antd-icons/outlined/desktop.svg" => Some(include_bytes!("../assets/antd-icons/outlined/desktop.svg").as_slice()),
-            "antd-icons/outlined/diff.svg" => Some(include_bytes!("../assets/antd-icons/outlined/diff.svg").as_slice()),
-            "antd-icons/outlined/dingding.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dingding.svg").as_slice()),
-            "antd-icons/outlined/dingtalk.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dingtalk.svg").as_slice()),
-            "antd-icons/outlined/disconnect.svg" => Some(include_bytes!("../assets/antd-icons/outlined/disconnect.svg").as_slice()),
-            "antd-icons/outlined/discord.svg" => Some(include_bytes!("../assets/antd-icons/outlined/discord.svg").as_slice()),
-            "antd-icons/outlined/dislike.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dislike.svg").as_slice()),
-            "antd-icons/outlined/docker.svg" => Some(include_bytes!("../assets/antd-icons/outlined/docker.svg").as_slice()),
-            "antd-icons/outlined/dollar-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dollar-circle.svg").as_slice()),
-            "antd-icons/outlined/dollar.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dollar.svg").as_slice()),
-            "antd-icons/outlined/dot-chart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dot-chart.svg").as_slice()),
-            "antd-icons/outlined/dot-net.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dot-net.svg").as_slice()),
-            "antd-icons/outlined/double-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/double-left.svg").as_slice()),
-            "antd-icons/outlined/double-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/double-right.svg").as_slice()),
-            "antd-icons/outlined/down-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/down-circle.svg").as_slice()),
-            "antd-icons/outlined/down-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/down-square.svg").as_slice()),
-            "antd-icons/outlined/down.svg" => Some(include_bytes!("../assets/antd-icons/outlined/down.svg").as_slice()),
-            "antd-icons/outlined/download.svg" => Some(include_bytes!("../assets/antd-icons/outlined/download.svg").as_slice()),
-            "antd-icons/outlined/drag.svg" => Some(include_bytes!("../assets/antd-icons/outlined/drag.svg").as_slice()),
-            "antd-icons/outlined/dribbble-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dribbble-square.svg").as_slice()),
-            "antd-icons/outlined/dribbble.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dribbble.svg").as_slice()),
-            "antd-icons/outlined/dropbox.svg" => Some(include_bytes!("../assets/antd-icons/outlined/dropbox.svg").as_slice()),
-            "antd-icons/outlined/edit.svg" => Some(include_bytes!("../assets/antd-icons/outlined/edit.svg").as_slice()),
-            "antd-icons/outlined/ellipsis.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ellipsis.svg").as_slice()),
-            "antd-icons/outlined/enter.svg" => Some(include_bytes!("../assets/antd-icons/outlined/enter.svg").as_slice()),
-            "antd-icons/outlined/environment.svg" => Some(include_bytes!("../assets/antd-icons/outlined/environment.svg").as_slice()),
-            "antd-icons/outlined/euro-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/euro-circle.svg").as_slice()),
-            "antd-icons/outlined/euro.svg" => Some(include_bytes!("../assets/antd-icons/outlined/euro.svg").as_slice()),
-            "antd-icons/outlined/exception.svg" => Some(include_bytes!("../assets/antd-icons/outlined/exception.svg").as_slice()),
-            "antd-icons/outlined/exclamation-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/exclamation-circle.svg").as_slice()),
-            "antd-icons/outlined/exclamation.svg" => Some(include_bytes!("../assets/antd-icons/outlined/exclamation.svg").as_slice()),
-            "antd-icons/outlined/expand-alt.svg" => Some(include_bytes!("../assets/antd-icons/outlined/expand-alt.svg").as_slice()),
-            "antd-icons/outlined/expand.svg" => Some(include_bytes!("../assets/antd-icons/outlined/expand.svg").as_slice()),
-            "antd-icons/outlined/experiment.svg" => Some(include_bytes!("../assets/antd-icons/outlined/experiment.svg").as_slice()),
-            "antd-icons/outlined/export.svg" => Some(include_bytes!("../assets/antd-icons/outlined/export.svg").as_slice()),
-            "antd-icons/outlined/eye-invisible.svg" => Some(include_bytes!("../assets/antd-icons/outlined/eye-invisible.svg").as_slice()),
-            "antd-icons/outlined/eye.svg" => Some(include_bytes!("../assets/antd-icons/outlined/eye.svg").as_slice()),
-            "antd-icons/outlined/facebook.svg" => Some(include_bytes!("../assets/antd-icons/outlined/facebook.svg").as_slice()),
-            "antd-icons/outlined/fall.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fall.svg").as_slice()),
-            "antd-icons/outlined/fast-backward.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fast-backward.svg").as_slice()),
-            "antd-icons/outlined/fast-forward.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fast-forward.svg").as_slice()),
-            "antd-icons/outlined/field-binary.svg" => Some(include_bytes!("../assets/antd-icons/outlined/field-binary.svg").as_slice()),
-            "antd-icons/outlined/field-number.svg" => Some(include_bytes!("../assets/antd-icons/outlined/field-number.svg").as_slice()),
-            "antd-icons/outlined/field-string.svg" => Some(include_bytes!("../assets/antd-icons/outlined/field-string.svg").as_slice()),
-            "antd-icons/outlined/field-time.svg" => Some(include_bytes!("../assets/antd-icons/outlined/field-time.svg").as_slice()),
-            "antd-icons/outlined/file-add.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-add.svg").as_slice()),
-            "antd-icons/outlined/file-done.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-done.svg").as_slice()),
-            "antd-icons/outlined/file-excel.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-excel.svg").as_slice()),
-            "antd-icons/outlined/file-exclamation.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-exclamation.svg").as_slice()),
-            "antd-icons/outlined/file-gif.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-gif.svg").as_slice()),
-            "antd-icons/outlined/file-image.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-image.svg").as_slice()),
-            "antd-icons/outlined/file-jpg.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-jpg.svg").as_slice()),
-            "antd-icons/outlined/file-markdown.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-markdown.svg").as_slice()),
-            "antd-icons/outlined/file-pdf.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-pdf.svg").as_slice()),
-            "antd-icons/outlined/file-ppt.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-ppt.svg").as_slice()),
-            "antd-icons/outlined/file-protect.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-protect.svg").as_slice()),
-            "antd-icons/outlined/file-search.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-search.svg").as_slice()),
-            "antd-icons/outlined/file-sync.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-sync.svg").as_slice()),
-            "antd-icons/outlined/file-text.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-text.svg").as_slice()),
-            "antd-icons/outlined/file-unknown.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-unknown.svg").as_slice()),
-            "antd-icons/outlined/file-word.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-word.svg").as_slice()),
-            "antd-icons/outlined/file-zip.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file-zip.svg").as_slice()),
-            "antd-icons/outlined/file.svg" => Some(include_bytes!("../assets/antd-icons/outlined/file.svg").as_slice()),
-            "antd-icons/outlined/filter.svg" => Some(include_bytes!("../assets/antd-icons/outlined/filter.svg").as_slice()),
-            "antd-icons/outlined/fire.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fire.svg").as_slice()),
-            "antd-icons/outlined/flag.svg" => Some(include_bytes!("../assets/antd-icons/outlined/flag.svg").as_slice()),
-            "antd-icons/outlined/folder-add.svg" => Some(include_bytes!("../assets/antd-icons/outlined/folder-add.svg").as_slice()),
-            "antd-icons/outlined/folder-open.svg" => Some(include_bytes!("../assets/antd-icons/outlined/folder-open.svg").as_slice()),
-            "antd-icons/outlined/folder-view.svg" => Some(include_bytes!("../assets/antd-icons/outlined/folder-view.svg").as_slice()),
-            "antd-icons/outlined/folder.svg" => Some(include_bytes!("../assets/antd-icons/outlined/folder.svg").as_slice()),
-            "antd-icons/outlined/font-colors.svg" => Some(include_bytes!("../assets/antd-icons/outlined/font-colors.svg").as_slice()),
-            "antd-icons/outlined/font-size.svg" => Some(include_bytes!("../assets/antd-icons/outlined/font-size.svg").as_slice()),
-            "antd-icons/outlined/fork.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fork.svg").as_slice()),
-            "antd-icons/outlined/form.svg" => Some(include_bytes!("../assets/antd-icons/outlined/form.svg").as_slice()),
-            "antd-icons/outlined/format-painter.svg" => Some(include_bytes!("../assets/antd-icons/outlined/format-painter.svg").as_slice()),
-            "antd-icons/outlined/forward.svg" => Some(include_bytes!("../assets/antd-icons/outlined/forward.svg").as_slice()),
-            "antd-icons/outlined/frown.svg" => Some(include_bytes!("../assets/antd-icons/outlined/frown.svg").as_slice()),
-            "antd-icons/outlined/fullscreen-exit.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fullscreen-exit.svg").as_slice()),
-            "antd-icons/outlined/fullscreen.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fullscreen.svg").as_slice()),
-            "antd-icons/outlined/function.svg" => Some(include_bytes!("../assets/antd-icons/outlined/function.svg").as_slice()),
-            "antd-icons/outlined/fund-projection-screen.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fund-projection-screen.svg").as_slice()),
-            "antd-icons/outlined/fund-view.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fund-view.svg").as_slice()),
-            "antd-icons/outlined/fund.svg" => Some(include_bytes!("../assets/antd-icons/outlined/fund.svg").as_slice()),
-            "antd-icons/outlined/funnel-plot.svg" => Some(include_bytes!("../assets/antd-icons/outlined/funnel-plot.svg").as_slice()),
-            "antd-icons/outlined/gateway.svg" => Some(include_bytes!("../assets/antd-icons/outlined/gateway.svg").as_slice()),
-            "antd-icons/outlined/gif.svg" => Some(include_bytes!("../assets/antd-icons/outlined/gif.svg").as_slice()),
-            "antd-icons/outlined/gift.svg" => Some(include_bytes!("../assets/antd-icons/outlined/gift.svg").as_slice()),
-            "antd-icons/outlined/github.svg" => Some(include_bytes!("../assets/antd-icons/outlined/github.svg").as_slice()),
-            "antd-icons/outlined/gitlab.svg" => Some(include_bytes!("../assets/antd-icons/outlined/gitlab.svg").as_slice()),
-            "antd-icons/outlined/global.svg" => Some(include_bytes!("../assets/antd-icons/outlined/global.svg").as_slice()),
-            "antd-icons/outlined/gold.svg" => Some(include_bytes!("../assets/antd-icons/outlined/gold.svg").as_slice()),
-            "antd-icons/outlined/google-plus.svg" => Some(include_bytes!("../assets/antd-icons/outlined/google-plus.svg").as_slice()),
-            "antd-icons/outlined/google.svg" => Some(include_bytes!("../assets/antd-icons/outlined/google.svg").as_slice()),
-            "antd-icons/outlined/group.svg" => Some(include_bytes!("../assets/antd-icons/outlined/group.svg").as_slice()),
-            "antd-icons/outlined/harmony-o-s.svg" => Some(include_bytes!("../assets/antd-icons/outlined/harmony-o-s.svg").as_slice()),
-            "antd-icons/outlined/hdd.svg" => Some(include_bytes!("../assets/antd-icons/outlined/hdd.svg").as_slice()),
-            "antd-icons/outlined/heart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/heart.svg").as_slice()),
-            "antd-icons/outlined/heat-map.svg" => Some(include_bytes!("../assets/antd-icons/outlined/heat-map.svg").as_slice()),
-            "antd-icons/outlined/highlight.svg" => Some(include_bytes!("../assets/antd-icons/outlined/highlight.svg").as_slice()),
-            "antd-icons/outlined/history.svg" => Some(include_bytes!("../assets/antd-icons/outlined/history.svg").as_slice()),
-            "antd-icons/outlined/holder.svg" => Some(include_bytes!("../assets/antd-icons/outlined/holder.svg").as_slice()),
-            "antd-icons/outlined/home.svg" => Some(include_bytes!("../assets/antd-icons/outlined/home.svg").as_slice()),
-            "antd-icons/outlined/hourglass.svg" => Some(include_bytes!("../assets/antd-icons/outlined/hourglass.svg").as_slice()),
-            "antd-icons/outlined/html5.svg" => Some(include_bytes!("../assets/antd-icons/outlined/html5.svg").as_slice()),
-            "antd-icons/outlined/idcard.svg" => Some(include_bytes!("../assets/antd-icons/outlined/idcard.svg").as_slice()),
-            "antd-icons/outlined/ie.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ie.svg").as_slice()),
-            "antd-icons/outlined/import.svg" => Some(include_bytes!("../assets/antd-icons/outlined/import.svg").as_slice()),
-            "antd-icons/outlined/inbox.svg" => Some(include_bytes!("../assets/antd-icons/outlined/inbox.svg").as_slice()),
-            "antd-icons/outlined/info-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/info-circle.svg").as_slice()),
-            "antd-icons/outlined/info.svg" => Some(include_bytes!("../assets/antd-icons/outlined/info.svg").as_slice()),
-            "antd-icons/outlined/insert-row-above.svg" => Some(include_bytes!("../assets/antd-icons/outlined/insert-row-above.svg").as_slice()),
-            "antd-icons/outlined/insert-row-below.svg" => Some(include_bytes!("../assets/antd-icons/outlined/insert-row-below.svg").as_slice()),
-            "antd-icons/outlined/insert-row-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/insert-row-left.svg").as_slice()),
-            "antd-icons/outlined/insert-row-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/insert-row-right.svg").as_slice()),
-            "antd-icons/outlined/instagram.svg" => Some(include_bytes!("../assets/antd-icons/outlined/instagram.svg").as_slice()),
-            "antd-icons/outlined/insurance.svg" => Some(include_bytes!("../assets/antd-icons/outlined/insurance.svg").as_slice()),
-            "antd-icons/outlined/interaction.svg" => Some(include_bytes!("../assets/antd-icons/outlined/interaction.svg").as_slice()),
-            "antd-icons/outlined/issues-close.svg" => Some(include_bytes!("../assets/antd-icons/outlined/issues-close.svg").as_slice()),
-            "antd-icons/outlined/italic.svg" => Some(include_bytes!("../assets/antd-icons/outlined/italic.svg").as_slice()),
-            "antd-icons/outlined/java-script.svg" => Some(include_bytes!("../assets/antd-icons/outlined/java-script.svg").as_slice()),
-            "antd-icons/outlined/java.svg" => Some(include_bytes!("../assets/antd-icons/outlined/java.svg").as_slice()),
-            "antd-icons/outlined/key.svg" => Some(include_bytes!("../assets/antd-icons/outlined/key.svg").as_slice()),
-            "antd-icons/outlined/kubernetes.svg" => Some(include_bytes!("../assets/antd-icons/outlined/kubernetes.svg").as_slice()),
-            "antd-icons/outlined/laptop.svg" => Some(include_bytes!("../assets/antd-icons/outlined/laptop.svg").as_slice()),
-            "antd-icons/outlined/layout.svg" => Some(include_bytes!("../assets/antd-icons/outlined/layout.svg").as_slice()),
-            "antd-icons/outlined/left-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/left-circle.svg").as_slice()),
-            "antd-icons/outlined/left-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/left-square.svg").as_slice()),
-            "antd-icons/outlined/left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/left.svg").as_slice()),
-            "antd-icons/outlined/like.svg" => Some(include_bytes!("../assets/antd-icons/outlined/like.svg").as_slice()),
-            "antd-icons/outlined/line-chart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/line-chart.svg").as_slice()),
-            "antd-icons/outlined/line-height.svg" => Some(include_bytes!("../assets/antd-icons/outlined/line-height.svg").as_slice()),
-            "antd-icons/outlined/line.svg" => Some(include_bytes!("../assets/antd-icons/outlined/line.svg").as_slice()),
-            "antd-icons/outlined/link.svg" => Some(include_bytes!("../assets/antd-icons/outlined/link.svg").as_slice()),
-            "antd-icons/outlined/linkedin.svg" => Some(include_bytes!("../assets/antd-icons/outlined/linkedin.svg").as_slice()),
-            "antd-icons/outlined/linux.svg" => Some(include_bytes!("../assets/antd-icons/outlined/linux.svg").as_slice()),
-            "antd-icons/outlined/loading-3-quarters.svg" => Some(include_bytes!("../assets/antd-icons/outlined/loading-3-quarters.svg").as_slice()),
-            "antd-icons/outlined/loading.svg" => Some(include_bytes!("../assets/antd-icons/outlined/loading.svg").as_slice()),
-            "antd-icons/outlined/lock.svg" => Some(include_bytes!("../assets/antd-icons/outlined/lock.svg").as_slice()),
-            "antd-icons/outlined/login.svg" => Some(include_bytes!("../assets/antd-icons/outlined/login.svg").as_slice()),
-            "antd-icons/outlined/logout.svg" => Some(include_bytes!("../assets/antd-icons/outlined/logout.svg").as_slice()),
-            "antd-icons/outlined/mac-command.svg" => Some(include_bytes!("../assets/antd-icons/outlined/mac-command.svg").as_slice()),
-            "antd-icons/outlined/mail.svg" => Some(include_bytes!("../assets/antd-icons/outlined/mail.svg").as_slice()),
-            "antd-icons/outlined/man.svg" => Some(include_bytes!("../assets/antd-icons/outlined/man.svg").as_slice()),
-            "antd-icons/outlined/medicine-box.svg" => Some(include_bytes!("../assets/antd-icons/outlined/medicine-box.svg").as_slice()),
-            "antd-icons/outlined/medium-workmark.svg" => Some(include_bytes!("../assets/antd-icons/outlined/medium-workmark.svg").as_slice()),
-            "antd-icons/outlined/medium.svg" => Some(include_bytes!("../assets/antd-icons/outlined/medium.svg").as_slice()),
-            "antd-icons/outlined/meh.svg" => Some(include_bytes!("../assets/antd-icons/outlined/meh.svg").as_slice()),
-            "antd-icons/outlined/menu-fold.svg" => Some(include_bytes!("../assets/antd-icons/outlined/menu-fold.svg").as_slice()),
-            "antd-icons/outlined/menu-unfold.svg" => Some(include_bytes!("../assets/antd-icons/outlined/menu-unfold.svg").as_slice()),
-            "antd-icons/outlined/menu.svg" => Some(include_bytes!("../assets/antd-icons/outlined/menu.svg").as_slice()),
-            "antd-icons/outlined/merge-cells.svg" => Some(include_bytes!("../assets/antd-icons/outlined/merge-cells.svg").as_slice()),
-            "antd-icons/outlined/merge.svg" => Some(include_bytes!("../assets/antd-icons/outlined/merge.svg").as_slice()),
-            "antd-icons/outlined/message.svg" => Some(include_bytes!("../assets/antd-icons/outlined/message.svg").as_slice()),
-            "antd-icons/outlined/minus-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/minus-circle.svg").as_slice()),
-            "antd-icons/outlined/minus-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/minus-square.svg").as_slice()),
-            "antd-icons/outlined/minus.svg" => Some(include_bytes!("../assets/antd-icons/outlined/minus.svg").as_slice()),
-            "antd-icons/outlined/mobile.svg" => Some(include_bytes!("../assets/antd-icons/outlined/mobile.svg").as_slice()),
-            "antd-icons/outlined/money-collect.svg" => Some(include_bytes!("../assets/antd-icons/outlined/money-collect.svg").as_slice()),
-            "antd-icons/outlined/monitor.svg" => Some(include_bytes!("../assets/antd-icons/outlined/monitor.svg").as_slice()),
-            "antd-icons/outlined/moon.svg" => Some(include_bytes!("../assets/antd-icons/outlined/moon.svg").as_slice()),
-            "antd-icons/outlined/more.svg" => Some(include_bytes!("../assets/antd-icons/outlined/more.svg").as_slice()),
-            "antd-icons/outlined/muted.svg" => Some(include_bytes!("../assets/antd-icons/outlined/muted.svg").as_slice()),
-            "antd-icons/outlined/node-collapse.svg" => Some(include_bytes!("../assets/antd-icons/outlined/node-collapse.svg").as_slice()),
-            "antd-icons/outlined/node-expand.svg" => Some(include_bytes!("../assets/antd-icons/outlined/node-expand.svg").as_slice()),
-            "antd-icons/outlined/node-index.svg" => Some(include_bytes!("../assets/antd-icons/outlined/node-index.svg").as_slice()),
-            "antd-icons/outlined/notification.svg" => Some(include_bytes!("../assets/antd-icons/outlined/notification.svg").as_slice()),
-            "antd-icons/outlined/number.svg" => Some(include_bytes!("../assets/antd-icons/outlined/number.svg").as_slice()),
-            "antd-icons/outlined/one-to-one.svg" => Some(include_bytes!("../assets/antd-icons/outlined/one-to-one.svg").as_slice()),
-            "antd-icons/outlined/open-a-i.svg" => Some(include_bytes!("../assets/antd-icons/outlined/open-a-i.svg").as_slice()),
-            "antd-icons/outlined/ordered-list.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ordered-list.svg").as_slice()),
-            "antd-icons/outlined/paper-clip.svg" => Some(include_bytes!("../assets/antd-icons/outlined/paper-clip.svg").as_slice()),
-            "antd-icons/outlined/partition.svg" => Some(include_bytes!("../assets/antd-icons/outlined/partition.svg").as_slice()),
-            "antd-icons/outlined/pause-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pause-circle.svg").as_slice()),
-            "antd-icons/outlined/pause.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pause.svg").as_slice()),
-            "antd-icons/outlined/pay-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pay-circle.svg").as_slice()),
-            "antd-icons/outlined/percentage.svg" => Some(include_bytes!("../assets/antd-icons/outlined/percentage.svg").as_slice()),
-            "antd-icons/outlined/phone.svg" => Some(include_bytes!("../assets/antd-icons/outlined/phone.svg").as_slice()),
-            "antd-icons/outlined/pic-center.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pic-center.svg").as_slice()),
-            "antd-icons/outlined/pic-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pic-left.svg").as_slice()),
-            "antd-icons/outlined/pic-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pic-right.svg").as_slice()),
-            "antd-icons/outlined/picture.svg" => Some(include_bytes!("../assets/antd-icons/outlined/picture.svg").as_slice()),
-            "antd-icons/outlined/pie-chart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pie-chart.svg").as_slice()),
-            "antd-icons/outlined/pinterest.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pinterest.svg").as_slice()),
-            "antd-icons/outlined/play-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/play-circle.svg").as_slice()),
-            "antd-icons/outlined/play-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/play-square.svg").as_slice()),
-            "antd-icons/outlined/plus-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/plus-circle.svg").as_slice()),
-            "antd-icons/outlined/plus-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/plus-square.svg").as_slice()),
-            "antd-icons/outlined/plus.svg" => Some(include_bytes!("../assets/antd-icons/outlined/plus.svg").as_slice()),
-            "antd-icons/outlined/pound-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pound-circle.svg").as_slice()),
-            "antd-icons/outlined/pound.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pound.svg").as_slice()),
-            "antd-icons/outlined/poweroff.svg" => Some(include_bytes!("../assets/antd-icons/outlined/poweroff.svg").as_slice()),
-            "antd-icons/outlined/printer.svg" => Some(include_bytes!("../assets/antd-icons/outlined/printer.svg").as_slice()),
-            "antd-icons/outlined/product.svg" => Some(include_bytes!("../assets/antd-icons/outlined/product.svg").as_slice()),
-            "antd-icons/outlined/profile.svg" => Some(include_bytes!("../assets/antd-icons/outlined/profile.svg").as_slice()),
-            "antd-icons/outlined/project.svg" => Some(include_bytes!("../assets/antd-icons/outlined/project.svg").as_slice()),
-            "antd-icons/outlined/property-safety.svg" => Some(include_bytes!("../assets/antd-icons/outlined/property-safety.svg").as_slice()),
-            "antd-icons/outlined/pull-request.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pull-request.svg").as_slice()),
-            "antd-icons/outlined/pushpin.svg" => Some(include_bytes!("../assets/antd-icons/outlined/pushpin.svg").as_slice()),
-            "antd-icons/outlined/python.svg" => Some(include_bytes!("../assets/antd-icons/outlined/python.svg").as_slice()),
-            "antd-icons/outlined/qq.svg" => Some(include_bytes!("../assets/antd-icons/outlined/qq.svg").as_slice()),
-            "antd-icons/outlined/qrcode.svg" => Some(include_bytes!("../assets/antd-icons/outlined/qrcode.svg").as_slice()),
-            "antd-icons/outlined/question-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/question-circle.svg").as_slice()),
-            "antd-icons/outlined/question.svg" => Some(include_bytes!("../assets/antd-icons/outlined/question.svg").as_slice()),
-            "antd-icons/outlined/radar-chart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/radar-chart.svg").as_slice()),
-            "antd-icons/outlined/radius-bottomleft.svg" => Some(include_bytes!("../assets/antd-icons/outlined/radius-bottomleft.svg").as_slice()),
-            "antd-icons/outlined/radius-bottomright.svg" => Some(include_bytes!("../assets/antd-icons/outlined/radius-bottomright.svg").as_slice()),
-            "antd-icons/outlined/radius-setting.svg" => Some(include_bytes!("../assets/antd-icons/outlined/radius-setting.svg").as_slice()),
-            "antd-icons/outlined/radius-upleft.svg" => Some(include_bytes!("../assets/antd-icons/outlined/radius-upleft.svg").as_slice()),
-            "antd-icons/outlined/radius-upright.svg" => Some(include_bytes!("../assets/antd-icons/outlined/radius-upright.svg").as_slice()),
-            "antd-icons/outlined/read.svg" => Some(include_bytes!("../assets/antd-icons/outlined/read.svg").as_slice()),
-            "antd-icons/outlined/reconciliation.svg" => Some(include_bytes!("../assets/antd-icons/outlined/reconciliation.svg").as_slice()),
-            "antd-icons/outlined/red-envelope.svg" => Some(include_bytes!("../assets/antd-icons/outlined/red-envelope.svg").as_slice()),
-            "antd-icons/outlined/reddit.svg" => Some(include_bytes!("../assets/antd-icons/outlined/reddit.svg").as_slice()),
-            "antd-icons/outlined/redo.svg" => Some(include_bytes!("../assets/antd-icons/outlined/redo.svg").as_slice()),
-            "antd-icons/outlined/reload.svg" => Some(include_bytes!("../assets/antd-icons/outlined/reload.svg").as_slice()),
-            "antd-icons/outlined/rest.svg" => Some(include_bytes!("../assets/antd-icons/outlined/rest.svg").as_slice()),
-            "antd-icons/outlined/retweet.svg" => Some(include_bytes!("../assets/antd-icons/outlined/retweet.svg").as_slice()),
-            "antd-icons/outlined/right-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/right-circle.svg").as_slice()),
-            "antd-icons/outlined/right-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/right-square.svg").as_slice()),
-            "antd-icons/outlined/right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/right.svg").as_slice()),
-            "antd-icons/outlined/rise.svg" => Some(include_bytes!("../assets/antd-icons/outlined/rise.svg").as_slice()),
-            "antd-icons/outlined/robot.svg" => Some(include_bytes!("../assets/antd-icons/outlined/robot.svg").as_slice()),
-            "antd-icons/outlined/rocket.svg" => Some(include_bytes!("../assets/antd-icons/outlined/rocket.svg").as_slice()),
-            "antd-icons/outlined/rollback.svg" => Some(include_bytes!("../assets/antd-icons/outlined/rollback.svg").as_slice()),
-            "antd-icons/outlined/rotate-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/rotate-left.svg").as_slice()),
-            "antd-icons/outlined/rotate-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/rotate-right.svg").as_slice()),
-            "antd-icons/outlined/ruby.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ruby.svg").as_slice()),
-            "antd-icons/outlined/safety-certificate.svg" => Some(include_bytes!("../assets/antd-icons/outlined/safety-certificate.svg").as_slice()),
-            "antd-icons/outlined/safety.svg" => Some(include_bytes!("../assets/antd-icons/outlined/safety.svg").as_slice()),
-            "antd-icons/outlined/save.svg" => Some(include_bytes!("../assets/antd-icons/outlined/save.svg").as_slice()),
-            "antd-icons/outlined/scan.svg" => Some(include_bytes!("../assets/antd-icons/outlined/scan.svg").as_slice()),
-            "antd-icons/outlined/schedule.svg" => Some(include_bytes!("../assets/antd-icons/outlined/schedule.svg").as_slice()),
-            "antd-icons/outlined/scissor.svg" => Some(include_bytes!("../assets/antd-icons/outlined/scissor.svg").as_slice()),
-            "antd-icons/outlined/search.svg" => Some(include_bytes!("../assets/antd-icons/outlined/search.svg").as_slice()),
-            "antd-icons/outlined/security-scan.svg" => Some(include_bytes!("../assets/antd-icons/outlined/security-scan.svg").as_slice()),
-            "antd-icons/outlined/select.svg" => Some(include_bytes!("../assets/antd-icons/outlined/select.svg").as_slice()),
-            "antd-icons/outlined/send.svg" => Some(include_bytes!("../assets/antd-icons/outlined/send.svg").as_slice()),
-            "antd-icons/outlined/setting.svg" => Some(include_bytes!("../assets/antd-icons/outlined/setting.svg").as_slice()),
-            "antd-icons/outlined/shake.svg" => Some(include_bytes!("../assets/antd-icons/outlined/shake.svg").as_slice()),
-            "antd-icons/outlined/share-alt.svg" => Some(include_bytes!("../assets/antd-icons/outlined/share-alt.svg").as_slice()),
-            "antd-icons/outlined/shop.svg" => Some(include_bytes!("../assets/antd-icons/outlined/shop.svg").as_slice()),
-            "antd-icons/outlined/shopping-cart.svg" => Some(include_bytes!("../assets/antd-icons/outlined/shopping-cart.svg").as_slice()),
-            "antd-icons/outlined/shopping.svg" => Some(include_bytes!("../assets/antd-icons/outlined/shopping.svg").as_slice()),
-            "antd-icons/outlined/shrink.svg" => Some(include_bytes!("../assets/antd-icons/outlined/shrink.svg").as_slice()),
-            "antd-icons/outlined/signature.svg" => Some(include_bytes!("../assets/antd-icons/outlined/signature.svg").as_slice()),
-            "antd-icons/outlined/sisternode.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sisternode.svg").as_slice()),
-            "antd-icons/outlined/sketch.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sketch.svg").as_slice()),
-            "antd-icons/outlined/skin.svg" => Some(include_bytes!("../assets/antd-icons/outlined/skin.svg").as_slice()),
-            "antd-icons/outlined/skype.svg" => Some(include_bytes!("../assets/antd-icons/outlined/skype.svg").as_slice()),
-            "antd-icons/outlined/slack-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/slack-square.svg").as_slice()),
-            "antd-icons/outlined/slack.svg" => Some(include_bytes!("../assets/antd-icons/outlined/slack.svg").as_slice()),
-            "antd-icons/outlined/sliders.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sliders.svg").as_slice()),
-            "antd-icons/outlined/small-dash.svg" => Some(include_bytes!("../assets/antd-icons/outlined/small-dash.svg").as_slice()),
-            "antd-icons/outlined/smile.svg" => Some(include_bytes!("../assets/antd-icons/outlined/smile.svg").as_slice()),
-            "antd-icons/outlined/snippets.svg" => Some(include_bytes!("../assets/antd-icons/outlined/snippets.svg").as_slice()),
-            "antd-icons/outlined/solution.svg" => Some(include_bytes!("../assets/antd-icons/outlined/solution.svg").as_slice()),
-            "antd-icons/outlined/sort-ascending.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sort-ascending.svg").as_slice()),
-            "antd-icons/outlined/sort-descending.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sort-descending.svg").as_slice()),
-            "antd-icons/outlined/sound.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sound.svg").as_slice()),
-            "antd-icons/outlined/split-cells.svg" => Some(include_bytes!("../assets/antd-icons/outlined/split-cells.svg").as_slice()),
-            "antd-icons/outlined/spotify.svg" => Some(include_bytes!("../assets/antd-icons/outlined/spotify.svg").as_slice()),
-            "antd-icons/outlined/star.svg" => Some(include_bytes!("../assets/antd-icons/outlined/star.svg").as_slice()),
-            "antd-icons/outlined/step-backward.svg" => Some(include_bytes!("../assets/antd-icons/outlined/step-backward.svg").as_slice()),
-            "antd-icons/outlined/step-forward.svg" => Some(include_bytes!("../assets/antd-icons/outlined/step-forward.svg").as_slice()),
-            "antd-icons/outlined/stock.svg" => Some(include_bytes!("../assets/antd-icons/outlined/stock.svg").as_slice()),
-            "antd-icons/outlined/stop.svg" => Some(include_bytes!("../assets/antd-icons/outlined/stop.svg").as_slice()),
-            "antd-icons/outlined/strikethrough.svg" => Some(include_bytes!("../assets/antd-icons/outlined/strikethrough.svg").as_slice()),
-            "antd-icons/outlined/subnode.svg" => Some(include_bytes!("../assets/antd-icons/outlined/subnode.svg").as_slice()),
-            "antd-icons/outlined/sun.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sun.svg").as_slice()),
-            "antd-icons/outlined/swap-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/swap-left.svg").as_slice()),
-            "antd-icons/outlined/swap-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/swap-right.svg").as_slice()),
-            "antd-icons/outlined/swap.svg" => Some(include_bytes!("../assets/antd-icons/outlined/swap.svg").as_slice()),
-            "antd-icons/outlined/switcher.svg" => Some(include_bytes!("../assets/antd-icons/outlined/switcher.svg").as_slice()),
-            "antd-icons/outlined/sync.svg" => Some(include_bytes!("../assets/antd-icons/outlined/sync.svg").as_slice()),
-            "antd-icons/outlined/table.svg" => Some(include_bytes!("../assets/antd-icons/outlined/table.svg").as_slice()),
-            "antd-icons/outlined/tablet.svg" => Some(include_bytes!("../assets/antd-icons/outlined/tablet.svg").as_slice()),
-            "antd-icons/outlined/tag.svg" => Some(include_bytes!("../assets/antd-icons/outlined/tag.svg").as_slice()),
-            "antd-icons/outlined/tags.svg" => Some(include_bytes!("../assets/antd-icons/outlined/tags.svg").as_slice()),
-            "antd-icons/outlined/taobao-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/taobao-circle.svg").as_slice()),
-            "antd-icons/outlined/taobao.svg" => Some(include_bytes!("../assets/antd-icons/outlined/taobao.svg").as_slice()),
-            "antd-icons/outlined/team.svg" => Some(include_bytes!("../assets/antd-icons/outlined/team.svg").as_slice()),
-            "antd-icons/outlined/thunderbolt.svg" => Some(include_bytes!("../assets/antd-icons/outlined/thunderbolt.svg").as_slice()),
-            "antd-icons/outlined/tik-tok.svg" => Some(include_bytes!("../assets/antd-icons/outlined/tik-tok.svg").as_slice()),
-            "antd-icons/outlined/to-top.svg" => Some(include_bytes!("../assets/antd-icons/outlined/to-top.svg").as_slice()),
-            "antd-icons/outlined/tool.svg" => Some(include_bytes!("../assets/antd-icons/outlined/tool.svg").as_slice()),
-            "antd-icons/outlined/trademark-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/trademark-circle.svg").as_slice()),
-            "antd-icons/outlined/trademark.svg" => Some(include_bytes!("../assets/antd-icons/outlined/trademark.svg").as_slice()),
-            "antd-icons/outlined/transaction.svg" => Some(include_bytes!("../assets/antd-icons/outlined/transaction.svg").as_slice()),
-            "antd-icons/outlined/translation.svg" => Some(include_bytes!("../assets/antd-icons/outlined/translation.svg").as_slice()),
-            "antd-icons/outlined/trophy.svg" => Some(include_bytes!("../assets/antd-icons/outlined/trophy.svg").as_slice()),
-            "antd-icons/outlined/truck.svg" => Some(include_bytes!("../assets/antd-icons/outlined/truck.svg").as_slice()),
-            "antd-icons/outlined/twitch.svg" => Some(include_bytes!("../assets/antd-icons/outlined/twitch.svg").as_slice()),
-            "antd-icons/outlined/twitter.svg" => Some(include_bytes!("../assets/antd-icons/outlined/twitter.svg").as_slice()),
-            "antd-icons/outlined/underline.svg" => Some(include_bytes!("../assets/antd-icons/outlined/underline.svg").as_slice()),
-            "antd-icons/outlined/undo.svg" => Some(include_bytes!("../assets/antd-icons/outlined/undo.svg").as_slice()),
-            "antd-icons/outlined/ungroup.svg" => Some(include_bytes!("../assets/antd-icons/outlined/ungroup.svg").as_slice()),
-            "antd-icons/outlined/unlock.svg" => Some(include_bytes!("../assets/antd-icons/outlined/unlock.svg").as_slice()),
-            "antd-icons/outlined/unordered-list.svg" => Some(include_bytes!("../assets/antd-icons/outlined/unordered-list.svg").as_slice()),
-            "antd-icons/outlined/up-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/up-circle.svg").as_slice()),
-            "antd-icons/outlined/up-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/up-square.svg").as_slice()),
-            "antd-icons/outlined/up.svg" => Some(include_bytes!("../assets/antd-icons/outlined/up.svg").as_slice()),
-            "antd-icons/outlined/upload.svg" => Some(include_bytes!("../assets/antd-icons/outlined/upload.svg").as_slice()),
-            "antd-icons/outlined/usb.svg" => Some(include_bytes!("../assets/antd-icons/outlined/usb.svg").as_slice()),
-            "antd-icons/outlined/user-add.svg" => Some(include_bytes!("../assets/antd-icons/outlined/user-add.svg").as_slice()),
-            "antd-icons/outlined/user-delete.svg" => Some(include_bytes!("../assets/antd-icons/outlined/user-delete.svg").as_slice()),
-            "antd-icons/outlined/user-switch.svg" => Some(include_bytes!("../assets/antd-icons/outlined/user-switch.svg").as_slice()),
-            "antd-icons/outlined/user.svg" => Some(include_bytes!("../assets/antd-icons/outlined/user.svg").as_slice()),
-            "antd-icons/outlined/usergroup-add.svg" => Some(include_bytes!("../assets/antd-icons/outlined/usergroup-add.svg").as_slice()),
-            "antd-icons/outlined/usergroup-delete.svg" => Some(include_bytes!("../assets/antd-icons/outlined/usergroup-delete.svg").as_slice()),
-            "antd-icons/outlined/verified.svg" => Some(include_bytes!("../assets/antd-icons/outlined/verified.svg").as_slice()),
-            "antd-icons/outlined/vertical-align-bottom.svg" => Some(include_bytes!("../assets/antd-icons/outlined/vertical-align-bottom.svg").as_slice()),
-            "antd-icons/outlined/vertical-align-middle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/vertical-align-middle.svg").as_slice()),
-            "antd-icons/outlined/vertical-align-top.svg" => Some(include_bytes!("../assets/antd-icons/outlined/vertical-align-top.svg").as_slice()),
-            "antd-icons/outlined/vertical-left.svg" => Some(include_bytes!("../assets/antd-icons/outlined/vertical-left.svg").as_slice()),
-            "antd-icons/outlined/vertical-right.svg" => Some(include_bytes!("../assets/antd-icons/outlined/vertical-right.svg").as_slice()),
-            "antd-icons/outlined/video-camera-add.svg" => Some(include_bytes!("../assets/antd-icons/outlined/video-camera-add.svg").as_slice()),
-            "antd-icons/outlined/video-camera.svg" => Some(include_bytes!("../assets/antd-icons/outlined/video-camera.svg").as_slice()),
-            "antd-icons/outlined/wallet.svg" => Some(include_bytes!("../assets/antd-icons/outlined/wallet.svg").as_slice()),
-            "antd-icons/outlined/warning.svg" => Some(include_bytes!("../assets/antd-icons/outlined/warning.svg").as_slice()),
-            "antd-icons/outlined/wechat-work.svg" => Some(include_bytes!("../assets/antd-icons/outlined/wechat-work.svg").as_slice()),
-            "antd-icons/outlined/wechat.svg" => Some(include_bytes!("../assets/antd-icons/outlined/wechat.svg").as_slice()),
-            "antd-icons/outlined/weibo-circle.svg" => Some(include_bytes!("../assets/antd-icons/outlined/weibo-circle.svg").as_slice()),
-            "antd-icons/outlined/weibo-square.svg" => Some(include_bytes!("../assets/antd-icons/outlined/weibo-square.svg").as_slice()),
-            "antd-icons/outlined/weibo.svg" => Some(include_bytes!("../assets/antd-icons/outlined/weibo.svg").as_slice()),
-            "antd-icons/outlined/whats-app.svg" => Some(include_bytes!("../assets/antd-icons/outlined/whats-app.svg").as_slice()),
-            "antd-icons/outlined/wifi.svg" => Some(include_bytes!("../assets/antd-icons/outlined/wifi.svg").as_slice()),
-            "antd-icons/outlined/windows.svg" => Some(include_bytes!("../assets/antd-icons/outlined/windows.svg").as_slice()),
-            "antd-icons/outlined/woman.svg" => Some(include_bytes!("../assets/antd-icons/outlined/woman.svg").as_slice()),
-            "antd-icons/outlined/x.svg" => Some(include_bytes!("../assets/antd-icons/outlined/x.svg").as_slice()),
-            "antd-icons/outlined/yahoo.svg" => Some(include_bytes!("../assets/antd-icons/outlined/yahoo.svg").as_slice()),
-            "antd-icons/outlined/youtube.svg" => Some(include_bytes!("../assets/antd-icons/outlined/youtube.svg").as_slice()),
-            "antd-icons/outlined/yuque.svg" => Some(include_bytes!("../assets/antd-icons/outlined/yuque.svg").as_slice()),
-            "antd-icons/outlined/zhihu.svg" => Some(include_bytes!("../assets/antd-icons/outlined/zhihu.svg").as_slice()),
-            "antd-icons/outlined/zoom-in.svg" => Some(include_bytes!("../assets/antd-icons/outlined/zoom-in.svg").as_slice()),
-            "antd-icons/outlined/zoom-out.svg" => Some(include_bytes!("../assets/antd-icons/outlined/zoom-out.svg").as_slice()),
-            "antd-icons/filled/account-book.svg" => Some(include_bytes!("../assets/antd-icons/filled/account-book.svg").as_slice()),
-            "antd-icons/filled/alert.svg" => Some(include_bytes!("../assets/antd-icons/filled/alert.svg").as_slice()),
-            "antd-icons/filled/alipay-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/alipay-circle.svg").as_slice()),
-            "antd-icons/filled/alipay-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/alipay-square.svg").as_slice()),
-            "antd-icons/filled/aliwangwang.svg" => Some(include_bytes!("../assets/antd-icons/filled/aliwangwang.svg").as_slice()),
-            "antd-icons/filled/amazon-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/amazon-circle.svg").as_slice()),
-            "antd-icons/filled/amazon-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/amazon-square.svg").as_slice()),
-            "antd-icons/filled/android.svg" => Some(include_bytes!("../assets/antd-icons/filled/android.svg").as_slice()),
-            "antd-icons/filled/anthropic.svg" => Some(include_bytes!("../assets/antd-icons/filled/anthropic.svg").as_slice()),
-            "antd-icons/filled/api.svg" => Some(include_bytes!("../assets/antd-icons/filled/api.svg").as_slice()),
-            "antd-icons/filled/apple.svg" => Some(include_bytes!("../assets/antd-icons/filled/apple.svg").as_slice()),
-            "antd-icons/filled/appstore.svg" => Some(include_bytes!("../assets/antd-icons/filled/appstore.svg").as_slice()),
-            "antd-icons/filled/audio.svg" => Some(include_bytes!("../assets/antd-icons/filled/audio.svg").as_slice()),
-            "antd-icons/filled/backward.svg" => Some(include_bytes!("../assets/antd-icons/filled/backward.svg").as_slice()),
-            "antd-icons/filled/bank.svg" => Some(include_bytes!("../assets/antd-icons/filled/bank.svg").as_slice()),
-            "antd-icons/filled/behance-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/behance-circle.svg").as_slice()),
-            "antd-icons/filled/behance-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/behance-square.svg").as_slice()),
-            "antd-icons/filled/bell.svg" => Some(include_bytes!("../assets/antd-icons/filled/bell.svg").as_slice()),
-            "antd-icons/filled/bilibili.svg" => Some(include_bytes!("../assets/antd-icons/filled/bilibili.svg").as_slice()),
-            "antd-icons/filled/book.svg" => Some(include_bytes!("../assets/antd-icons/filled/book.svg").as_slice()),
-            "antd-icons/filled/box-plot.svg" => Some(include_bytes!("../assets/antd-icons/filled/box-plot.svg").as_slice()),
-            "antd-icons/filled/bug.svg" => Some(include_bytes!("../assets/antd-icons/filled/bug.svg").as_slice()),
-            "antd-icons/filled/build.svg" => Some(include_bytes!("../assets/antd-icons/filled/build.svg").as_slice()),
-            "antd-icons/filled/bulb.svg" => Some(include_bytes!("../assets/antd-icons/filled/bulb.svg").as_slice()),
-            "antd-icons/filled/calculator.svg" => Some(include_bytes!("../assets/antd-icons/filled/calculator.svg").as_slice()),
-            "antd-icons/filled/calendar.svg" => Some(include_bytes!("../assets/antd-icons/filled/calendar.svg").as_slice()),
-            "antd-icons/filled/camera.svg" => Some(include_bytes!("../assets/antd-icons/filled/camera.svg").as_slice()),
-            "antd-icons/filled/car.svg" => Some(include_bytes!("../assets/antd-icons/filled/car.svg").as_slice()),
-            "antd-icons/filled/caret-down.svg" => Some(include_bytes!("../assets/antd-icons/filled/caret-down.svg").as_slice()),
-            "antd-icons/filled/caret-left.svg" => Some(include_bytes!("../assets/antd-icons/filled/caret-left.svg").as_slice()),
-            "antd-icons/filled/caret-right.svg" => Some(include_bytes!("../assets/antd-icons/filled/caret-right.svg").as_slice()),
-            "antd-icons/filled/caret-up.svg" => Some(include_bytes!("../assets/antd-icons/filled/caret-up.svg").as_slice()),
-            "antd-icons/filled/carry-out.svg" => Some(include_bytes!("../assets/antd-icons/filled/carry-out.svg").as_slice()),
-            "antd-icons/filled/check-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/check-circle.svg").as_slice()),
-            "antd-icons/filled/check-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/check-square.svg").as_slice()),
-            "antd-icons/filled/chrome.svg" => Some(include_bytes!("../assets/antd-icons/filled/chrome.svg").as_slice()),
-            "antd-icons/filled/ci-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/ci-circle.svg").as_slice()),
-            "antd-icons/filled/claude.svg" => Some(include_bytes!("../assets/antd-icons/filled/claude.svg").as_slice()),
-            "antd-icons/filled/clock-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/clock-circle.svg").as_slice()),
-            "antd-icons/filled/close-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/close-circle.svg").as_slice()),
-            "antd-icons/filled/close-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/close-square.svg").as_slice()),
-            "antd-icons/filled/cloud.svg" => Some(include_bytes!("../assets/antd-icons/filled/cloud.svg").as_slice()),
-            "antd-icons/filled/code-sandbox-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/code-sandbox-circle.svg").as_slice()),
-            "antd-icons/filled/code-sandbox-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/code-sandbox-square.svg").as_slice()),
-            "antd-icons/filled/code.svg" => Some(include_bytes!("../assets/antd-icons/filled/code.svg").as_slice()),
-            "antd-icons/filled/codepen-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/codepen-circle.svg").as_slice()),
-            "antd-icons/filled/codepen-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/codepen-square.svg").as_slice()),
-            "antd-icons/filled/compass.svg" => Some(include_bytes!("../assets/antd-icons/filled/compass.svg").as_slice()),
-            "antd-icons/filled/contacts.svg" => Some(include_bytes!("../assets/antd-icons/filled/contacts.svg").as_slice()),
-            "antd-icons/filled/container.svg" => Some(include_bytes!("../assets/antd-icons/filled/container.svg").as_slice()),
-            "antd-icons/filled/control.svg" => Some(include_bytes!("../assets/antd-icons/filled/control.svg").as_slice()),
-            "antd-icons/filled/copy.svg" => Some(include_bytes!("../assets/antd-icons/filled/copy.svg").as_slice()),
-            "antd-icons/filled/copyright-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/copyright-circle.svg").as_slice()),
-            "antd-icons/filled/credit-card.svg" => Some(include_bytes!("../assets/antd-icons/filled/credit-card.svg").as_slice()),
-            "antd-icons/filled/crown.svg" => Some(include_bytes!("../assets/antd-icons/filled/crown.svg").as_slice()),
-            "antd-icons/filled/customer-service.svg" => Some(include_bytes!("../assets/antd-icons/filled/customer-service.svg").as_slice()),
-            "antd-icons/filled/dashboard.svg" => Some(include_bytes!("../assets/antd-icons/filled/dashboard.svg").as_slice()),
-            "antd-icons/filled/database.svg" => Some(include_bytes!("../assets/antd-icons/filled/database.svg").as_slice()),
-            "antd-icons/filled/deep-seek.svg" => Some(include_bytes!("../assets/antd-icons/filled/deep-seek.svg").as_slice()),
-            "antd-icons/filled/delete.svg" => Some(include_bytes!("../assets/antd-icons/filled/delete.svg").as_slice()),
-            "antd-icons/filled/diff.svg" => Some(include_bytes!("../assets/antd-icons/filled/diff.svg").as_slice()),
-            "antd-icons/filled/dingtalk-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/dingtalk-circle.svg").as_slice()),
-            "antd-icons/filled/dingtalk-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/dingtalk-square.svg").as_slice()),
-            "antd-icons/filled/discord.svg" => Some(include_bytes!("../assets/antd-icons/filled/discord.svg").as_slice()),
-            "antd-icons/filled/dislike.svg" => Some(include_bytes!("../assets/antd-icons/filled/dislike.svg").as_slice()),
-            "antd-icons/filled/dollar-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/dollar-circle.svg").as_slice()),
-            "antd-icons/filled/down-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/down-circle.svg").as_slice()),
-            "antd-icons/filled/down-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/down-square.svg").as_slice()),
-            "antd-icons/filled/dribbble-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/dribbble-circle.svg").as_slice()),
-            "antd-icons/filled/dribbble-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/dribbble-square.svg").as_slice()),
-            "antd-icons/filled/dropbox-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/dropbox-circle.svg").as_slice()),
-            "antd-icons/filled/dropbox-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/dropbox-square.svg").as_slice()),
-            "antd-icons/filled/edit.svg" => Some(include_bytes!("../assets/antd-icons/filled/edit.svg").as_slice()),
-            "antd-icons/filled/eleven-labs.svg" => Some(include_bytes!("../assets/antd-icons/filled/eleven-labs.svg").as_slice()),
-            "antd-icons/filled/environment.svg" => Some(include_bytes!("../assets/antd-icons/filled/environment.svg").as_slice()),
-            "antd-icons/filled/euro-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/euro-circle.svg").as_slice()),
-            "antd-icons/filled/exclamation-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/exclamation-circle.svg").as_slice()),
-            "antd-icons/filled/experiment.svg" => Some(include_bytes!("../assets/antd-icons/filled/experiment.svg").as_slice()),
-            "antd-icons/filled/eye-invisible.svg" => Some(include_bytes!("../assets/antd-icons/filled/eye-invisible.svg").as_slice()),
-            "antd-icons/filled/eye.svg" => Some(include_bytes!("../assets/antd-icons/filled/eye.svg").as_slice()),
-            "antd-icons/filled/facebook.svg" => Some(include_bytes!("../assets/antd-icons/filled/facebook.svg").as_slice()),
-            "antd-icons/filled/fast-backward.svg" => Some(include_bytes!("../assets/antd-icons/filled/fast-backward.svg").as_slice()),
-            "antd-icons/filled/fast-forward.svg" => Some(include_bytes!("../assets/antd-icons/filled/fast-forward.svg").as_slice()),
-            "antd-icons/filled/file-add.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-add.svg").as_slice()),
-            "antd-icons/filled/file-excel.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-excel.svg").as_slice()),
-            "antd-icons/filled/file-exclamation.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-exclamation.svg").as_slice()),
-            "antd-icons/filled/file-image.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-image.svg").as_slice()),
-            "antd-icons/filled/file-markdown.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-markdown.svg").as_slice()),
-            "antd-icons/filled/file-pdf.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-pdf.svg").as_slice()),
-            "antd-icons/filled/file-ppt.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-ppt.svg").as_slice()),
-            "antd-icons/filled/file-text.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-text.svg").as_slice()),
-            "antd-icons/filled/file-unknown.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-unknown.svg").as_slice()),
-            "antd-icons/filled/file-word.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-word.svg").as_slice()),
-            "antd-icons/filled/file-zip.svg" => Some(include_bytes!("../assets/antd-icons/filled/file-zip.svg").as_slice()),
-            "antd-icons/filled/file.svg" => Some(include_bytes!("../assets/antd-icons/filled/file.svg").as_slice()),
-            "antd-icons/filled/filter.svg" => Some(include_bytes!("../assets/antd-icons/filled/filter.svg").as_slice()),
-            "antd-icons/filled/fire.svg" => Some(include_bytes!("../assets/antd-icons/filled/fire.svg").as_slice()),
-            "antd-icons/filled/flag.svg" => Some(include_bytes!("../assets/antd-icons/filled/flag.svg").as_slice()),
-            "antd-icons/filled/folder-add.svg" => Some(include_bytes!("../assets/antd-icons/filled/folder-add.svg").as_slice()),
-            "antd-icons/filled/folder-open.svg" => Some(include_bytes!("../assets/antd-icons/filled/folder-open.svg").as_slice()),
-            "antd-icons/filled/folder.svg" => Some(include_bytes!("../assets/antd-icons/filled/folder.svg").as_slice()),
-            "antd-icons/filled/format-painter.svg" => Some(include_bytes!("../assets/antd-icons/filled/format-painter.svg").as_slice()),
-            "antd-icons/filled/forward.svg" => Some(include_bytes!("../assets/antd-icons/filled/forward.svg").as_slice()),
-            "antd-icons/filled/frown.svg" => Some(include_bytes!("../assets/antd-icons/filled/frown.svg").as_slice()),
-            "antd-icons/filled/fund.svg" => Some(include_bytes!("../assets/antd-icons/filled/fund.svg").as_slice()),
-            "antd-icons/filled/funnel-plot.svg" => Some(include_bytes!("../assets/antd-icons/filled/funnel-plot.svg").as_slice()),
-            "antd-icons/filled/gemini.svg" => Some(include_bytes!("../assets/antd-icons/filled/gemini.svg").as_slice()),
-            "antd-icons/filled/gift.svg" => Some(include_bytes!("../assets/antd-icons/filled/gift.svg").as_slice()),
-            "antd-icons/filled/github.svg" => Some(include_bytes!("../assets/antd-icons/filled/github.svg").as_slice()),
-            "antd-icons/filled/gitlab.svg" => Some(include_bytes!("../assets/antd-icons/filled/gitlab.svg").as_slice()),
-            "antd-icons/filled/gold.svg" => Some(include_bytes!("../assets/antd-icons/filled/gold.svg").as_slice()),
-            "antd-icons/filled/golden.svg" => Some(include_bytes!("../assets/antd-icons/filled/golden.svg").as_slice()),
-            "antd-icons/filled/google-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/google-circle.svg").as_slice()),
-            "antd-icons/filled/google-plus-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/google-plus-circle.svg").as_slice()),
-            "antd-icons/filled/google-plus-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/google-plus-square.svg").as_slice()),
-            "antd-icons/filled/google-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/google-square.svg").as_slice()),
-            "antd-icons/filled/hdd.svg" => Some(include_bytes!("../assets/antd-icons/filled/hdd.svg").as_slice()),
-            "antd-icons/filled/heart.svg" => Some(include_bytes!("../assets/antd-icons/filled/heart.svg").as_slice()),
-            "antd-icons/filled/highlight.svg" => Some(include_bytes!("../assets/antd-icons/filled/highlight.svg").as_slice()),
-            "antd-icons/filled/home.svg" => Some(include_bytes!("../assets/antd-icons/filled/home.svg").as_slice()),
-            "antd-icons/filled/hourglass.svg" => Some(include_bytes!("../assets/antd-icons/filled/hourglass.svg").as_slice()),
-            "antd-icons/filled/html5.svg" => Some(include_bytes!("../assets/antd-icons/filled/html5.svg").as_slice()),
-            "antd-icons/filled/hugging-face.svg" => Some(include_bytes!("../assets/antd-icons/filled/hugging-face.svg").as_slice()),
-            "antd-icons/filled/idcard.svg" => Some(include_bytes!("../assets/antd-icons/filled/idcard.svg").as_slice()),
-            "antd-icons/filled/ie-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/ie-circle.svg").as_slice()),
-            "antd-icons/filled/ie-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/ie-square.svg").as_slice()),
-            "antd-icons/filled/info-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/info-circle.svg").as_slice()),
-            "antd-icons/filled/instagram.svg" => Some(include_bytes!("../assets/antd-icons/filled/instagram.svg").as_slice()),
-            "antd-icons/filled/insurance.svg" => Some(include_bytes!("../assets/antd-icons/filled/insurance.svg").as_slice()),
-            "antd-icons/filled/interaction.svg" => Some(include_bytes!("../assets/antd-icons/filled/interaction.svg").as_slice()),
-            "antd-icons/filled/layout.svg" => Some(include_bytes!("../assets/antd-icons/filled/layout.svg").as_slice()),
-            "antd-icons/filled/left-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/left-circle.svg").as_slice()),
-            "antd-icons/filled/left-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/left-square.svg").as_slice()),
-            "antd-icons/filled/like.svg" => Some(include_bytes!("../assets/antd-icons/filled/like.svg").as_slice()),
-            "antd-icons/filled/linkedin.svg" => Some(include_bytes!("../assets/antd-icons/filled/linkedin.svg").as_slice()),
-            "antd-icons/filled/lock.svg" => Some(include_bytes!("../assets/antd-icons/filled/lock.svg").as_slice()),
-            "antd-icons/filled/mac-command.svg" => Some(include_bytes!("../assets/antd-icons/filled/mac-command.svg").as_slice()),
-            "antd-icons/filled/mail.svg" => Some(include_bytes!("../assets/antd-icons/filled/mail.svg").as_slice()),
-            "antd-icons/filled/mastodon.svg" => Some(include_bytes!("../assets/antd-icons/filled/mastodon.svg").as_slice()),
-            "antd-icons/filled/medicine-box.svg" => Some(include_bytes!("../assets/antd-icons/filled/medicine-box.svg").as_slice()),
-            "antd-icons/filled/medium-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/medium-circle.svg").as_slice()),
-            "antd-icons/filled/medium-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/medium-square.svg").as_slice()),
-            "antd-icons/filled/meh.svg" => Some(include_bytes!("../assets/antd-icons/filled/meh.svg").as_slice()),
-            "antd-icons/filled/merge.svg" => Some(include_bytes!("../assets/antd-icons/filled/merge.svg").as_slice()),
-            "antd-icons/filled/message.svg" => Some(include_bytes!("../assets/antd-icons/filled/message.svg").as_slice()),
-            "antd-icons/filled/meta.svg" => Some(include_bytes!("../assets/antd-icons/filled/meta.svg").as_slice()),
-            "antd-icons/filled/minus-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/minus-circle.svg").as_slice()),
-            "antd-icons/filled/minus-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/minus-square.svg").as_slice()),
-            "antd-icons/filled/mistral.svg" => Some(include_bytes!("../assets/antd-icons/filled/mistral.svg").as_slice()),
-            "antd-icons/filled/mobile.svg" => Some(include_bytes!("../assets/antd-icons/filled/mobile.svg").as_slice()),
-            "antd-icons/filled/money-collect.svg" => Some(include_bytes!("../assets/antd-icons/filled/money-collect.svg").as_slice()),
-            "antd-icons/filled/moon.svg" => Some(include_bytes!("../assets/antd-icons/filled/moon.svg").as_slice()),
-            "antd-icons/filled/muted.svg" => Some(include_bytes!("../assets/antd-icons/filled/muted.svg").as_slice()),
-            "antd-icons/filled/netflix.svg" => Some(include_bytes!("../assets/antd-icons/filled/netflix.svg").as_slice()),
-            "antd-icons/filled/notification.svg" => Some(include_bytes!("../assets/antd-icons/filled/notification.svg").as_slice()),
-            "antd-icons/filled/ollama.svg" => Some(include_bytes!("../assets/antd-icons/filled/ollama.svg").as_slice()),
-            "antd-icons/filled/open-a-i.svg" => Some(include_bytes!("../assets/antd-icons/filled/open-a-i.svg").as_slice()),
-            "antd-icons/filled/pause-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/pause-circle.svg").as_slice()),
-            "antd-icons/filled/pay-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/pay-circle.svg").as_slice()),
-            "antd-icons/filled/perplexity.svg" => Some(include_bytes!("../assets/antd-icons/filled/perplexity.svg").as_slice()),
-            "antd-icons/filled/phone.svg" => Some(include_bytes!("../assets/antd-icons/filled/phone.svg").as_slice()),
-            "antd-icons/filled/picture.svg" => Some(include_bytes!("../assets/antd-icons/filled/picture.svg").as_slice()),
-            "antd-icons/filled/pie-chart.svg" => Some(include_bytes!("../assets/antd-icons/filled/pie-chart.svg").as_slice()),
-            "antd-icons/filled/pinterest.svg" => Some(include_bytes!("../assets/antd-icons/filled/pinterest.svg").as_slice()),
-            "antd-icons/filled/play-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/play-circle.svg").as_slice()),
-            "antd-icons/filled/play-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/play-square.svg").as_slice()),
-            "antd-icons/filled/plus-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/plus-circle.svg").as_slice()),
-            "antd-icons/filled/plus-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/plus-square.svg").as_slice()),
-            "antd-icons/filled/pound-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/pound-circle.svg").as_slice()),
-            "antd-icons/filled/printer.svg" => Some(include_bytes!("../assets/antd-icons/filled/printer.svg").as_slice()),
-            "antd-icons/filled/product.svg" => Some(include_bytes!("../assets/antd-icons/filled/product.svg").as_slice()),
-            "antd-icons/filled/profile.svg" => Some(include_bytes!("../assets/antd-icons/filled/profile.svg").as_slice()),
-            "antd-icons/filled/project.svg" => Some(include_bytes!("../assets/antd-icons/filled/project.svg").as_slice()),
-            "antd-icons/filled/property-safety.svg" => Some(include_bytes!("../assets/antd-icons/filled/property-safety.svg").as_slice()),
-            "antd-icons/filled/pushpin.svg" => Some(include_bytes!("../assets/antd-icons/filled/pushpin.svg").as_slice()),
-            "antd-icons/filled/qq-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/qq-circle.svg").as_slice()),
-            "antd-icons/filled/qq-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/qq-square.svg").as_slice()),
-            "antd-icons/filled/question-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/question-circle.svg").as_slice()),
-            "antd-icons/filled/qwen.svg" => Some(include_bytes!("../assets/antd-icons/filled/qwen.svg").as_slice()),
-            "antd-icons/filled/read.svg" => Some(include_bytes!("../assets/antd-icons/filled/read.svg").as_slice()),
-            "antd-icons/filled/reconciliation.svg" => Some(include_bytes!("../assets/antd-icons/filled/reconciliation.svg").as_slice()),
-            "antd-icons/filled/red-envelope.svg" => Some(include_bytes!("../assets/antd-icons/filled/red-envelope.svg").as_slice()),
-            "antd-icons/filled/reddit-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/reddit-circle.svg").as_slice()),
-            "antd-icons/filled/reddit-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/reddit-square.svg").as_slice()),
-            "antd-icons/filled/replicate.svg" => Some(include_bytes!("../assets/antd-icons/filled/replicate.svg").as_slice()),
-            "antd-icons/filled/rest.svg" => Some(include_bytes!("../assets/antd-icons/filled/rest.svg").as_slice()),
-            "antd-icons/filled/right-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/right-circle.svg").as_slice()),
-            "antd-icons/filled/right-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/right-square.svg").as_slice()),
-            "antd-icons/filled/robot.svg" => Some(include_bytes!("../assets/antd-icons/filled/robot.svg").as_slice()),
-            "antd-icons/filled/rocket.svg" => Some(include_bytes!("../assets/antd-icons/filled/rocket.svg").as_slice()),
-            "antd-icons/filled/safety-certificate.svg" => Some(include_bytes!("../assets/antd-icons/filled/safety-certificate.svg").as_slice()),
-            "antd-icons/filled/save.svg" => Some(include_bytes!("../assets/antd-icons/filled/save.svg").as_slice()),
-            "antd-icons/filled/schedule.svg" => Some(include_bytes!("../assets/antd-icons/filled/schedule.svg").as_slice()),
-            "antd-icons/filled/security-scan.svg" => Some(include_bytes!("../assets/antd-icons/filled/security-scan.svg").as_slice()),
-            "antd-icons/filled/setting.svg" => Some(include_bytes!("../assets/antd-icons/filled/setting.svg").as_slice()),
-            "antd-icons/filled/shop.svg" => Some(include_bytes!("../assets/antd-icons/filled/shop.svg").as_slice()),
-            "antd-icons/filled/shopping.svg" => Some(include_bytes!("../assets/antd-icons/filled/shopping.svg").as_slice()),
-            "antd-icons/filled/signal.svg" => Some(include_bytes!("../assets/antd-icons/filled/signal.svg").as_slice()),
-            "antd-icons/filled/signature.svg" => Some(include_bytes!("../assets/antd-icons/filled/signature.svg").as_slice()),
-            "antd-icons/filled/sketch-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/sketch-circle.svg").as_slice()),
-            "antd-icons/filled/sketch-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/sketch-square.svg").as_slice()),
-            "antd-icons/filled/skin.svg" => Some(include_bytes!("../assets/antd-icons/filled/skin.svg").as_slice()),
-            "antd-icons/filled/skype.svg" => Some(include_bytes!("../assets/antd-icons/filled/skype.svg").as_slice()),
-            "antd-icons/filled/slack-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/slack-circle.svg").as_slice()),
-            "antd-icons/filled/slack-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/slack-square.svg").as_slice()),
-            "antd-icons/filled/sliders.svg" => Some(include_bytes!("../assets/antd-icons/filled/sliders.svg").as_slice()),
-            "antd-icons/filled/smile.svg" => Some(include_bytes!("../assets/antd-icons/filled/smile.svg").as_slice()),
-            "antd-icons/filled/snapchat.svg" => Some(include_bytes!("../assets/antd-icons/filled/snapchat.svg").as_slice()),
-            "antd-icons/filled/snippets.svg" => Some(include_bytes!("../assets/antd-icons/filled/snippets.svg").as_slice()),
-            "antd-icons/filled/sound.svg" => Some(include_bytes!("../assets/antd-icons/filled/sound.svg").as_slice()),
-            "antd-icons/filled/spotify.svg" => Some(include_bytes!("../assets/antd-icons/filled/spotify.svg").as_slice()),
-            "antd-icons/filled/star.svg" => Some(include_bytes!("../assets/antd-icons/filled/star.svg").as_slice()),
-            "antd-icons/filled/step-backward.svg" => Some(include_bytes!("../assets/antd-icons/filled/step-backward.svg").as_slice()),
-            "antd-icons/filled/step-forward.svg" => Some(include_bytes!("../assets/antd-icons/filled/step-forward.svg").as_slice()),
-            "antd-icons/filled/stop.svg" => Some(include_bytes!("../assets/antd-icons/filled/stop.svg").as_slice()),
-            "antd-icons/filled/sun.svg" => Some(include_bytes!("../assets/antd-icons/filled/sun.svg").as_slice()),
-            "antd-icons/filled/switcher.svg" => Some(include_bytes!("../assets/antd-icons/filled/switcher.svg").as_slice()),
-            "antd-icons/filled/tablet.svg" => Some(include_bytes!("../assets/antd-icons/filled/tablet.svg").as_slice()),
-            "antd-icons/filled/tag.svg" => Some(include_bytes!("../assets/antd-icons/filled/tag.svg").as_slice()),
-            "antd-icons/filled/tags.svg" => Some(include_bytes!("../assets/antd-icons/filled/tags.svg").as_slice()),
-            "antd-icons/filled/taobao-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/taobao-circle.svg").as_slice()),
-            "antd-icons/filled/taobao-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/taobao-square.svg").as_slice()),
-            "antd-icons/filled/telegram.svg" => Some(include_bytes!("../assets/antd-icons/filled/telegram.svg").as_slice()),
-            "antd-icons/filled/threads.svg" => Some(include_bytes!("../assets/antd-icons/filled/threads.svg").as_slice()),
-            "antd-icons/filled/thunderbolt.svg" => Some(include_bytes!("../assets/antd-icons/filled/thunderbolt.svg").as_slice()),
-            "antd-icons/filled/tik-tok.svg" => Some(include_bytes!("../assets/antd-icons/filled/tik-tok.svg").as_slice()),
-            "antd-icons/filled/tool.svg" => Some(include_bytes!("../assets/antd-icons/filled/tool.svg").as_slice()),
-            "antd-icons/filled/trademark-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/trademark-circle.svg").as_slice()),
-            "antd-icons/filled/trophy.svg" => Some(include_bytes!("../assets/antd-icons/filled/trophy.svg").as_slice()),
-            "antd-icons/filled/truck.svg" => Some(include_bytes!("../assets/antd-icons/filled/truck.svg").as_slice()),
-            "antd-icons/filled/twitch.svg" => Some(include_bytes!("../assets/antd-icons/filled/twitch.svg").as_slice()),
-            "antd-icons/filled/twitter-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/twitter-circle.svg").as_slice()),
-            "antd-icons/filled/twitter-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/twitter-square.svg").as_slice()),
-            "antd-icons/filled/unlock.svg" => Some(include_bytes!("../assets/antd-icons/filled/unlock.svg").as_slice()),
-            "antd-icons/filled/up-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/up-circle.svg").as_slice()),
-            "antd-icons/filled/up-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/up-square.svg").as_slice()),
-            "antd-icons/filled/usb.svg" => Some(include_bytes!("../assets/antd-icons/filled/usb.svg").as_slice()),
-            "antd-icons/filled/video-camera.svg" => Some(include_bytes!("../assets/antd-icons/filled/video-camera.svg").as_slice()),
-            "antd-icons/filled/wallet.svg" => Some(include_bytes!("../assets/antd-icons/filled/wallet.svg").as_slice()),
-            "antd-icons/filled/warning.svg" => Some(include_bytes!("../assets/antd-icons/filled/warning.svg").as_slice()),
-            "antd-icons/filled/wechat-work.svg" => Some(include_bytes!("../assets/antd-icons/filled/wechat-work.svg").as_slice()),
-            "antd-icons/filled/wechat.svg" => Some(include_bytes!("../assets/antd-icons/filled/wechat.svg").as_slice()),
-            "antd-icons/filled/weibo-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/weibo-circle.svg").as_slice()),
-            "antd-icons/filled/weibo-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/weibo-square.svg").as_slice()),
-            "antd-icons/filled/windows.svg" => Some(include_bytes!("../assets/antd-icons/filled/windows.svg").as_slice()),
-            "antd-icons/filled/x.svg" => Some(include_bytes!("../assets/antd-icons/filled/x.svg").as_slice()),
-            "antd-icons/filled/yahoo.svg" => Some(include_bytes!("../assets/antd-icons/filled/yahoo.svg").as_slice()),
-            "antd-icons/filled/youtube.svg" => Some(include_bytes!("../assets/antd-icons/filled/youtube.svg").as_slice()),
-            "antd-icons/filled/yuque.svg" => Some(include_bytes!("../assets/antd-icons/filled/yuque.svg").as_slice()),
-            "antd-icons/filled/zhihu-circle.svg" => Some(include_bytes!("../assets/antd-icons/filled/zhihu-circle.svg").as_slice()),
-            "antd-icons/filled/zhihu-square.svg" => Some(include_bytes!("../assets/antd-icons/filled/zhihu-square.svg").as_slice()),
-            "antd-icons/twotone/account-book.svg" => Some(include_bytes!("../assets/antd-icons/twotone/account-book.svg").as_slice()),
-            "antd-icons/twotone/alert.svg" => Some(include_bytes!("../assets/antd-icons/twotone/alert.svg").as_slice()),
-            "antd-icons/twotone/api.svg" => Some(include_bytes!("../assets/antd-icons/twotone/api.svg").as_slice()),
-            "antd-icons/twotone/appstore.svg" => Some(include_bytes!("../assets/antd-icons/twotone/appstore.svg").as_slice()),
-            "antd-icons/twotone/audio.svg" => Some(include_bytes!("../assets/antd-icons/twotone/audio.svg").as_slice()),
-            "antd-icons/twotone/bank.svg" => Some(include_bytes!("../assets/antd-icons/twotone/bank.svg").as_slice()),
-            "antd-icons/twotone/bell.svg" => Some(include_bytes!("../assets/antd-icons/twotone/bell.svg").as_slice()),
-            "antd-icons/twotone/book.svg" => Some(include_bytes!("../assets/antd-icons/twotone/book.svg").as_slice()),
-            "antd-icons/twotone/box-plot.svg" => Some(include_bytes!("../assets/antd-icons/twotone/box-plot.svg").as_slice()),
-            "antd-icons/twotone/bug.svg" => Some(include_bytes!("../assets/antd-icons/twotone/bug.svg").as_slice()),
-            "antd-icons/twotone/build.svg" => Some(include_bytes!("../assets/antd-icons/twotone/build.svg").as_slice()),
-            "antd-icons/twotone/bulb.svg" => Some(include_bytes!("../assets/antd-icons/twotone/bulb.svg").as_slice()),
-            "antd-icons/twotone/calculator.svg" => Some(include_bytes!("../assets/antd-icons/twotone/calculator.svg").as_slice()),
-            "antd-icons/twotone/calendar.svg" => Some(include_bytes!("../assets/antd-icons/twotone/calendar.svg").as_slice()),
-            "antd-icons/twotone/camera.svg" => Some(include_bytes!("../assets/antd-icons/twotone/camera.svg").as_slice()),
-            "antd-icons/twotone/car.svg" => Some(include_bytes!("../assets/antd-icons/twotone/car.svg").as_slice()),
-            "antd-icons/twotone/carry-out.svg" => Some(include_bytes!("../assets/antd-icons/twotone/carry-out.svg").as_slice()),
-            "antd-icons/twotone/check-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/check-circle.svg").as_slice()),
-            "antd-icons/twotone/check-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/check-square.svg").as_slice()),
-            "antd-icons/twotone/ci-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/ci-circle.svg").as_slice()),
-            "antd-icons/twotone/ci.svg" => Some(include_bytes!("../assets/antd-icons/twotone/ci.svg").as_slice()),
-            "antd-icons/twotone/clock-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/clock-circle.svg").as_slice()),
-            "antd-icons/twotone/close-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/close-circle.svg").as_slice()),
-            "antd-icons/twotone/close-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/close-square.svg").as_slice()),
-            "antd-icons/twotone/cloud.svg" => Some(include_bytes!("../assets/antd-icons/twotone/cloud.svg").as_slice()),
-            "antd-icons/twotone/code.svg" => Some(include_bytes!("../assets/antd-icons/twotone/code.svg").as_slice()),
-            "antd-icons/twotone/compass.svg" => Some(include_bytes!("../assets/antd-icons/twotone/compass.svg").as_slice()),
-            "antd-icons/twotone/contacts.svg" => Some(include_bytes!("../assets/antd-icons/twotone/contacts.svg").as_slice()),
-            "antd-icons/twotone/container.svg" => Some(include_bytes!("../assets/antd-icons/twotone/container.svg").as_slice()),
-            "antd-icons/twotone/control.svg" => Some(include_bytes!("../assets/antd-icons/twotone/control.svg").as_slice()),
-            "antd-icons/twotone/copy.svg" => Some(include_bytes!("../assets/antd-icons/twotone/copy.svg").as_slice()),
-            "antd-icons/twotone/copyright-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/copyright-circle.svg").as_slice()),
-            "antd-icons/twotone/copyright.svg" => Some(include_bytes!("../assets/antd-icons/twotone/copyright.svg").as_slice()),
-            "antd-icons/twotone/credit-card.svg" => Some(include_bytes!("../assets/antd-icons/twotone/credit-card.svg").as_slice()),
-            "antd-icons/twotone/crown.svg" => Some(include_bytes!("../assets/antd-icons/twotone/crown.svg").as_slice()),
-            "antd-icons/twotone/customer-service.svg" => Some(include_bytes!("../assets/antd-icons/twotone/customer-service.svg").as_slice()),
-            "antd-icons/twotone/dashboard.svg" => Some(include_bytes!("../assets/antd-icons/twotone/dashboard.svg").as_slice()),
-            "antd-icons/twotone/database.svg" => Some(include_bytes!("../assets/antd-icons/twotone/database.svg").as_slice()),
-            "antd-icons/twotone/delete.svg" => Some(include_bytes!("../assets/antd-icons/twotone/delete.svg").as_slice()),
-            "antd-icons/twotone/diff.svg" => Some(include_bytes!("../assets/antd-icons/twotone/diff.svg").as_slice()),
-            "antd-icons/twotone/dislike.svg" => Some(include_bytes!("../assets/antd-icons/twotone/dislike.svg").as_slice()),
-            "antd-icons/twotone/dollar-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/dollar-circle.svg").as_slice()),
-            "antd-icons/twotone/dollar.svg" => Some(include_bytes!("../assets/antd-icons/twotone/dollar.svg").as_slice()),
-            "antd-icons/twotone/down-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/down-circle.svg").as_slice()),
-            "antd-icons/twotone/down-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/down-square.svg").as_slice()),
-            "antd-icons/twotone/edit.svg" => Some(include_bytes!("../assets/antd-icons/twotone/edit.svg").as_slice()),
-            "antd-icons/twotone/environment.svg" => Some(include_bytes!("../assets/antd-icons/twotone/environment.svg").as_slice()),
-            "antd-icons/twotone/euro-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/euro-circle.svg").as_slice()),
-            "antd-icons/twotone/euro.svg" => Some(include_bytes!("../assets/antd-icons/twotone/euro.svg").as_slice()),
-            "antd-icons/twotone/exclamation-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/exclamation-circle.svg").as_slice()),
-            "antd-icons/twotone/experiment.svg" => Some(include_bytes!("../assets/antd-icons/twotone/experiment.svg").as_slice()),
-            "antd-icons/twotone/eye-invisible.svg" => Some(include_bytes!("../assets/antd-icons/twotone/eye-invisible.svg").as_slice()),
-            "antd-icons/twotone/eye.svg" => Some(include_bytes!("../assets/antd-icons/twotone/eye.svg").as_slice()),
-            "antd-icons/twotone/file-add.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-add.svg").as_slice()),
-            "antd-icons/twotone/file-excel.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-excel.svg").as_slice()),
-            "antd-icons/twotone/file-exclamation.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-exclamation.svg").as_slice()),
-            "antd-icons/twotone/file-image.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-image.svg").as_slice()),
-            "antd-icons/twotone/file-markdown.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-markdown.svg").as_slice()),
-            "antd-icons/twotone/file-pdf.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-pdf.svg").as_slice()),
-            "antd-icons/twotone/file-ppt.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-ppt.svg").as_slice()),
-            "antd-icons/twotone/file-text.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-text.svg").as_slice()),
-            "antd-icons/twotone/file-unknown.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-unknown.svg").as_slice()),
-            "antd-icons/twotone/file-word.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-word.svg").as_slice()),
-            "antd-icons/twotone/file-zip.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file-zip.svg").as_slice()),
-            "antd-icons/twotone/file.svg" => Some(include_bytes!("../assets/antd-icons/twotone/file.svg").as_slice()),
-            "antd-icons/twotone/filter.svg" => Some(include_bytes!("../assets/antd-icons/twotone/filter.svg").as_slice()),
-            "antd-icons/twotone/fire.svg" => Some(include_bytes!("../assets/antd-icons/twotone/fire.svg").as_slice()),
-            "antd-icons/twotone/flag.svg" => Some(include_bytes!("../assets/antd-icons/twotone/flag.svg").as_slice()),
-            "antd-icons/twotone/folder-add.svg" => Some(include_bytes!("../assets/antd-icons/twotone/folder-add.svg").as_slice()),
-            "antd-icons/twotone/folder-open.svg" => Some(include_bytes!("../assets/antd-icons/twotone/folder-open.svg").as_slice()),
-            "antd-icons/twotone/folder.svg" => Some(include_bytes!("../assets/antd-icons/twotone/folder.svg").as_slice()),
-            "antd-icons/twotone/frown.svg" => Some(include_bytes!("../assets/antd-icons/twotone/frown.svg").as_slice()),
-            "antd-icons/twotone/fund.svg" => Some(include_bytes!("../assets/antd-icons/twotone/fund.svg").as_slice()),
-            "antd-icons/twotone/funnel-plot.svg" => Some(include_bytes!("../assets/antd-icons/twotone/funnel-plot.svg").as_slice()),
-            "antd-icons/twotone/gift.svg" => Some(include_bytes!("../assets/antd-icons/twotone/gift.svg").as_slice()),
-            "antd-icons/twotone/gold.svg" => Some(include_bytes!("../assets/antd-icons/twotone/gold.svg").as_slice()),
-            "antd-icons/twotone/hdd.svg" => Some(include_bytes!("../assets/antd-icons/twotone/hdd.svg").as_slice()),
-            "antd-icons/twotone/heart.svg" => Some(include_bytes!("../assets/antd-icons/twotone/heart.svg").as_slice()),
-            "antd-icons/twotone/highlight.svg" => Some(include_bytes!("../assets/antd-icons/twotone/highlight.svg").as_slice()),
-            "antd-icons/twotone/home.svg" => Some(include_bytes!("../assets/antd-icons/twotone/home.svg").as_slice()),
-            "antd-icons/twotone/hourglass.svg" => Some(include_bytes!("../assets/antd-icons/twotone/hourglass.svg").as_slice()),
-            "antd-icons/twotone/html5.svg" => Some(include_bytes!("../assets/antd-icons/twotone/html5.svg").as_slice()),
-            "antd-icons/twotone/idcard.svg" => Some(include_bytes!("../assets/antd-icons/twotone/idcard.svg").as_slice()),
-            "antd-icons/twotone/info-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/info-circle.svg").as_slice()),
-            "antd-icons/twotone/insurance.svg" => Some(include_bytes!("../assets/antd-icons/twotone/insurance.svg").as_slice()),
-            "antd-icons/twotone/interaction.svg" => Some(include_bytes!("../assets/antd-icons/twotone/interaction.svg").as_slice()),
-            "antd-icons/twotone/layout.svg" => Some(include_bytes!("../assets/antd-icons/twotone/layout.svg").as_slice()),
-            "antd-icons/twotone/left-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/left-circle.svg").as_slice()),
-            "antd-icons/twotone/left-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/left-square.svg").as_slice()),
-            "antd-icons/twotone/like.svg" => Some(include_bytes!("../assets/antd-icons/twotone/like.svg").as_slice()),
-            "antd-icons/twotone/lock.svg" => Some(include_bytes!("../assets/antd-icons/twotone/lock.svg").as_slice()),
-            "antd-icons/twotone/mail.svg" => Some(include_bytes!("../assets/antd-icons/twotone/mail.svg").as_slice()),
-            "antd-icons/twotone/medicine-box.svg" => Some(include_bytes!("../assets/antd-icons/twotone/medicine-box.svg").as_slice()),
-            "antd-icons/twotone/meh.svg" => Some(include_bytes!("../assets/antd-icons/twotone/meh.svg").as_slice()),
-            "antd-icons/twotone/message.svg" => Some(include_bytes!("../assets/antd-icons/twotone/message.svg").as_slice()),
-            "antd-icons/twotone/minus-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/minus-circle.svg").as_slice()),
-            "antd-icons/twotone/minus-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/minus-square.svg").as_slice()),
-            "antd-icons/twotone/mobile.svg" => Some(include_bytes!("../assets/antd-icons/twotone/mobile.svg").as_slice()),
-            "antd-icons/twotone/money-collect.svg" => Some(include_bytes!("../assets/antd-icons/twotone/money-collect.svg").as_slice()),
-            "antd-icons/twotone/notification.svg" => Some(include_bytes!("../assets/antd-icons/twotone/notification.svg").as_slice()),
-            "antd-icons/twotone/pause-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/pause-circle.svg").as_slice()),
-            "antd-icons/twotone/phone.svg" => Some(include_bytes!("../assets/antd-icons/twotone/phone.svg").as_slice()),
-            "antd-icons/twotone/picture.svg" => Some(include_bytes!("../assets/antd-icons/twotone/picture.svg").as_slice()),
-            "antd-icons/twotone/pie-chart.svg" => Some(include_bytes!("../assets/antd-icons/twotone/pie-chart.svg").as_slice()),
-            "antd-icons/twotone/play-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/play-circle.svg").as_slice()),
-            "antd-icons/twotone/play-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/play-square.svg").as_slice()),
-            "antd-icons/twotone/plus-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/plus-circle.svg").as_slice()),
-            "antd-icons/twotone/plus-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/plus-square.svg").as_slice()),
-            "antd-icons/twotone/pound-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/pound-circle.svg").as_slice()),
-            "antd-icons/twotone/printer.svg" => Some(include_bytes!("../assets/antd-icons/twotone/printer.svg").as_slice()),
-            "antd-icons/twotone/profile.svg" => Some(include_bytes!("../assets/antd-icons/twotone/profile.svg").as_slice()),
-            "antd-icons/twotone/project.svg" => Some(include_bytes!("../assets/antd-icons/twotone/project.svg").as_slice()),
-            "antd-icons/twotone/property-safety.svg" => Some(include_bytes!("../assets/antd-icons/twotone/property-safety.svg").as_slice()),
-            "antd-icons/twotone/pushpin.svg" => Some(include_bytes!("../assets/antd-icons/twotone/pushpin.svg").as_slice()),
-            "antd-icons/twotone/question-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/question-circle.svg").as_slice()),
-            "antd-icons/twotone/reconciliation.svg" => Some(include_bytes!("../assets/antd-icons/twotone/reconciliation.svg").as_slice()),
-            "antd-icons/twotone/red-envelope.svg" => Some(include_bytes!("../assets/antd-icons/twotone/red-envelope.svg").as_slice()),
-            "antd-icons/twotone/rest.svg" => Some(include_bytes!("../assets/antd-icons/twotone/rest.svg").as_slice()),
-            "antd-icons/twotone/right-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/right-circle.svg").as_slice()),
-            "antd-icons/twotone/right-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/right-square.svg").as_slice()),
-            "antd-icons/twotone/rocket.svg" => Some(include_bytes!("../assets/antd-icons/twotone/rocket.svg").as_slice()),
-            "antd-icons/twotone/safety-certificate.svg" => Some(include_bytes!("../assets/antd-icons/twotone/safety-certificate.svg").as_slice()),
-            "antd-icons/twotone/save.svg" => Some(include_bytes!("../assets/antd-icons/twotone/save.svg").as_slice()),
-            "antd-icons/twotone/schedule.svg" => Some(include_bytes!("../assets/antd-icons/twotone/schedule.svg").as_slice()),
-            "antd-icons/twotone/security-scan.svg" => Some(include_bytes!("../assets/antd-icons/twotone/security-scan.svg").as_slice()),
-            "antd-icons/twotone/setting.svg" => Some(include_bytes!("../assets/antd-icons/twotone/setting.svg").as_slice()),
-            "antd-icons/twotone/shop.svg" => Some(include_bytes!("../assets/antd-icons/twotone/shop.svg").as_slice()),
-            "antd-icons/twotone/shopping.svg" => Some(include_bytes!("../assets/antd-icons/twotone/shopping.svg").as_slice()),
-            "antd-icons/twotone/skin.svg" => Some(include_bytes!("../assets/antd-icons/twotone/skin.svg").as_slice()),
-            "antd-icons/twotone/sliders.svg" => Some(include_bytes!("../assets/antd-icons/twotone/sliders.svg").as_slice()),
-            "antd-icons/twotone/smile.svg" => Some(include_bytes!("../assets/antd-icons/twotone/smile.svg").as_slice()),
-            "antd-icons/twotone/snippets.svg" => Some(include_bytes!("../assets/antd-icons/twotone/snippets.svg").as_slice()),
-            "antd-icons/twotone/sound.svg" => Some(include_bytes!("../assets/antd-icons/twotone/sound.svg").as_slice()),
-            "antd-icons/twotone/star.svg" => Some(include_bytes!("../assets/antd-icons/twotone/star.svg").as_slice()),
-            "antd-icons/twotone/stop.svg" => Some(include_bytes!("../assets/antd-icons/twotone/stop.svg").as_slice()),
-            "antd-icons/twotone/switcher.svg" => Some(include_bytes!("../assets/antd-icons/twotone/switcher.svg").as_slice()),
-            "antd-icons/twotone/tablet.svg" => Some(include_bytes!("../assets/antd-icons/twotone/tablet.svg").as_slice()),
-            "antd-icons/twotone/tag.svg" => Some(include_bytes!("../assets/antd-icons/twotone/tag.svg").as_slice()),
-            "antd-icons/twotone/tags.svg" => Some(include_bytes!("../assets/antd-icons/twotone/tags.svg").as_slice()),
-            "antd-icons/twotone/thunderbolt.svg" => Some(include_bytes!("../assets/antd-icons/twotone/thunderbolt.svg").as_slice()),
-            "antd-icons/twotone/tool.svg" => Some(include_bytes!("../assets/antd-icons/twotone/tool.svg").as_slice()),
-            "antd-icons/twotone/trademark-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/trademark-circle.svg").as_slice()),
-            "antd-icons/twotone/trophy.svg" => Some(include_bytes!("../assets/antd-icons/twotone/trophy.svg").as_slice()),
-            "antd-icons/twotone/unlock.svg" => Some(include_bytes!("../assets/antd-icons/twotone/unlock.svg").as_slice()),
-            "antd-icons/twotone/up-circle.svg" => Some(include_bytes!("../assets/antd-icons/twotone/up-circle.svg").as_slice()),
-            "antd-icons/twotone/up-square.svg" => Some(include_bytes!("../assets/antd-icons/twotone/up-square.svg").as_slice()),
-            "antd-icons/twotone/usb.svg" => Some(include_bytes!("../assets/antd-icons/twotone/usb.svg").as_slice()),
-            "antd-icons/twotone/video-camera.svg" => Some(include_bytes!("../assets/antd-icons/twotone/video-camera.svg").as_slice()),
-            "antd-icons/twotone/wallet.svg" => Some(include_bytes!("../assets/antd-icons/twotone/wallet.svg").as_slice()),
-            "antd-icons/twotone/warning.svg" => Some(include_bytes!("../assets/antd-icons/twotone/warning.svg").as_slice()),
+            "antd-icons/outlined/account-book.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/account-book.svg").as_slice())
+            }
+            "antd-icons/outlined/aim.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/aim.svg").as_slice())
+            }
+            "antd-icons/outlined/alert.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/alert.svg").as_slice())
+            }
+            "antd-icons/outlined/alibaba.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/alibaba.svg").as_slice())
+            }
+            "antd-icons/outlined/align-center.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/align-center.svg").as_slice())
+            }
+            "antd-icons/outlined/align-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/align-left.svg").as_slice())
+            }
+            "antd-icons/outlined/align-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/align-right.svg").as_slice())
+            }
+            "antd-icons/outlined/alipay-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/alipay-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/alipay.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/alipay.svg").as_slice())
+            }
+            "antd-icons/outlined/aliwangwang.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/aliwangwang.svg").as_slice())
+            }
+            "antd-icons/outlined/aliyun.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/aliyun.svg").as_slice())
+            }
+            "antd-icons/outlined/amazon.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/amazon.svg").as_slice())
+            }
+            "antd-icons/outlined/android.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/android.svg").as_slice())
+            }
+            "antd-icons/outlined/ant-cloud.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ant-cloud.svg").as_slice())
+            }
+            "antd-icons/outlined/ant-design.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ant-design.svg").as_slice())
+            }
+            "antd-icons/outlined/apartment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/apartment.svg").as_slice())
+            }
+            "antd-icons/outlined/api.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/api.svg").as_slice())
+            }
+            "antd-icons/outlined/apple.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/apple.svg").as_slice())
+            }
+            "antd-icons/outlined/appstore-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/appstore-add.svg").as_slice())
+            }
+            "antd-icons/outlined/appstore.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/appstore.svg").as_slice())
+            }
+            "antd-icons/outlined/area-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/area-chart.svg").as_slice())
+            }
+            "antd-icons/outlined/arrow-down.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/arrow-down.svg").as_slice())
+            }
+            "antd-icons/outlined/arrow-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/arrow-left.svg").as_slice())
+            }
+            "antd-icons/outlined/arrow-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/arrow-right.svg").as_slice())
+            }
+            "antd-icons/outlined/arrow-up.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/arrow-up.svg").as_slice())
+            }
+            "antd-icons/outlined/arrows-alt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/arrows-alt.svg").as_slice())
+            }
+            "antd-icons/outlined/audio-muted.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/audio-muted.svg").as_slice())
+            }
+            "antd-icons/outlined/audio.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/audio.svg").as_slice())
+            }
+            "antd-icons/outlined/audit.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/audit.svg").as_slice())
+            }
+            "antd-icons/outlined/backward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/backward.svg").as_slice())
+            }
+            "antd-icons/outlined/baidu.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/baidu.svg").as_slice())
+            }
+            "antd-icons/outlined/bank.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bank.svg").as_slice())
+            }
+            "antd-icons/outlined/bar-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bar-chart.svg").as_slice())
+            }
+            "antd-icons/outlined/barcode.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/barcode.svg").as_slice())
+            }
+            "antd-icons/outlined/bars.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bars.svg").as_slice())
+            }
+            "antd-icons/outlined/behance-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/behance-square.svg").as_slice())
+            }
+            "antd-icons/outlined/behance.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/behance.svg").as_slice())
+            }
+            "antd-icons/outlined/bell.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bell.svg").as_slice())
+            }
+            "antd-icons/outlined/bg-colors.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bg-colors.svg").as_slice())
+            }
+            "antd-icons/outlined/bilibili.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bilibili.svg").as_slice())
+            }
+            "antd-icons/outlined/block.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/block.svg").as_slice())
+            }
+            "antd-icons/outlined/bold.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bold.svg").as_slice())
+            }
+            "antd-icons/outlined/book.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/book.svg").as_slice())
+            }
+            "antd-icons/outlined/border-bottom.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border-bottom.svg").as_slice())
+            }
+            "antd-icons/outlined/border-horizontal.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/border-horizontal.svg").as_slice(),
+            ),
+            "antd-icons/outlined/border-inner.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border-inner.svg").as_slice())
+            }
+            "antd-icons/outlined/border-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border-left.svg").as_slice())
+            }
+            "antd-icons/outlined/border-outer.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border-outer.svg").as_slice())
+            }
+            "antd-icons/outlined/border-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border-right.svg").as_slice())
+            }
+            "antd-icons/outlined/border-top.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border-top.svg").as_slice())
+            }
+            "antd-icons/outlined/border-verticle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border-verticle.svg").as_slice())
+            }
+            "antd-icons/outlined/border.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/border.svg").as_slice())
+            }
+            "antd-icons/outlined/borderless-table.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/borderless-table.svg").as_slice(),
+            ),
+            "antd-icons/outlined/box-plot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/box-plot.svg").as_slice())
+            }
+            "antd-icons/outlined/branches.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/branches.svg").as_slice())
+            }
+            "antd-icons/outlined/bug.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bug.svg").as_slice())
+            }
+            "antd-icons/outlined/build.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/build.svg").as_slice())
+            }
+            "antd-icons/outlined/bulb.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/bulb.svg").as_slice())
+            }
+            "antd-icons/outlined/calculator.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/calculator.svg").as_slice())
+            }
+            "antd-icons/outlined/calendar.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/calendar.svg").as_slice())
+            }
+            "antd-icons/outlined/camera.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/camera.svg").as_slice())
+            }
+            "antd-icons/outlined/car.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/car.svg").as_slice())
+            }
+            "antd-icons/outlined/caret-down.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/caret-down.svg").as_slice())
+            }
+            "antd-icons/outlined/caret-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/caret-left.svg").as_slice())
+            }
+            "antd-icons/outlined/caret-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/caret-right.svg").as_slice())
+            }
+            "antd-icons/outlined/caret-up.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/caret-up.svg").as_slice())
+            }
+            "antd-icons/outlined/carry-out.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/carry-out.svg").as_slice())
+            }
+            "antd-icons/outlined/check-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/check-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/check-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/check-square.svg").as_slice())
+            }
+            "antd-icons/outlined/check.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/check.svg").as_slice())
+            }
+            "antd-icons/outlined/chrome.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/chrome.svg").as_slice())
+            }
+            "antd-icons/outlined/ci-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ci-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/ci.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ci.svg").as_slice())
+            }
+            "antd-icons/outlined/clear.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/clear.svg").as_slice())
+            }
+            "antd-icons/outlined/clock-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/clock-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/close-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/close-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/close-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/close-square.svg").as_slice())
+            }
+            "antd-icons/outlined/close.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/close.svg").as_slice())
+            }
+            "antd-icons/outlined/cloud-download.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/cloud-download.svg").as_slice())
+            }
+            "antd-icons/outlined/cloud-server.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/cloud-server.svg").as_slice())
+            }
+            "antd-icons/outlined/cloud-sync.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/cloud-sync.svg").as_slice())
+            }
+            "antd-icons/outlined/cloud-upload.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/cloud-upload.svg").as_slice())
+            }
+            "antd-icons/outlined/cloud.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/cloud.svg").as_slice())
+            }
+            "antd-icons/outlined/cluster.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/cluster.svg").as_slice())
+            }
+            "antd-icons/outlined/code-sandbox.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/code-sandbox.svg").as_slice())
+            }
+            "antd-icons/outlined/code.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/code.svg").as_slice())
+            }
+            "antd-icons/outlined/codepen-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/codepen-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/codepen.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/codepen.svg").as_slice())
+            }
+            "antd-icons/outlined/coffee.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/coffee.svg").as_slice())
+            }
+            "antd-icons/outlined/column-height.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/column-height.svg").as_slice())
+            }
+            "antd-icons/outlined/column-width.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/column-width.svg").as_slice())
+            }
+            "antd-icons/outlined/comment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/comment.svg").as_slice())
+            }
+            "antd-icons/outlined/compass.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/compass.svg").as_slice())
+            }
+            "antd-icons/outlined/compress.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/compress.svg").as_slice())
+            }
+            "antd-icons/outlined/console-sql.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/console-sql.svg").as_slice())
+            }
+            "antd-icons/outlined/contacts.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/contacts.svg").as_slice())
+            }
+            "antd-icons/outlined/container.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/container.svg").as_slice())
+            }
+            "antd-icons/outlined/control.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/control.svg").as_slice())
+            }
+            "antd-icons/outlined/copy.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/copy.svg").as_slice())
+            }
+            "antd-icons/outlined/copyright-circle.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/copyright-circle.svg").as_slice(),
+            ),
+            "antd-icons/outlined/copyright.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/copyright.svg").as_slice())
+            }
+            "antd-icons/outlined/credit-card.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/credit-card.svg").as_slice())
+            }
+            "antd-icons/outlined/crown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/crown.svg").as_slice())
+            }
+            "antd-icons/outlined/customer-service.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/customer-service.svg").as_slice(),
+            ),
+            "antd-icons/outlined/dash.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dash.svg").as_slice())
+            }
+            "antd-icons/outlined/dashboard.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dashboard.svg").as_slice())
+            }
+            "antd-icons/outlined/database.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/database.svg").as_slice())
+            }
+            "antd-icons/outlined/delete-column.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/delete-column.svg").as_slice())
+            }
+            "antd-icons/outlined/delete-row.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/delete-row.svg").as_slice())
+            }
+            "antd-icons/outlined/delete.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/delete.svg").as_slice())
+            }
+            "antd-icons/outlined/delivered-procedure.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/delivered-procedure.svg").as_slice(),
+            ),
+            "antd-icons/outlined/deployment-unit.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/deployment-unit.svg").as_slice())
+            }
+            "antd-icons/outlined/desktop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/desktop.svg").as_slice())
+            }
+            "antd-icons/outlined/diff.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/diff.svg").as_slice())
+            }
+            "antd-icons/outlined/dingding.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dingding.svg").as_slice())
+            }
+            "antd-icons/outlined/dingtalk.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dingtalk.svg").as_slice())
+            }
+            "antd-icons/outlined/disconnect.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/disconnect.svg").as_slice())
+            }
+            "antd-icons/outlined/discord.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/discord.svg").as_slice())
+            }
+            "antd-icons/outlined/dislike.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dislike.svg").as_slice())
+            }
+            "antd-icons/outlined/docker.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/docker.svg").as_slice())
+            }
+            "antd-icons/outlined/dollar-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dollar-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/dollar.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dollar.svg").as_slice())
+            }
+            "antd-icons/outlined/dot-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dot-chart.svg").as_slice())
+            }
+            "antd-icons/outlined/dot-net.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dot-net.svg").as_slice())
+            }
+            "antd-icons/outlined/double-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/double-left.svg").as_slice())
+            }
+            "antd-icons/outlined/double-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/double-right.svg").as_slice())
+            }
+            "antd-icons/outlined/down-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/down-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/down-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/down-square.svg").as_slice())
+            }
+            "antd-icons/outlined/down.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/down.svg").as_slice())
+            }
+            "antd-icons/outlined/download.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/download.svg").as_slice())
+            }
+            "antd-icons/outlined/drag.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/drag.svg").as_slice())
+            }
+            "antd-icons/outlined/dribbble-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dribbble-square.svg").as_slice())
+            }
+            "antd-icons/outlined/dribbble.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dribbble.svg").as_slice())
+            }
+            "antd-icons/outlined/dropbox.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/dropbox.svg").as_slice())
+            }
+            "antd-icons/outlined/edit.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/edit.svg").as_slice())
+            }
+            "antd-icons/outlined/ellipsis.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ellipsis.svg").as_slice())
+            }
+            "antd-icons/outlined/enter.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/enter.svg").as_slice())
+            }
+            "antd-icons/outlined/environment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/environment.svg").as_slice())
+            }
+            "antd-icons/outlined/euro-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/euro-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/euro.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/euro.svg").as_slice())
+            }
+            "antd-icons/outlined/exception.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/exception.svg").as_slice())
+            }
+            "antd-icons/outlined/exclamation-circle.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/exclamation-circle.svg").as_slice(),
+            ),
+            "antd-icons/outlined/exclamation.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/exclamation.svg").as_slice())
+            }
+            "antd-icons/outlined/expand-alt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/expand-alt.svg").as_slice())
+            }
+            "antd-icons/outlined/expand.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/expand.svg").as_slice())
+            }
+            "antd-icons/outlined/experiment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/experiment.svg").as_slice())
+            }
+            "antd-icons/outlined/export.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/export.svg").as_slice())
+            }
+            "antd-icons/outlined/eye-invisible.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/eye-invisible.svg").as_slice())
+            }
+            "antd-icons/outlined/eye.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/eye.svg").as_slice())
+            }
+            "antd-icons/outlined/facebook.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/facebook.svg").as_slice())
+            }
+            "antd-icons/outlined/fall.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fall.svg").as_slice())
+            }
+            "antd-icons/outlined/fast-backward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fast-backward.svg").as_slice())
+            }
+            "antd-icons/outlined/fast-forward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fast-forward.svg").as_slice())
+            }
+            "antd-icons/outlined/field-binary.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/field-binary.svg").as_slice())
+            }
+            "antd-icons/outlined/field-number.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/field-number.svg").as_slice())
+            }
+            "antd-icons/outlined/field-string.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/field-string.svg").as_slice())
+            }
+            "antd-icons/outlined/field-time.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/field-time.svg").as_slice())
+            }
+            "antd-icons/outlined/file-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-add.svg").as_slice())
+            }
+            "antd-icons/outlined/file-done.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-done.svg").as_slice())
+            }
+            "antd-icons/outlined/file-excel.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-excel.svg").as_slice())
+            }
+            "antd-icons/outlined/file-exclamation.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/file-exclamation.svg").as_slice(),
+            ),
+            "antd-icons/outlined/file-gif.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-gif.svg").as_slice())
+            }
+            "antd-icons/outlined/file-image.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-image.svg").as_slice())
+            }
+            "antd-icons/outlined/file-jpg.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-jpg.svg").as_slice())
+            }
+            "antd-icons/outlined/file-markdown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-markdown.svg").as_slice())
+            }
+            "antd-icons/outlined/file-pdf.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-pdf.svg").as_slice())
+            }
+            "antd-icons/outlined/file-ppt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-ppt.svg").as_slice())
+            }
+            "antd-icons/outlined/file-protect.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-protect.svg").as_slice())
+            }
+            "antd-icons/outlined/file-search.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-search.svg").as_slice())
+            }
+            "antd-icons/outlined/file-sync.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-sync.svg").as_slice())
+            }
+            "antd-icons/outlined/file-text.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-text.svg").as_slice())
+            }
+            "antd-icons/outlined/file-unknown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-unknown.svg").as_slice())
+            }
+            "antd-icons/outlined/file-word.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-word.svg").as_slice())
+            }
+            "antd-icons/outlined/file-zip.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file-zip.svg").as_slice())
+            }
+            "antd-icons/outlined/file.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/file.svg").as_slice())
+            }
+            "antd-icons/outlined/filter.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/filter.svg").as_slice())
+            }
+            "antd-icons/outlined/fire.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fire.svg").as_slice())
+            }
+            "antd-icons/outlined/flag.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/flag.svg").as_slice())
+            }
+            "antd-icons/outlined/folder-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/folder-add.svg").as_slice())
+            }
+            "antd-icons/outlined/folder-open.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/folder-open.svg").as_slice())
+            }
+            "antd-icons/outlined/folder-view.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/folder-view.svg").as_slice())
+            }
+            "antd-icons/outlined/folder.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/folder.svg").as_slice())
+            }
+            "antd-icons/outlined/font-colors.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/font-colors.svg").as_slice())
+            }
+            "antd-icons/outlined/font-size.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/font-size.svg").as_slice())
+            }
+            "antd-icons/outlined/fork.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fork.svg").as_slice())
+            }
+            "antd-icons/outlined/form.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/form.svg").as_slice())
+            }
+            "antd-icons/outlined/format-painter.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/format-painter.svg").as_slice())
+            }
+            "antd-icons/outlined/forward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/forward.svg").as_slice())
+            }
+            "antd-icons/outlined/frown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/frown.svg").as_slice())
+            }
+            "antd-icons/outlined/fullscreen-exit.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fullscreen-exit.svg").as_slice())
+            }
+            "antd-icons/outlined/fullscreen.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fullscreen.svg").as_slice())
+            }
+            "antd-icons/outlined/function.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/function.svg").as_slice())
+            }
+            "antd-icons/outlined/fund-projection-screen.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/fund-projection-screen.svg")
+                    .as_slice(),
+            ),
+            "antd-icons/outlined/fund-view.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fund-view.svg").as_slice())
+            }
+            "antd-icons/outlined/fund.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/fund.svg").as_slice())
+            }
+            "antd-icons/outlined/funnel-plot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/funnel-plot.svg").as_slice())
+            }
+            "antd-icons/outlined/gateway.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/gateway.svg").as_slice())
+            }
+            "antd-icons/outlined/gif.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/gif.svg").as_slice())
+            }
+            "antd-icons/outlined/gift.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/gift.svg").as_slice())
+            }
+            "antd-icons/outlined/github.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/github.svg").as_slice())
+            }
+            "antd-icons/outlined/gitlab.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/gitlab.svg").as_slice())
+            }
+            "antd-icons/outlined/global.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/global.svg").as_slice())
+            }
+            "antd-icons/outlined/gold.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/gold.svg").as_slice())
+            }
+            "antd-icons/outlined/google-plus.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/google-plus.svg").as_slice())
+            }
+            "antd-icons/outlined/google.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/google.svg").as_slice())
+            }
+            "antd-icons/outlined/group.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/group.svg").as_slice())
+            }
+            "antd-icons/outlined/harmony-o-s.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/harmony-o-s.svg").as_slice())
+            }
+            "antd-icons/outlined/hdd.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/hdd.svg").as_slice())
+            }
+            "antd-icons/outlined/heart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/heart.svg").as_slice())
+            }
+            "antd-icons/outlined/heat-map.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/heat-map.svg").as_slice())
+            }
+            "antd-icons/outlined/highlight.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/highlight.svg").as_slice())
+            }
+            "antd-icons/outlined/history.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/history.svg").as_slice())
+            }
+            "antd-icons/outlined/holder.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/holder.svg").as_slice())
+            }
+            "antd-icons/outlined/home.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/home.svg").as_slice())
+            }
+            "antd-icons/outlined/hourglass.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/hourglass.svg").as_slice())
+            }
+            "antd-icons/outlined/html5.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/html5.svg").as_slice())
+            }
+            "antd-icons/outlined/idcard.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/idcard.svg").as_slice())
+            }
+            "antd-icons/outlined/ie.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ie.svg").as_slice())
+            }
+            "antd-icons/outlined/import.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/import.svg").as_slice())
+            }
+            "antd-icons/outlined/inbox.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/inbox.svg").as_slice())
+            }
+            "antd-icons/outlined/info-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/info-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/info.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/info.svg").as_slice())
+            }
+            "antd-icons/outlined/insert-row-above.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/insert-row-above.svg").as_slice(),
+            ),
+            "antd-icons/outlined/insert-row-below.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/insert-row-below.svg").as_slice(),
+            ),
+            "antd-icons/outlined/insert-row-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/insert-row-left.svg").as_slice())
+            }
+            "antd-icons/outlined/insert-row-right.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/insert-row-right.svg").as_slice(),
+            ),
+            "antd-icons/outlined/instagram.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/instagram.svg").as_slice())
+            }
+            "antd-icons/outlined/insurance.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/insurance.svg").as_slice())
+            }
+            "antd-icons/outlined/interaction.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/interaction.svg").as_slice())
+            }
+            "antd-icons/outlined/issues-close.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/issues-close.svg").as_slice())
+            }
+            "antd-icons/outlined/italic.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/italic.svg").as_slice())
+            }
+            "antd-icons/outlined/java-script.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/java-script.svg").as_slice())
+            }
+            "antd-icons/outlined/java.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/java.svg").as_slice())
+            }
+            "antd-icons/outlined/key.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/key.svg").as_slice())
+            }
+            "antd-icons/outlined/kubernetes.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/kubernetes.svg").as_slice())
+            }
+            "antd-icons/outlined/laptop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/laptop.svg").as_slice())
+            }
+            "antd-icons/outlined/layout.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/layout.svg").as_slice())
+            }
+            "antd-icons/outlined/left-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/left-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/left-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/left-square.svg").as_slice())
+            }
+            "antd-icons/outlined/left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/left.svg").as_slice())
+            }
+            "antd-icons/outlined/like.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/like.svg").as_slice())
+            }
+            "antd-icons/outlined/line-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/line-chart.svg").as_slice())
+            }
+            "antd-icons/outlined/line-height.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/line-height.svg").as_slice())
+            }
+            "antd-icons/outlined/line.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/line.svg").as_slice())
+            }
+            "antd-icons/outlined/link.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/link.svg").as_slice())
+            }
+            "antd-icons/outlined/linkedin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/linkedin.svg").as_slice())
+            }
+            "antd-icons/outlined/linux.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/linux.svg").as_slice())
+            }
+            "antd-icons/outlined/loading-3-quarters.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/loading-3-quarters.svg").as_slice(),
+            ),
+            "antd-icons/outlined/loading.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/loading.svg").as_slice())
+            }
+            "antd-icons/outlined/lock.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/lock.svg").as_slice())
+            }
+            "antd-icons/outlined/login.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/login.svg").as_slice())
+            }
+            "antd-icons/outlined/logout.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/logout.svg").as_slice())
+            }
+            "antd-icons/outlined/mac-command.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/mac-command.svg").as_slice())
+            }
+            "antd-icons/outlined/mail.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/mail.svg").as_slice())
+            }
+            "antd-icons/outlined/man.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/man.svg").as_slice())
+            }
+            "antd-icons/outlined/medicine-box.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/medicine-box.svg").as_slice())
+            }
+            "antd-icons/outlined/medium-workmark.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/medium-workmark.svg").as_slice())
+            }
+            "antd-icons/outlined/medium.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/medium.svg").as_slice())
+            }
+            "antd-icons/outlined/meh.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/meh.svg").as_slice())
+            }
+            "antd-icons/outlined/menu-fold.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/menu-fold.svg").as_slice())
+            }
+            "antd-icons/outlined/menu-unfold.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/menu-unfold.svg").as_slice())
+            }
+            "antd-icons/outlined/menu.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/menu.svg").as_slice())
+            }
+            "antd-icons/outlined/merge-cells.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/merge-cells.svg").as_slice())
+            }
+            "antd-icons/outlined/merge.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/merge.svg").as_slice())
+            }
+            "antd-icons/outlined/message.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/message.svg").as_slice())
+            }
+            "antd-icons/outlined/minus-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/minus-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/minus-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/minus-square.svg").as_slice())
+            }
+            "antd-icons/outlined/minus.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/minus.svg").as_slice())
+            }
+            "antd-icons/outlined/mobile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/mobile.svg").as_slice())
+            }
+            "antd-icons/outlined/money-collect.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/money-collect.svg").as_slice())
+            }
+            "antd-icons/outlined/monitor.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/monitor.svg").as_slice())
+            }
+            "antd-icons/outlined/moon.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/moon.svg").as_slice())
+            }
+            "antd-icons/outlined/more.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/more.svg").as_slice())
+            }
+            "antd-icons/outlined/muted.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/muted.svg").as_slice())
+            }
+            "antd-icons/outlined/node-collapse.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/node-collapse.svg").as_slice())
+            }
+            "antd-icons/outlined/node-expand.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/node-expand.svg").as_slice())
+            }
+            "antd-icons/outlined/node-index.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/node-index.svg").as_slice())
+            }
+            "antd-icons/outlined/notification.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/notification.svg").as_slice())
+            }
+            "antd-icons/outlined/number.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/number.svg").as_slice())
+            }
+            "antd-icons/outlined/one-to-one.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/one-to-one.svg").as_slice())
+            }
+            "antd-icons/outlined/open-a-i.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/open-a-i.svg").as_slice())
+            }
+            "antd-icons/outlined/ordered-list.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ordered-list.svg").as_slice())
+            }
+            "antd-icons/outlined/paper-clip.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/paper-clip.svg").as_slice())
+            }
+            "antd-icons/outlined/partition.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/partition.svg").as_slice())
+            }
+            "antd-icons/outlined/pause-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pause-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/pause.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pause.svg").as_slice())
+            }
+            "antd-icons/outlined/pay-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pay-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/percentage.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/percentage.svg").as_slice())
+            }
+            "antd-icons/outlined/phone.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/phone.svg").as_slice())
+            }
+            "antd-icons/outlined/pic-center.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pic-center.svg").as_slice())
+            }
+            "antd-icons/outlined/pic-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pic-left.svg").as_slice())
+            }
+            "antd-icons/outlined/pic-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pic-right.svg").as_slice())
+            }
+            "antd-icons/outlined/picture.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/picture.svg").as_slice())
+            }
+            "antd-icons/outlined/pie-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pie-chart.svg").as_slice())
+            }
+            "antd-icons/outlined/pinterest.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pinterest.svg").as_slice())
+            }
+            "antd-icons/outlined/play-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/play-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/play-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/play-square.svg").as_slice())
+            }
+            "antd-icons/outlined/plus-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/plus-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/plus-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/plus-square.svg").as_slice())
+            }
+            "antd-icons/outlined/plus.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/plus.svg").as_slice())
+            }
+            "antd-icons/outlined/pound-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pound-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/pound.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pound.svg").as_slice())
+            }
+            "antd-icons/outlined/poweroff.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/poweroff.svg").as_slice())
+            }
+            "antd-icons/outlined/printer.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/printer.svg").as_slice())
+            }
+            "antd-icons/outlined/product.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/product.svg").as_slice())
+            }
+            "antd-icons/outlined/profile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/profile.svg").as_slice())
+            }
+            "antd-icons/outlined/project.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/project.svg").as_slice())
+            }
+            "antd-icons/outlined/property-safety.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/property-safety.svg").as_slice())
+            }
+            "antd-icons/outlined/pull-request.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pull-request.svg").as_slice())
+            }
+            "antd-icons/outlined/pushpin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/pushpin.svg").as_slice())
+            }
+            "antd-icons/outlined/python.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/python.svg").as_slice())
+            }
+            "antd-icons/outlined/qq.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/qq.svg").as_slice())
+            }
+            "antd-icons/outlined/qrcode.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/qrcode.svg").as_slice())
+            }
+            "antd-icons/outlined/question-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/question-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/question.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/question.svg").as_slice())
+            }
+            "antd-icons/outlined/radar-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/radar-chart.svg").as_slice())
+            }
+            "antd-icons/outlined/radius-bottomleft.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/radius-bottomleft.svg").as_slice(),
+            ),
+            "antd-icons/outlined/radius-bottomright.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/radius-bottomright.svg").as_slice(),
+            ),
+            "antd-icons/outlined/radius-setting.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/radius-setting.svg").as_slice())
+            }
+            "antd-icons/outlined/radius-upleft.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/radius-upleft.svg").as_slice())
+            }
+            "antd-icons/outlined/radius-upright.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/radius-upright.svg").as_slice())
+            }
+            "antd-icons/outlined/read.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/read.svg").as_slice())
+            }
+            "antd-icons/outlined/reconciliation.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/reconciliation.svg").as_slice())
+            }
+            "antd-icons/outlined/red-envelope.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/red-envelope.svg").as_slice())
+            }
+            "antd-icons/outlined/reddit.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/reddit.svg").as_slice())
+            }
+            "antd-icons/outlined/redo.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/redo.svg").as_slice())
+            }
+            "antd-icons/outlined/reload.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/reload.svg").as_slice())
+            }
+            "antd-icons/outlined/rest.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/rest.svg").as_slice())
+            }
+            "antd-icons/outlined/retweet.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/retweet.svg").as_slice())
+            }
+            "antd-icons/outlined/right-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/right-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/right-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/right-square.svg").as_slice())
+            }
+            "antd-icons/outlined/right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/right.svg").as_slice())
+            }
+            "antd-icons/outlined/rise.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/rise.svg").as_slice())
+            }
+            "antd-icons/outlined/robot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/robot.svg").as_slice())
+            }
+            "antd-icons/outlined/rocket.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/rocket.svg").as_slice())
+            }
+            "antd-icons/outlined/rollback.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/rollback.svg").as_slice())
+            }
+            "antd-icons/outlined/rotate-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/rotate-left.svg").as_slice())
+            }
+            "antd-icons/outlined/rotate-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/rotate-right.svg").as_slice())
+            }
+            "antd-icons/outlined/ruby.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ruby.svg").as_slice())
+            }
+            "antd-icons/outlined/safety-certificate.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/safety-certificate.svg").as_slice(),
+            ),
+            "antd-icons/outlined/safety.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/safety.svg").as_slice())
+            }
+            "antd-icons/outlined/save.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/save.svg").as_slice())
+            }
+            "antd-icons/outlined/scan.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/scan.svg").as_slice())
+            }
+            "antd-icons/outlined/schedule.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/schedule.svg").as_slice())
+            }
+            "antd-icons/outlined/scissor.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/scissor.svg").as_slice())
+            }
+            "antd-icons/outlined/search.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/search.svg").as_slice())
+            }
+            "antd-icons/outlined/security-scan.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/security-scan.svg").as_slice())
+            }
+            "antd-icons/outlined/select.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/select.svg").as_slice())
+            }
+            "antd-icons/outlined/send.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/send.svg").as_slice())
+            }
+            "antd-icons/outlined/setting.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/setting.svg").as_slice())
+            }
+            "antd-icons/outlined/shake.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/shake.svg").as_slice())
+            }
+            "antd-icons/outlined/share-alt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/share-alt.svg").as_slice())
+            }
+            "antd-icons/outlined/shop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/shop.svg").as_slice())
+            }
+            "antd-icons/outlined/shopping-cart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/shopping-cart.svg").as_slice())
+            }
+            "antd-icons/outlined/shopping.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/shopping.svg").as_slice())
+            }
+            "antd-icons/outlined/shrink.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/shrink.svg").as_slice())
+            }
+            "antd-icons/outlined/signature.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/signature.svg").as_slice())
+            }
+            "antd-icons/outlined/sisternode.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sisternode.svg").as_slice())
+            }
+            "antd-icons/outlined/sketch.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sketch.svg").as_slice())
+            }
+            "antd-icons/outlined/skin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/skin.svg").as_slice())
+            }
+            "antd-icons/outlined/skype.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/skype.svg").as_slice())
+            }
+            "antd-icons/outlined/slack-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/slack-square.svg").as_slice())
+            }
+            "antd-icons/outlined/slack.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/slack.svg").as_slice())
+            }
+            "antd-icons/outlined/sliders.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sliders.svg").as_slice())
+            }
+            "antd-icons/outlined/small-dash.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/small-dash.svg").as_slice())
+            }
+            "antd-icons/outlined/smile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/smile.svg").as_slice())
+            }
+            "antd-icons/outlined/snippets.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/snippets.svg").as_slice())
+            }
+            "antd-icons/outlined/solution.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/solution.svg").as_slice())
+            }
+            "antd-icons/outlined/sort-ascending.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sort-ascending.svg").as_slice())
+            }
+            "antd-icons/outlined/sort-descending.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sort-descending.svg").as_slice())
+            }
+            "antd-icons/outlined/sound.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sound.svg").as_slice())
+            }
+            "antd-icons/outlined/split-cells.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/split-cells.svg").as_slice())
+            }
+            "antd-icons/outlined/spotify.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/spotify.svg").as_slice())
+            }
+            "antd-icons/outlined/star.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/star.svg").as_slice())
+            }
+            "antd-icons/outlined/step-backward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/step-backward.svg").as_slice())
+            }
+            "antd-icons/outlined/step-forward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/step-forward.svg").as_slice())
+            }
+            "antd-icons/outlined/stock.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/stock.svg").as_slice())
+            }
+            "antd-icons/outlined/stop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/stop.svg").as_slice())
+            }
+            "antd-icons/outlined/strikethrough.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/strikethrough.svg").as_slice())
+            }
+            "antd-icons/outlined/subnode.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/subnode.svg").as_slice())
+            }
+            "antd-icons/outlined/sun.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sun.svg").as_slice())
+            }
+            "antd-icons/outlined/swap-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/swap-left.svg").as_slice())
+            }
+            "antd-icons/outlined/swap-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/swap-right.svg").as_slice())
+            }
+            "antd-icons/outlined/swap.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/swap.svg").as_slice())
+            }
+            "antd-icons/outlined/switcher.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/switcher.svg").as_slice())
+            }
+            "antd-icons/outlined/sync.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/sync.svg").as_slice())
+            }
+            "antd-icons/outlined/table.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/table.svg").as_slice())
+            }
+            "antd-icons/outlined/tablet.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/tablet.svg").as_slice())
+            }
+            "antd-icons/outlined/tag.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/tag.svg").as_slice())
+            }
+            "antd-icons/outlined/tags.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/tags.svg").as_slice())
+            }
+            "antd-icons/outlined/taobao-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/taobao-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/taobao.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/taobao.svg").as_slice())
+            }
+            "antd-icons/outlined/team.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/team.svg").as_slice())
+            }
+            "antd-icons/outlined/thunderbolt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/thunderbolt.svg").as_slice())
+            }
+            "antd-icons/outlined/tik-tok.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/tik-tok.svg").as_slice())
+            }
+            "antd-icons/outlined/to-top.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/to-top.svg").as_slice())
+            }
+            "antd-icons/outlined/tool.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/tool.svg").as_slice())
+            }
+            "antd-icons/outlined/trademark-circle.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/trademark-circle.svg").as_slice(),
+            ),
+            "antd-icons/outlined/trademark.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/trademark.svg").as_slice())
+            }
+            "antd-icons/outlined/transaction.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/transaction.svg").as_slice())
+            }
+            "antd-icons/outlined/translation.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/translation.svg").as_slice())
+            }
+            "antd-icons/outlined/trophy.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/trophy.svg").as_slice())
+            }
+            "antd-icons/outlined/truck.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/truck.svg").as_slice())
+            }
+            "antd-icons/outlined/twitch.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/twitch.svg").as_slice())
+            }
+            "antd-icons/outlined/twitter.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/twitter.svg").as_slice())
+            }
+            "antd-icons/outlined/underline.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/underline.svg").as_slice())
+            }
+            "antd-icons/outlined/undo.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/undo.svg").as_slice())
+            }
+            "antd-icons/outlined/ungroup.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/ungroup.svg").as_slice())
+            }
+            "antd-icons/outlined/unlock.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/unlock.svg").as_slice())
+            }
+            "antd-icons/outlined/unordered-list.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/unordered-list.svg").as_slice())
+            }
+            "antd-icons/outlined/up-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/up-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/up-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/up-square.svg").as_slice())
+            }
+            "antd-icons/outlined/up.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/up.svg").as_slice())
+            }
+            "antd-icons/outlined/upload.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/upload.svg").as_slice())
+            }
+            "antd-icons/outlined/usb.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/usb.svg").as_slice())
+            }
+            "antd-icons/outlined/user-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/user-add.svg").as_slice())
+            }
+            "antd-icons/outlined/user-delete.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/user-delete.svg").as_slice())
+            }
+            "antd-icons/outlined/user-switch.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/user-switch.svg").as_slice())
+            }
+            "antd-icons/outlined/user.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/user.svg").as_slice())
+            }
+            "antd-icons/outlined/usergroup-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/usergroup-add.svg").as_slice())
+            }
+            "antd-icons/outlined/usergroup-delete.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/usergroup-delete.svg").as_slice(),
+            ),
+            "antd-icons/outlined/verified.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/verified.svg").as_slice())
+            }
+            "antd-icons/outlined/vertical-align-bottom.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/vertical-align-bottom.svg")
+                    .as_slice(),
+            ),
+            "antd-icons/outlined/vertical-align-middle.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/vertical-align-middle.svg")
+                    .as_slice(),
+            ),
+            "antd-icons/outlined/vertical-align-top.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/vertical-align-top.svg").as_slice(),
+            ),
+            "antd-icons/outlined/vertical-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/vertical-left.svg").as_slice())
+            }
+            "antd-icons/outlined/vertical-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/vertical-right.svg").as_slice())
+            }
+            "antd-icons/outlined/video-camera-add.svg" => Some(
+                include_bytes!("../assets/antd-icons/outlined/video-camera-add.svg").as_slice(),
+            ),
+            "antd-icons/outlined/video-camera.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/video-camera.svg").as_slice())
+            }
+            "antd-icons/outlined/wallet.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/wallet.svg").as_slice())
+            }
+            "antd-icons/outlined/warning.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/warning.svg").as_slice())
+            }
+            "antd-icons/outlined/wechat-work.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/wechat-work.svg").as_slice())
+            }
+            "antd-icons/outlined/wechat.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/wechat.svg").as_slice())
+            }
+            "antd-icons/outlined/weibo-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/weibo-circle.svg").as_slice())
+            }
+            "antd-icons/outlined/weibo-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/weibo-square.svg").as_slice())
+            }
+            "antd-icons/outlined/weibo.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/weibo.svg").as_slice())
+            }
+            "antd-icons/outlined/whats-app.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/whats-app.svg").as_slice())
+            }
+            "antd-icons/outlined/wifi.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/wifi.svg").as_slice())
+            }
+            "antd-icons/outlined/windows.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/windows.svg").as_slice())
+            }
+            "antd-icons/outlined/woman.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/woman.svg").as_slice())
+            }
+            "antd-icons/outlined/x.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/x.svg").as_slice())
+            }
+            "antd-icons/outlined/yahoo.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/yahoo.svg").as_slice())
+            }
+            "antd-icons/outlined/youtube.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/youtube.svg").as_slice())
+            }
+            "antd-icons/outlined/yuque.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/yuque.svg").as_slice())
+            }
+            "antd-icons/outlined/zhihu.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/zhihu.svg").as_slice())
+            }
+            "antd-icons/outlined/zoom-in.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/zoom-in.svg").as_slice())
+            }
+            "antd-icons/outlined/zoom-out.svg" => {
+                Some(include_bytes!("../assets/antd-icons/outlined/zoom-out.svg").as_slice())
+            }
+            "antd-icons/filled/account-book.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/account-book.svg").as_slice())
+            }
+            "antd-icons/filled/alert.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/alert.svg").as_slice())
+            }
+            "antd-icons/filled/alipay-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/alipay-circle.svg").as_slice())
+            }
+            "antd-icons/filled/alipay-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/alipay-square.svg").as_slice())
+            }
+            "antd-icons/filled/aliwangwang.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/aliwangwang.svg").as_slice())
+            }
+            "antd-icons/filled/amazon-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/amazon-circle.svg").as_slice())
+            }
+            "antd-icons/filled/amazon-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/amazon-square.svg").as_slice())
+            }
+            "antd-icons/filled/android.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/android.svg").as_slice())
+            }
+            "antd-icons/filled/anthropic.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/anthropic.svg").as_slice())
+            }
+            "antd-icons/filled/api.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/api.svg").as_slice())
+            }
+            "antd-icons/filled/apple.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/apple.svg").as_slice())
+            }
+            "antd-icons/filled/appstore.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/appstore.svg").as_slice())
+            }
+            "antd-icons/filled/audio.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/audio.svg").as_slice())
+            }
+            "antd-icons/filled/backward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/backward.svg").as_slice())
+            }
+            "antd-icons/filled/bank.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/bank.svg").as_slice())
+            }
+            "antd-icons/filled/behance-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/behance-circle.svg").as_slice())
+            }
+            "antd-icons/filled/behance-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/behance-square.svg").as_slice())
+            }
+            "antd-icons/filled/bell.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/bell.svg").as_slice())
+            }
+            "antd-icons/filled/bilibili.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/bilibili.svg").as_slice())
+            }
+            "antd-icons/filled/book.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/book.svg").as_slice())
+            }
+            "antd-icons/filled/box-plot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/box-plot.svg").as_slice())
+            }
+            "antd-icons/filled/bug.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/bug.svg").as_slice())
+            }
+            "antd-icons/filled/build.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/build.svg").as_slice())
+            }
+            "antd-icons/filled/bulb.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/bulb.svg").as_slice())
+            }
+            "antd-icons/filled/calculator.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/calculator.svg").as_slice())
+            }
+            "antd-icons/filled/calendar.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/calendar.svg").as_slice())
+            }
+            "antd-icons/filled/camera.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/camera.svg").as_slice())
+            }
+            "antd-icons/filled/car.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/car.svg").as_slice())
+            }
+            "antd-icons/filled/caret-down.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/caret-down.svg").as_slice())
+            }
+            "antd-icons/filled/caret-left.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/caret-left.svg").as_slice())
+            }
+            "antd-icons/filled/caret-right.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/caret-right.svg").as_slice())
+            }
+            "antd-icons/filled/caret-up.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/caret-up.svg").as_slice())
+            }
+            "antd-icons/filled/carry-out.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/carry-out.svg").as_slice())
+            }
+            "antd-icons/filled/check-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/check-circle.svg").as_slice())
+            }
+            "antd-icons/filled/check-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/check-square.svg").as_slice())
+            }
+            "antd-icons/filled/chrome.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/chrome.svg").as_slice())
+            }
+            "antd-icons/filled/ci-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/ci-circle.svg").as_slice())
+            }
+            "antd-icons/filled/claude.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/claude.svg").as_slice())
+            }
+            "antd-icons/filled/clock-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/clock-circle.svg").as_slice())
+            }
+            "antd-icons/filled/close-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/close-circle.svg").as_slice())
+            }
+            "antd-icons/filled/close-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/close-square.svg").as_slice())
+            }
+            "antd-icons/filled/cloud.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/cloud.svg").as_slice())
+            }
+            "antd-icons/filled/code-sandbox-circle.svg" => Some(
+                include_bytes!("../assets/antd-icons/filled/code-sandbox-circle.svg").as_slice(),
+            ),
+            "antd-icons/filled/code-sandbox-square.svg" => Some(
+                include_bytes!("../assets/antd-icons/filled/code-sandbox-square.svg").as_slice(),
+            ),
+            "antd-icons/filled/code.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/code.svg").as_slice())
+            }
+            "antd-icons/filled/codepen-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/codepen-circle.svg").as_slice())
+            }
+            "antd-icons/filled/codepen-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/codepen-square.svg").as_slice())
+            }
+            "antd-icons/filled/compass.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/compass.svg").as_slice())
+            }
+            "antd-icons/filled/contacts.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/contacts.svg").as_slice())
+            }
+            "antd-icons/filled/container.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/container.svg").as_slice())
+            }
+            "antd-icons/filled/control.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/control.svg").as_slice())
+            }
+            "antd-icons/filled/copy.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/copy.svg").as_slice())
+            }
+            "antd-icons/filled/copyright-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/copyright-circle.svg").as_slice())
+            }
+            "antd-icons/filled/credit-card.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/credit-card.svg").as_slice())
+            }
+            "antd-icons/filled/crown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/crown.svg").as_slice())
+            }
+            "antd-icons/filled/customer-service.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/customer-service.svg").as_slice())
+            }
+            "antd-icons/filled/dashboard.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dashboard.svg").as_slice())
+            }
+            "antd-icons/filled/database.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/database.svg").as_slice())
+            }
+            "antd-icons/filled/deep-seek.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/deep-seek.svg").as_slice())
+            }
+            "antd-icons/filled/delete.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/delete.svg").as_slice())
+            }
+            "antd-icons/filled/diff.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/diff.svg").as_slice())
+            }
+            "antd-icons/filled/dingtalk-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dingtalk-circle.svg").as_slice())
+            }
+            "antd-icons/filled/dingtalk-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dingtalk-square.svg").as_slice())
+            }
+            "antd-icons/filled/discord.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/discord.svg").as_slice())
+            }
+            "antd-icons/filled/dislike.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dislike.svg").as_slice())
+            }
+            "antd-icons/filled/dollar-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dollar-circle.svg").as_slice())
+            }
+            "antd-icons/filled/down-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/down-circle.svg").as_slice())
+            }
+            "antd-icons/filled/down-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/down-square.svg").as_slice())
+            }
+            "antd-icons/filled/dribbble-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dribbble-circle.svg").as_slice())
+            }
+            "antd-icons/filled/dribbble-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dribbble-square.svg").as_slice())
+            }
+            "antd-icons/filled/dropbox-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dropbox-circle.svg").as_slice())
+            }
+            "antd-icons/filled/dropbox-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/dropbox-square.svg").as_slice())
+            }
+            "antd-icons/filled/edit.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/edit.svg").as_slice())
+            }
+            "antd-icons/filled/eleven-labs.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/eleven-labs.svg").as_slice())
+            }
+            "antd-icons/filled/environment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/environment.svg").as_slice())
+            }
+            "antd-icons/filled/euro-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/euro-circle.svg").as_slice())
+            }
+            "antd-icons/filled/exclamation-circle.svg" => Some(
+                include_bytes!("../assets/antd-icons/filled/exclamation-circle.svg").as_slice(),
+            ),
+            "antd-icons/filled/experiment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/experiment.svg").as_slice())
+            }
+            "antd-icons/filled/eye-invisible.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/eye-invisible.svg").as_slice())
+            }
+            "antd-icons/filled/eye.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/eye.svg").as_slice())
+            }
+            "antd-icons/filled/facebook.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/facebook.svg").as_slice())
+            }
+            "antd-icons/filled/fast-backward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/fast-backward.svg").as_slice())
+            }
+            "antd-icons/filled/fast-forward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/fast-forward.svg").as_slice())
+            }
+            "antd-icons/filled/file-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-add.svg").as_slice())
+            }
+            "antd-icons/filled/file-excel.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-excel.svg").as_slice())
+            }
+            "antd-icons/filled/file-exclamation.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-exclamation.svg").as_slice())
+            }
+            "antd-icons/filled/file-image.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-image.svg").as_slice())
+            }
+            "antd-icons/filled/file-markdown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-markdown.svg").as_slice())
+            }
+            "antd-icons/filled/file-pdf.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-pdf.svg").as_slice())
+            }
+            "antd-icons/filled/file-ppt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-ppt.svg").as_slice())
+            }
+            "antd-icons/filled/file-text.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-text.svg").as_slice())
+            }
+            "antd-icons/filled/file-unknown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-unknown.svg").as_slice())
+            }
+            "antd-icons/filled/file-word.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-word.svg").as_slice())
+            }
+            "antd-icons/filled/file-zip.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file-zip.svg").as_slice())
+            }
+            "antd-icons/filled/file.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/file.svg").as_slice())
+            }
+            "antd-icons/filled/filter.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/filter.svg").as_slice())
+            }
+            "antd-icons/filled/fire.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/fire.svg").as_slice())
+            }
+            "antd-icons/filled/flag.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/flag.svg").as_slice())
+            }
+            "antd-icons/filled/folder-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/folder-add.svg").as_slice())
+            }
+            "antd-icons/filled/folder-open.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/folder-open.svg").as_slice())
+            }
+            "antd-icons/filled/folder.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/folder.svg").as_slice())
+            }
+            "antd-icons/filled/format-painter.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/format-painter.svg").as_slice())
+            }
+            "antd-icons/filled/forward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/forward.svg").as_slice())
+            }
+            "antd-icons/filled/frown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/frown.svg").as_slice())
+            }
+            "antd-icons/filled/fund.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/fund.svg").as_slice())
+            }
+            "antd-icons/filled/funnel-plot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/funnel-plot.svg").as_slice())
+            }
+            "antd-icons/filled/gemini.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/gemini.svg").as_slice())
+            }
+            "antd-icons/filled/gift.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/gift.svg").as_slice())
+            }
+            "antd-icons/filled/github.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/github.svg").as_slice())
+            }
+            "antd-icons/filled/gitlab.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/gitlab.svg").as_slice())
+            }
+            "antd-icons/filled/gold.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/gold.svg").as_slice())
+            }
+            "antd-icons/filled/golden.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/golden.svg").as_slice())
+            }
+            "antd-icons/filled/google-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/google-circle.svg").as_slice())
+            }
+            "antd-icons/filled/google-plus-circle.svg" => Some(
+                include_bytes!("../assets/antd-icons/filled/google-plus-circle.svg").as_slice(),
+            ),
+            "antd-icons/filled/google-plus-square.svg" => Some(
+                include_bytes!("../assets/antd-icons/filled/google-plus-square.svg").as_slice(),
+            ),
+            "antd-icons/filled/google-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/google-square.svg").as_slice())
+            }
+            "antd-icons/filled/hdd.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/hdd.svg").as_slice())
+            }
+            "antd-icons/filled/heart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/heart.svg").as_slice())
+            }
+            "antd-icons/filled/highlight.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/highlight.svg").as_slice())
+            }
+            "antd-icons/filled/home.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/home.svg").as_slice())
+            }
+            "antd-icons/filled/hourglass.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/hourglass.svg").as_slice())
+            }
+            "antd-icons/filled/html5.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/html5.svg").as_slice())
+            }
+            "antd-icons/filled/hugging-face.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/hugging-face.svg").as_slice())
+            }
+            "antd-icons/filled/idcard.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/idcard.svg").as_slice())
+            }
+            "antd-icons/filled/ie-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/ie-circle.svg").as_slice())
+            }
+            "antd-icons/filled/ie-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/ie-square.svg").as_slice())
+            }
+            "antd-icons/filled/info-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/info-circle.svg").as_slice())
+            }
+            "antd-icons/filled/instagram.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/instagram.svg").as_slice())
+            }
+            "antd-icons/filled/insurance.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/insurance.svg").as_slice())
+            }
+            "antd-icons/filled/interaction.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/interaction.svg").as_slice())
+            }
+            "antd-icons/filled/layout.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/layout.svg").as_slice())
+            }
+            "antd-icons/filled/left-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/left-circle.svg").as_slice())
+            }
+            "antd-icons/filled/left-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/left-square.svg").as_slice())
+            }
+            "antd-icons/filled/like.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/like.svg").as_slice())
+            }
+            "antd-icons/filled/linkedin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/linkedin.svg").as_slice())
+            }
+            "antd-icons/filled/lock.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/lock.svg").as_slice())
+            }
+            "antd-icons/filled/mac-command.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/mac-command.svg").as_slice())
+            }
+            "antd-icons/filled/mail.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/mail.svg").as_slice())
+            }
+            "antd-icons/filled/mastodon.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/mastodon.svg").as_slice())
+            }
+            "antd-icons/filled/medicine-box.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/medicine-box.svg").as_slice())
+            }
+            "antd-icons/filled/medium-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/medium-circle.svg").as_slice())
+            }
+            "antd-icons/filled/medium-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/medium-square.svg").as_slice())
+            }
+            "antd-icons/filled/meh.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/meh.svg").as_slice())
+            }
+            "antd-icons/filled/merge.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/merge.svg").as_slice())
+            }
+            "antd-icons/filled/message.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/message.svg").as_slice())
+            }
+            "antd-icons/filled/meta.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/meta.svg").as_slice())
+            }
+            "antd-icons/filled/minus-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/minus-circle.svg").as_slice())
+            }
+            "antd-icons/filled/minus-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/minus-square.svg").as_slice())
+            }
+            "antd-icons/filled/mistral.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/mistral.svg").as_slice())
+            }
+            "antd-icons/filled/mobile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/mobile.svg").as_slice())
+            }
+            "antd-icons/filled/money-collect.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/money-collect.svg").as_slice())
+            }
+            "antd-icons/filled/moon.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/moon.svg").as_slice())
+            }
+            "antd-icons/filled/muted.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/muted.svg").as_slice())
+            }
+            "antd-icons/filled/netflix.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/netflix.svg").as_slice())
+            }
+            "antd-icons/filled/notification.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/notification.svg").as_slice())
+            }
+            "antd-icons/filled/ollama.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/ollama.svg").as_slice())
+            }
+            "antd-icons/filled/open-a-i.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/open-a-i.svg").as_slice())
+            }
+            "antd-icons/filled/pause-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/pause-circle.svg").as_slice())
+            }
+            "antd-icons/filled/pay-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/pay-circle.svg").as_slice())
+            }
+            "antd-icons/filled/perplexity.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/perplexity.svg").as_slice())
+            }
+            "antd-icons/filled/phone.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/phone.svg").as_slice())
+            }
+            "antd-icons/filled/picture.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/picture.svg").as_slice())
+            }
+            "antd-icons/filled/pie-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/pie-chart.svg").as_slice())
+            }
+            "antd-icons/filled/pinterest.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/pinterest.svg").as_slice())
+            }
+            "antd-icons/filled/play-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/play-circle.svg").as_slice())
+            }
+            "antd-icons/filled/play-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/play-square.svg").as_slice())
+            }
+            "antd-icons/filled/plus-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/plus-circle.svg").as_slice())
+            }
+            "antd-icons/filled/plus-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/plus-square.svg").as_slice())
+            }
+            "antd-icons/filled/pound-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/pound-circle.svg").as_slice())
+            }
+            "antd-icons/filled/printer.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/printer.svg").as_slice())
+            }
+            "antd-icons/filled/product.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/product.svg").as_slice())
+            }
+            "antd-icons/filled/profile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/profile.svg").as_slice())
+            }
+            "antd-icons/filled/project.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/project.svg").as_slice())
+            }
+            "antd-icons/filled/property-safety.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/property-safety.svg").as_slice())
+            }
+            "antd-icons/filled/pushpin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/pushpin.svg").as_slice())
+            }
+            "antd-icons/filled/qq-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/qq-circle.svg").as_slice())
+            }
+            "antd-icons/filled/qq-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/qq-square.svg").as_slice())
+            }
+            "antd-icons/filled/question-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/question-circle.svg").as_slice())
+            }
+            "antd-icons/filled/qwen.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/qwen.svg").as_slice())
+            }
+            "antd-icons/filled/read.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/read.svg").as_slice())
+            }
+            "antd-icons/filled/reconciliation.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/reconciliation.svg").as_slice())
+            }
+            "antd-icons/filled/red-envelope.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/red-envelope.svg").as_slice())
+            }
+            "antd-icons/filled/reddit-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/reddit-circle.svg").as_slice())
+            }
+            "antd-icons/filled/reddit-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/reddit-square.svg").as_slice())
+            }
+            "antd-icons/filled/replicate.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/replicate.svg").as_slice())
+            }
+            "antd-icons/filled/rest.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/rest.svg").as_slice())
+            }
+            "antd-icons/filled/right-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/right-circle.svg").as_slice())
+            }
+            "antd-icons/filled/right-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/right-square.svg").as_slice())
+            }
+            "antd-icons/filled/robot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/robot.svg").as_slice())
+            }
+            "antd-icons/filled/rocket.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/rocket.svg").as_slice())
+            }
+            "antd-icons/filled/safety-certificate.svg" => Some(
+                include_bytes!("../assets/antd-icons/filled/safety-certificate.svg").as_slice(),
+            ),
+            "antd-icons/filled/save.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/save.svg").as_slice())
+            }
+            "antd-icons/filled/schedule.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/schedule.svg").as_slice())
+            }
+            "antd-icons/filled/security-scan.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/security-scan.svg").as_slice())
+            }
+            "antd-icons/filled/setting.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/setting.svg").as_slice())
+            }
+            "antd-icons/filled/shop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/shop.svg").as_slice())
+            }
+            "antd-icons/filled/shopping.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/shopping.svg").as_slice())
+            }
+            "antd-icons/filled/signal.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/signal.svg").as_slice())
+            }
+            "antd-icons/filled/signature.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/signature.svg").as_slice())
+            }
+            "antd-icons/filled/sketch-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/sketch-circle.svg").as_slice())
+            }
+            "antd-icons/filled/sketch-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/sketch-square.svg").as_slice())
+            }
+            "antd-icons/filled/skin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/skin.svg").as_slice())
+            }
+            "antd-icons/filled/skype.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/skype.svg").as_slice())
+            }
+            "antd-icons/filled/slack-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/slack-circle.svg").as_slice())
+            }
+            "antd-icons/filled/slack-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/slack-square.svg").as_slice())
+            }
+            "antd-icons/filled/sliders.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/sliders.svg").as_slice())
+            }
+            "antd-icons/filled/smile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/smile.svg").as_slice())
+            }
+            "antd-icons/filled/snapchat.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/snapchat.svg").as_slice())
+            }
+            "antd-icons/filled/snippets.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/snippets.svg").as_slice())
+            }
+            "antd-icons/filled/sound.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/sound.svg").as_slice())
+            }
+            "antd-icons/filled/spotify.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/spotify.svg").as_slice())
+            }
+            "antd-icons/filled/star.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/star.svg").as_slice())
+            }
+            "antd-icons/filled/step-backward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/step-backward.svg").as_slice())
+            }
+            "antd-icons/filled/step-forward.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/step-forward.svg").as_slice())
+            }
+            "antd-icons/filled/stop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/stop.svg").as_slice())
+            }
+            "antd-icons/filled/sun.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/sun.svg").as_slice())
+            }
+            "antd-icons/filled/switcher.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/switcher.svg").as_slice())
+            }
+            "antd-icons/filled/tablet.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/tablet.svg").as_slice())
+            }
+            "antd-icons/filled/tag.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/tag.svg").as_slice())
+            }
+            "antd-icons/filled/tags.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/tags.svg").as_slice())
+            }
+            "antd-icons/filled/taobao-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/taobao-circle.svg").as_slice())
+            }
+            "antd-icons/filled/taobao-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/taobao-square.svg").as_slice())
+            }
+            "antd-icons/filled/telegram.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/telegram.svg").as_slice())
+            }
+            "antd-icons/filled/threads.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/threads.svg").as_slice())
+            }
+            "antd-icons/filled/thunderbolt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/thunderbolt.svg").as_slice())
+            }
+            "antd-icons/filled/tik-tok.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/tik-tok.svg").as_slice())
+            }
+            "antd-icons/filled/tool.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/tool.svg").as_slice())
+            }
+            "antd-icons/filled/trademark-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/trademark-circle.svg").as_slice())
+            }
+            "antd-icons/filled/trophy.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/trophy.svg").as_slice())
+            }
+            "antd-icons/filled/truck.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/truck.svg").as_slice())
+            }
+            "antd-icons/filled/twitch.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/twitch.svg").as_slice())
+            }
+            "antd-icons/filled/twitter-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/twitter-circle.svg").as_slice())
+            }
+            "antd-icons/filled/twitter-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/twitter-square.svg").as_slice())
+            }
+            "antd-icons/filled/unlock.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/unlock.svg").as_slice())
+            }
+            "antd-icons/filled/up-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/up-circle.svg").as_slice())
+            }
+            "antd-icons/filled/up-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/up-square.svg").as_slice())
+            }
+            "antd-icons/filled/usb.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/usb.svg").as_slice())
+            }
+            "antd-icons/filled/video-camera.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/video-camera.svg").as_slice())
+            }
+            "antd-icons/filled/wallet.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/wallet.svg").as_slice())
+            }
+            "antd-icons/filled/warning.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/warning.svg").as_slice())
+            }
+            "antd-icons/filled/wechat-work.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/wechat-work.svg").as_slice())
+            }
+            "antd-icons/filled/wechat.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/wechat.svg").as_slice())
+            }
+            "antd-icons/filled/weibo-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/weibo-circle.svg").as_slice())
+            }
+            "antd-icons/filled/weibo-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/weibo-square.svg").as_slice())
+            }
+            "antd-icons/filled/windows.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/windows.svg").as_slice())
+            }
+            "antd-icons/filled/x.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/x.svg").as_slice())
+            }
+            "antd-icons/filled/yahoo.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/yahoo.svg").as_slice())
+            }
+            "antd-icons/filled/youtube.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/youtube.svg").as_slice())
+            }
+            "antd-icons/filled/yuque.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/yuque.svg").as_slice())
+            }
+            "antd-icons/filled/zhihu-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/zhihu-circle.svg").as_slice())
+            }
+            "antd-icons/filled/zhihu-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/filled/zhihu-square.svg").as_slice())
+            }
+            "antd-icons/twotone/account-book.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/account-book.svg").as_slice())
+            }
+            "antd-icons/twotone/alert.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/alert.svg").as_slice())
+            }
+            "antd-icons/twotone/api.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/api.svg").as_slice())
+            }
+            "antd-icons/twotone/appstore.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/appstore.svg").as_slice())
+            }
+            "antd-icons/twotone/audio.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/audio.svg").as_slice())
+            }
+            "antd-icons/twotone/bank.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/bank.svg").as_slice())
+            }
+            "antd-icons/twotone/bell.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/bell.svg").as_slice())
+            }
+            "antd-icons/twotone/book.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/book.svg").as_slice())
+            }
+            "antd-icons/twotone/box-plot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/box-plot.svg").as_slice())
+            }
+            "antd-icons/twotone/bug.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/bug.svg").as_slice())
+            }
+            "antd-icons/twotone/build.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/build.svg").as_slice())
+            }
+            "antd-icons/twotone/bulb.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/bulb.svg").as_slice())
+            }
+            "antd-icons/twotone/calculator.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/calculator.svg").as_slice())
+            }
+            "antd-icons/twotone/calendar.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/calendar.svg").as_slice())
+            }
+            "antd-icons/twotone/camera.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/camera.svg").as_slice())
+            }
+            "antd-icons/twotone/car.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/car.svg").as_slice())
+            }
+            "antd-icons/twotone/carry-out.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/carry-out.svg").as_slice())
+            }
+            "antd-icons/twotone/check-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/check-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/check-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/check-square.svg").as_slice())
+            }
+            "antd-icons/twotone/ci-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/ci-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/ci.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/ci.svg").as_slice())
+            }
+            "antd-icons/twotone/clock-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/clock-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/close-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/close-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/close-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/close-square.svg").as_slice())
+            }
+            "antd-icons/twotone/cloud.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/cloud.svg").as_slice())
+            }
+            "antd-icons/twotone/code.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/code.svg").as_slice())
+            }
+            "antd-icons/twotone/compass.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/compass.svg").as_slice())
+            }
+            "antd-icons/twotone/contacts.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/contacts.svg").as_slice())
+            }
+            "antd-icons/twotone/container.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/container.svg").as_slice())
+            }
+            "antd-icons/twotone/control.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/control.svg").as_slice())
+            }
+            "antd-icons/twotone/copy.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/copy.svg").as_slice())
+            }
+            "antd-icons/twotone/copyright-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/copyright-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/copyright.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/copyright.svg").as_slice())
+            }
+            "antd-icons/twotone/credit-card.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/credit-card.svg").as_slice())
+            }
+            "antd-icons/twotone/crown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/crown.svg").as_slice())
+            }
+            "antd-icons/twotone/customer-service.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/customer-service.svg").as_slice())
+            }
+            "antd-icons/twotone/dashboard.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/dashboard.svg").as_slice())
+            }
+            "antd-icons/twotone/database.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/database.svg").as_slice())
+            }
+            "antd-icons/twotone/delete.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/delete.svg").as_slice())
+            }
+            "antd-icons/twotone/diff.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/diff.svg").as_slice())
+            }
+            "antd-icons/twotone/dislike.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/dislike.svg").as_slice())
+            }
+            "antd-icons/twotone/dollar-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/dollar-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/dollar.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/dollar.svg").as_slice())
+            }
+            "antd-icons/twotone/down-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/down-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/down-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/down-square.svg").as_slice())
+            }
+            "antd-icons/twotone/edit.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/edit.svg").as_slice())
+            }
+            "antd-icons/twotone/environment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/environment.svg").as_slice())
+            }
+            "antd-icons/twotone/euro-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/euro-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/euro.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/euro.svg").as_slice())
+            }
+            "antd-icons/twotone/exclamation-circle.svg" => Some(
+                include_bytes!("../assets/antd-icons/twotone/exclamation-circle.svg").as_slice(),
+            ),
+            "antd-icons/twotone/experiment.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/experiment.svg").as_slice())
+            }
+            "antd-icons/twotone/eye-invisible.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/eye-invisible.svg").as_slice())
+            }
+            "antd-icons/twotone/eye.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/eye.svg").as_slice())
+            }
+            "antd-icons/twotone/file-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-add.svg").as_slice())
+            }
+            "antd-icons/twotone/file-excel.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-excel.svg").as_slice())
+            }
+            "antd-icons/twotone/file-exclamation.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-exclamation.svg").as_slice())
+            }
+            "antd-icons/twotone/file-image.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-image.svg").as_slice())
+            }
+            "antd-icons/twotone/file-markdown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-markdown.svg").as_slice())
+            }
+            "antd-icons/twotone/file-pdf.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-pdf.svg").as_slice())
+            }
+            "antd-icons/twotone/file-ppt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-ppt.svg").as_slice())
+            }
+            "antd-icons/twotone/file-text.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-text.svg").as_slice())
+            }
+            "antd-icons/twotone/file-unknown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-unknown.svg").as_slice())
+            }
+            "antd-icons/twotone/file-word.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-word.svg").as_slice())
+            }
+            "antd-icons/twotone/file-zip.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file-zip.svg").as_slice())
+            }
+            "antd-icons/twotone/file.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/file.svg").as_slice())
+            }
+            "antd-icons/twotone/filter.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/filter.svg").as_slice())
+            }
+            "antd-icons/twotone/fire.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/fire.svg").as_slice())
+            }
+            "antd-icons/twotone/flag.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/flag.svg").as_slice())
+            }
+            "antd-icons/twotone/folder-add.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/folder-add.svg").as_slice())
+            }
+            "antd-icons/twotone/folder-open.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/folder-open.svg").as_slice())
+            }
+            "antd-icons/twotone/folder.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/folder.svg").as_slice())
+            }
+            "antd-icons/twotone/frown.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/frown.svg").as_slice())
+            }
+            "antd-icons/twotone/fund.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/fund.svg").as_slice())
+            }
+            "antd-icons/twotone/funnel-plot.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/funnel-plot.svg").as_slice())
+            }
+            "antd-icons/twotone/gift.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/gift.svg").as_slice())
+            }
+            "antd-icons/twotone/gold.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/gold.svg").as_slice())
+            }
+            "antd-icons/twotone/hdd.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/hdd.svg").as_slice())
+            }
+            "antd-icons/twotone/heart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/heart.svg").as_slice())
+            }
+            "antd-icons/twotone/highlight.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/highlight.svg").as_slice())
+            }
+            "antd-icons/twotone/home.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/home.svg").as_slice())
+            }
+            "antd-icons/twotone/hourglass.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/hourglass.svg").as_slice())
+            }
+            "antd-icons/twotone/html5.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/html5.svg").as_slice())
+            }
+            "antd-icons/twotone/idcard.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/idcard.svg").as_slice())
+            }
+            "antd-icons/twotone/info-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/info-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/insurance.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/insurance.svg").as_slice())
+            }
+            "antd-icons/twotone/interaction.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/interaction.svg").as_slice())
+            }
+            "antd-icons/twotone/layout.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/layout.svg").as_slice())
+            }
+            "antd-icons/twotone/left-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/left-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/left-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/left-square.svg").as_slice())
+            }
+            "antd-icons/twotone/like.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/like.svg").as_slice())
+            }
+            "antd-icons/twotone/lock.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/lock.svg").as_slice())
+            }
+            "antd-icons/twotone/mail.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/mail.svg").as_slice())
+            }
+            "antd-icons/twotone/medicine-box.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/medicine-box.svg").as_slice())
+            }
+            "antd-icons/twotone/meh.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/meh.svg").as_slice())
+            }
+            "antd-icons/twotone/message.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/message.svg").as_slice())
+            }
+            "antd-icons/twotone/minus-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/minus-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/minus-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/minus-square.svg").as_slice())
+            }
+            "antd-icons/twotone/mobile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/mobile.svg").as_slice())
+            }
+            "antd-icons/twotone/money-collect.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/money-collect.svg").as_slice())
+            }
+            "antd-icons/twotone/notification.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/notification.svg").as_slice())
+            }
+            "antd-icons/twotone/pause-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/pause-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/phone.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/phone.svg").as_slice())
+            }
+            "antd-icons/twotone/picture.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/picture.svg").as_slice())
+            }
+            "antd-icons/twotone/pie-chart.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/pie-chart.svg").as_slice())
+            }
+            "antd-icons/twotone/play-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/play-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/play-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/play-square.svg").as_slice())
+            }
+            "antd-icons/twotone/plus-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/plus-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/plus-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/plus-square.svg").as_slice())
+            }
+            "antd-icons/twotone/pound-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/pound-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/printer.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/printer.svg").as_slice())
+            }
+            "antd-icons/twotone/profile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/profile.svg").as_slice())
+            }
+            "antd-icons/twotone/project.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/project.svg").as_slice())
+            }
+            "antd-icons/twotone/property-safety.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/property-safety.svg").as_slice())
+            }
+            "antd-icons/twotone/pushpin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/pushpin.svg").as_slice())
+            }
+            "antd-icons/twotone/question-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/question-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/reconciliation.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/reconciliation.svg").as_slice())
+            }
+            "antd-icons/twotone/red-envelope.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/red-envelope.svg").as_slice())
+            }
+            "antd-icons/twotone/rest.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/rest.svg").as_slice())
+            }
+            "antd-icons/twotone/right-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/right-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/right-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/right-square.svg").as_slice())
+            }
+            "antd-icons/twotone/rocket.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/rocket.svg").as_slice())
+            }
+            "antd-icons/twotone/safety-certificate.svg" => Some(
+                include_bytes!("../assets/antd-icons/twotone/safety-certificate.svg").as_slice(),
+            ),
+            "antd-icons/twotone/save.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/save.svg").as_slice())
+            }
+            "antd-icons/twotone/schedule.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/schedule.svg").as_slice())
+            }
+            "antd-icons/twotone/security-scan.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/security-scan.svg").as_slice())
+            }
+            "antd-icons/twotone/setting.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/setting.svg").as_slice())
+            }
+            "antd-icons/twotone/shop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/shop.svg").as_slice())
+            }
+            "antd-icons/twotone/shopping.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/shopping.svg").as_slice())
+            }
+            "antd-icons/twotone/skin.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/skin.svg").as_slice())
+            }
+            "antd-icons/twotone/sliders.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/sliders.svg").as_slice())
+            }
+            "antd-icons/twotone/smile.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/smile.svg").as_slice())
+            }
+            "antd-icons/twotone/snippets.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/snippets.svg").as_slice())
+            }
+            "antd-icons/twotone/sound.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/sound.svg").as_slice())
+            }
+            "antd-icons/twotone/star.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/star.svg").as_slice())
+            }
+            "antd-icons/twotone/stop.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/stop.svg").as_slice())
+            }
+            "antd-icons/twotone/switcher.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/switcher.svg").as_slice())
+            }
+            "antd-icons/twotone/tablet.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/tablet.svg").as_slice())
+            }
+            "antd-icons/twotone/tag.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/tag.svg").as_slice())
+            }
+            "antd-icons/twotone/tags.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/tags.svg").as_slice())
+            }
+            "antd-icons/twotone/thunderbolt.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/thunderbolt.svg").as_slice())
+            }
+            "antd-icons/twotone/tool.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/tool.svg").as_slice())
+            }
+            "antd-icons/twotone/trademark-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/trademark-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/trophy.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/trophy.svg").as_slice())
+            }
+            "antd-icons/twotone/unlock.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/unlock.svg").as_slice())
+            }
+            "antd-icons/twotone/up-circle.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/up-circle.svg").as_slice())
+            }
+            "antd-icons/twotone/up-square.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/up-square.svg").as_slice())
+            }
+            "antd-icons/twotone/usb.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/usb.svg").as_slice())
+            }
+            "antd-icons/twotone/video-camera.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/video-camera.svg").as_slice())
+            }
+            "antd-icons/twotone/wallet.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/wallet.svg").as_slice())
+            }
+            "antd-icons/twotone/warning.svg" => {
+                Some(include_bytes!("../assets/antd-icons/twotone/warning.svg").as_slice())
+            }
             _ => None,
         };
         if asset_path.starts_with("antd-icons/twotone/") {
@@ -6135,8 +7872,9 @@ impl AssetSource for AntIconAssets {
                     Cow::Owned(svg_layer_mask(&resized, layer))
                 } else {
                     match palette {
-                        Some((primary, secondary)) =>
-                            Cow::Owned(recolor_svg(&resized, primary, secondary)),
+                        Some((primary, secondary)) => {
+                            Cow::Owned(recolor_svg(&resized, primary, secondary))
+                        }
                         None => resized,
                     }
                 }
@@ -6147,7 +7885,8 @@ impl AssetSource for AntIconAssets {
     }
 
     fn list(&self, prefix: &str) -> Result<Vec<SharedString>> {
-        Ok(AntIconName::ALL.iter()
+        Ok(AntIconName::ALL
+            .iter()
             .map(|name| name.path())
             .filter(|path| path.starts_with(prefix))
             .map(SharedString::from)
@@ -6168,7 +7907,10 @@ mod tests {
             assert!(bytes.windows(4).any(|w| w == b"<svg"), "{}", name.path());
             assert_eq!(name.path().starts_with("antd-icons/"), true);
         }
-        assert_eq!(source.list("antd-icons/").unwrap().len(), AntIconName::ALL.len());
+        assert_eq!(
+            source.list("antd-icons/").unwrap().len(),
+            AntIconName::ALL.len()
+        );
         assert!(source.load("icons/unknown.svg").unwrap().is_none());
         assert_eq!(source.list("unknown").unwrap().len(), 0);
     }
@@ -6194,13 +7936,24 @@ mod tests {
             assert_eq!(name.style(), "twotone");
             let bytes = source.load(name.path()).unwrap().expect(name.path());
             let svg = std::str::from_utf8(&bytes).unwrap();
-            assert!(svg.contains(r#"<svg width="128" height="128""#), "{}", name.path());
-            assert!(svg.contains(r#"viewBox="0 0 1024 1024""#), "{}", name.path());
+            assert!(
+                svg.contains(r#"<svg width="128" height="128""#),
+                "{}",
+                name.path()
+            );
+            assert!(
+                svg.contains(r#"viewBox="0 0 1024 1024""#),
+                "{}",
+                name.path()
+            );
             assert!(svg.contains(r##"fill="#1677ff""##), "{}", name.path());
             assert!(svg.contains(r##"fill="#e6f4ff""##), "{}", name.path());
         }
         assert_eq!(
-            AntIconName::ALL.iter().filter(|name| name.style() == "twotone").count(),
+            AntIconName::ALL
+                .iter()
+                .filter(|name| name.style() == "twotone")
+                .count(),
             150
         );
         assert!(matches!(
@@ -6212,7 +7965,10 @@ mod tests {
     fn two_tone_builder_prioritizes_explicit_colors() {
         let icon = AntIcon::new(AntIconName::CheckCircleTwoTone)
             .theme(AntTheme::dark())
-            .two_tone_colors(crate::tokens::color(0x52c41a), crate::tokens::color(0xf6ffed))
+            .two_tone_colors(
+                crate::tokens::color(0x52c41a),
+                crate::tokens::color(0xf6ffed),
+            )
             .color(crate::tokens::color(0xff4d4f));
         assert_eq!(
             palette_asset_key(
