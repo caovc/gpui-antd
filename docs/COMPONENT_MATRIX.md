@@ -62,6 +62,20 @@ consume the host's Confirm action and select once. Regression coverage lives in
 check date presets/disabled dates/datetime, time scrolling, number hints and
 Tooltip side geometry. Browser smoke and pixel parity are separate checks.
 
+Catalog popup regressions in the same native test target cover Cascader
+placement, disabled options, selection and dismissal in both themes; Mentions
+continuous editor typing, Escape/outside dismissal and query changes; targetless
+Tour visibility; and collapsed Menu flyout geometry. When supplying a Mentions
+field with `.trigger(AntInput::new(&input))`, also pass
+`.track_focus(&input.read(cx).focus_handle(cx))` (import `Focusable`) so the
+suggestion popover retains editor focus. Dismissal is transient element state;
+the field text and selected value remain owned by the parent.
+
+Browser smoke additionally checks Cascader, ColorPicker, TreeSelect, Image and
+Tour panel pixels below the trigger, Escape and outside dismissal in light and
+dark themes. These checks establish working native overlays, not full Ant
+Design screenshot parity, keyboard list navigation or a screen-reader audit.
+
 ## Wave 3: feedback and enterprise display foundations
 
 | Component | Initial native implementation | Explicit parity gaps |

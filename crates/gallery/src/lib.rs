@@ -46,9 +46,9 @@ use gpui_kit::component::time_field::TimePrecision;
 use gpui_kit::component::time_field::{HourCycle, TimeFieldEvent, TimeFieldState};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
-    AppContext as _, AssetSource, Context, Entity, InteractiveElement as _, IntoElement,
-    ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _,
-    Subscription, Window, WindowOptions, div, px,
+    AppContext as _, AssetSource, Context, Entity, Focusable as _, InteractiveElement as _,
+    IntoElement, ParentElement as _, Render, SharedString, StatefulInteractiveElement as _,
+    Styled as _, Subscription, Window, WindowOptions, div, px,
 };
 
 /// Retains GPUI Kit's default component icon source while also resolving
@@ -854,6 +854,7 @@ impl Gallery {
                     .child(
                         AntMentions::new("mentions-demo")
                             .theme(t)
+                            .track_focus(&self.mentions_input.read(cx).focus_handle(cx))
                             .trigger(AntInput::new(&self.mentions_input).theme(t))
                             .text(text.clone(), text.len())
                             .option(AntMentionOption::new("ada", "Ada Lovelace"))

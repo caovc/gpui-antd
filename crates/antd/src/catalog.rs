@@ -1575,6 +1575,7 @@ pub struct AntMentions {
     options: Vec<AntMentionOption>,
     theme: AntTheme,
     trigger: Option<AnyElement>,
+    focus_handle: Option<FocusHandle>,
     on_select: Option<KeyNotify>,
 }
 impl AntMentions {
@@ -1586,6 +1587,7 @@ impl AntMentions {
             options: Vec::new(),
             theme: AntTheme::default(),
             trigger: None,
+            focus_handle: None,
             on_select: None,
         }
     }
@@ -1605,6 +1607,12 @@ impl AntMentions {
     /// Field the suggestion list anchors to. Without it, matches stay inline.
     pub fn trigger(mut self, trigger: impl IntoElement) -> Self {
         self.trigger = Some(trigger.into_any_element());
+        self
+    }
+    /// Keep keyboard input in the editor while suggestions are open.
+    /// Pass the field's retained focus handle alongside `.trigger(...)`.
+    pub fn track_focus(mut self, handle: &FocusHandle) -> Self {
+        self.focus_handle = Some(handle.clone());
         self
     }
     pub fn on_select(mut self, f: impl Fn(SharedString, &mut Window, &mut App) + 'static) -> Self {
@@ -1647,9 +1655,17 @@ impl RenderOnce for AntMentions {
         let dismissed = window.use_keyed_state(
             SharedString::from(format!("mentions-dismiss-{:?}", self.id)),
             cx,
-            |_, _| None::<String>,
+            |_, _| (None::<String>, false),
         );
-        let suppressed = query.is_some() && dismissed.read(cx).as_deref() == query.as_deref();
+        // This is transient popup state, keyed by component identity. A changed
+        // query starts a fresh suggestion session, including returning to an
+        // earlier query after clearing the field.
+        dismissed.update(cx, |state, _| {
+            if state.0 != query {
+                *state = (query.clone(), false);
+            }
+        });
+        let suppressed = dismissed.read(cx).1;
         let Some(trigger) = self.trigger else {
             return div()
                 .id(self.id)
@@ -1664,21 +1680,37 @@ impl RenderOnce for AntMentions {
         // stops propagation, which would steal caret clicks from InputState.
         // Open is derived from the query, so a dismiss has to be remembered or
         // the next frame forces the popup open again.
-        let query_for_dismiss = query.clone();
+        let dismiss_from_editor = dismissed.clone();
+        let visible = query.is_some() && !suppressed;
         div()
             .w_full()
             .flex()
             .flex_col()
+            .on_key_down(move |event, _, cx| {
+                if visible && event.keystroke.key == "escape" {
+                    dismiss_from_editor.update(cx, |state, cx| {
+                        state.1 = true;
+                        cx.notify();
+                    });
+                    cx.stop_propagation();
+                }
+            })
             .child(trigger)
             .child(
                 BasePopover::new(self.id)
                     .anchor(dropdown_anchor())
                     .offset(px(4.))
-                    .open(query.is_some() && !suppressed)
+                    .open(visible)
+                    .when_some(self.focus_handle, |popover, handle| {
+                        popover.track_focus(&handle)
+                    })
                     .overlay_closable(true)
                     .on_open_change(move |open, _, cx| {
                         if !*open {
-                            dismissed.update(cx, |slot, _| *slot = query_for_dismiss.clone());
+                            dismissed.update(cx, |state, cx| {
+                                state.1 = true;
+                                cx.notify();
+                            });
                         }
                     })
                     .trigger_with(move |_, _, _| {
