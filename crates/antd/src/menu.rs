@@ -108,6 +108,16 @@ pub(crate) enum MenuMove {
     Last,
 }
 
+/// Popup corner for a submenu flyout. Horizontal opens below; vertical and
+/// collapsed open to the right.
+pub(crate) fn menu_flyout_anchor(horizontal: bool) -> Anchor {
+    if horizontal {
+        Anchor::TopLeft
+    } else {
+        Anchor::LeftCenter
+    }
+}
+
 pub(crate) fn move_for_key(key: &str, horizontal: bool) -> Option<MenuMove> {
     match key {
         "home" => Some(MenuMove::First),
@@ -219,6 +229,9 @@ fn flatten_visible(
 ///
 /// Collapsed and vertical modes open a flyout to the right; horizontal mode
 /// opens a flyout below. Controlled open/selected keys persist across modes.
+///
+/// The named [`Anchor`] is the popup corner pinned to the opposite edge of the
+/// trigger, so "below" is `TopLeft` and "to the right" is `LeftCenter`.
 /// Hover delays, responsive overflow and typeahead remain future milestones.
 #[derive(IntoElement)]
 pub struct AntMenu {
@@ -602,11 +615,7 @@ impl RenderOnce for AntMenu {
                     let key_for_close = flyout_key.clone();
                     let popup_change = flyout_callback.clone();
                     BasePopover::new(flyout_id)
-                        .anchor(if horizontal {
-                            Anchor::BottomLeft
-                        } else {
-                            Anchor::RightCenter
-                        })
+                        .anchor(menu_flyout_anchor(horizontal))
                         .offset(px(6.))
                         .open(row_expanded)
                         .overlay_closable(true)
@@ -692,6 +701,8 @@ mod tests {
         assert_eq!(move_for_key("down", false), Some(MenuMove::Next));
         assert_eq!(move_for_key("right", false), None);
         assert_eq!(move_for_key("home", true), Some(MenuMove::First));
+        assert_eq!(menu_flyout_anchor(true), Anchor::TopLeft);
+        assert_eq!(menu_flyout_anchor(false), Anchor::LeftCenter);
     }
     #[test]
     fn popup_mode_preserves_nested_items_without_inlining_rows() {

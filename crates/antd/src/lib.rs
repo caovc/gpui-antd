@@ -74,7 +74,7 @@ pub use navigation_extra::{AntPagination, AntStep, AntSteps, PageSlot, StepStatu
 pub use auto_complete::{AntAutoComplete, autocomplete_matches, next_autocomplete_index};
 pub use input_number::AntInputNumber;
 pub use segmented::{AntSegmented, AntSegmentedOption, next_segmented_index};
-pub use slider::{AntSlider, slider_key_value};
+pub use slider::{AntSlider, slider_key_value, slider_mark_ratio};
 pub use time_picker::AntTimePicker;
 
 pub mod calendar;
@@ -105,9 +105,9 @@ pub use catalog::{
     AntImage, AntListyItem, AntMasonry, AntMasonryItem, AntMentionOption, AntMentions, AntQrCode,
     AntSplitter, AntTour, AntTourStep, AntTransfer, AntTransferItem, AntTreeSelect, AntUpload,
     AntUploadFile, AntWatermark, ListySlot, QrMatrix, UploadStatus, ant_listy, apply_mention,
-    carousel_index, cascader_column, cascader_select, hsv_to_rgb, listy_slots, masonry_columns,
-    mention_matches, mention_query, next_anchor_index, parse_hex, qr_matrix, tour_index,
-    transfer_move, tree_select_title, upload_accepted, upload_without, watermark_count,
+    carousel_index, cascader_column, cascader_labels, cascader_select, hsv_to_rgb, listy_slots,
+    masonry_columns, mention_matches, mention_query, next_anchor_index, parse_hex, qr_matrix,
+    tour_index, transfer_move, tree_select_title, upload_accepted, upload_without, watermark_count,
 };
 pub use float_button::{
     AntFloatAction, AntFloatButton, AntFloatButtonGroup, FloatShape, FloatVariant, float_offset,

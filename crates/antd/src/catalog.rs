@@ -21,11 +21,19 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     Anchor, Animation, AnimationExt as _, AnyElement, App, Context, ElementId, Entity, FocusHandle,
     InteractiveElement as _, IntoElement, KeyDownEvent, ParentElement as _, Render, RenderOnce,
-    Role, SharedString, StatefulInteractiveElement as _, Styled as _, Window, div, px, size,
+    Role, SharedString, StatefulInteractiveElement as _, Styled as _, Window, div, px, relative,
+    size,
 };
 use qrcode::{Color as QrColor, EcLevel, QrCode};
 
+use crate::overlays::{OverlayPlacement, overlay_anchor};
 use crate::{AntIcon, AntIconName, AntText, AntTheme, AntTree, AntTreeNode, ControlSize, TextTone};
+
+/// Menus open below the trigger, left-aligned. The named anchor is the popup
+/// corner pinned to the opposite edge of the trigger.
+fn dropdown_anchor() -> Anchor {
+    overlay_anchor(OverlayPlacement::BottomLeft)
+}
 
 type Notify = Rc<dyn Fn(&mut Window, &mut App)>;
 type KeyNotify = Rc<dyn Fn(SharedString, &mut Window, &mut App)>;
@@ -466,12 +474,14 @@ impl RenderOnce for AntWatermark {
 
 #[derive(IntoElement)]
 pub struct AntBorderBeam {
+    id: ElementId,
     theme: AntTheme,
     children: Vec<AnyElement>,
 }
 impl AntBorderBeam {
-    pub fn new() -> Self {
+    pub fn new(id: impl Into<ElementId>) -> Self {
         Self {
+            id: id.into(),
             theme: AntTheme::default(),
             children: Vec::new(),
         }
@@ -487,12 +497,13 @@ impl AntBorderBeam {
 }
 impl Default for AntBorderBeam {
     fn default() -> Self {
-        Self::new()
+        Self::new("ant-border-beam")
     }
 }
 impl RenderOnce for AntBorderBeam {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let t = self.theme;
+        let id = self.id;
         div()
             .relative()
             .w_full()
@@ -504,13 +515,19 @@ impl RenderOnce for AntBorderBeam {
                 div()
                     .absolute()
                     .top(px(0.))
+                    .left(px(0.))
+                    .right(px(0.))
                     .h(px(2.))
-                    .w(px(72.))
-                    .bg(t.primary)
-                    .with_animation(
-                        "ant-border-beam",
-                        Animation::new(Duration::from_millis(1600)).repeat(),
-                        |beam, delta| beam.left(px((delta * 280.).round())),
+                    .child(
+                        div()
+                            .h(px(2.))
+                            .w(relative(0.18))
+                            .bg(t.primary)
+                            .with_animation(
+                                id,
+                                Animation::new(Duration::from_millis(1600)).repeat(),
+                                |beam, delta| beam.ml(relative(delta * 0.82)),
+                            ),
                     ),
             )
             .child(
@@ -525,21 +542,21 @@ impl RenderOnce for AntBorderBeam {
 }
 
 fn picker_trigger(
-    id: impl Into<SharedString>,
+    id: impl Into<ElementId>,
     label: impl Into<SharedString>,
     theme: AntTheme,
 ) -> AnyElement {
-    div()
-        .id(id.into())
+    BaseButton::new(id)
         .h(px(32.))
         .min_w(px(180.))
         .px(px(10.))
+        .flex()
+        .items_center()
         .rounded(px(theme.border_radius))
         .border_1()
         .border_color(theme.border)
         .bg(theme.surface)
-        .flex()
-        .items_center()
+        .cursor_pointer()
         .child(AntText::new(label.into()).theme(theme))
         .into_any_element()
 }
@@ -1084,11 +1101,14 @@ impl RenderOnce for AntTour {
                     )),
             );
         let Some(target) = self.target else {
+            if !self.open {
+                return div().id(id).into_any_element();
+            }
             return div().id(id).relative().child(card).into_any_element();
         };
         let on_close = self.on_close.clone();
         BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(dropdown_anchor())
             .offset(px(8.))
             .open(self.open)
             .overlay_closable(true)
@@ -1182,7 +1202,7 @@ impl RenderOnce for AntImage {
         let on_open = self.on_open.clone();
         let id = self.id.clone();
         BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(dropdown_anchor())
             .offset(px(8.))
             .open(self.open)
             .overlay_closable(true)
@@ -1593,7 +1613,7 @@ impl AntMentions {
     }
 }
 impl RenderOnce for AntMentions {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
+    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let t = self.theme;
         let query = mention_query(self.text.as_ref(), self.cursor).map(str::to_owned);
         let matches = query
@@ -1623,6 +1643,13 @@ impl RenderOnce for AntMentions {
                             .child(AntText::new(option.label.clone()).theme(t)),
                     )
             }));
+        let anchor_id = SharedString::from(format!("mentions-anchor-{:?}", self.id));
+        let dismissed = window.use_keyed_state(
+            SharedString::from(format!("mentions-dismiss-{:?}", self.id)),
+            cx,
+            |_, _| None::<String>,
+        );
+        let suppressed = query.is_some() && dismissed.read(cx).as_deref() == query.as_deref();
         let Some(trigger) = self.trigger else {
             return div()
                 .id(self.id)
@@ -1633,13 +1660,32 @@ impl RenderOnce for AntMentions {
                 .when(query.is_some(), |panel| panel.child(list))
                 .into_any_element();
         };
-        BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
-            .offset(px(4.))
-            .open(query.is_some())
-            .overlay_closable(true)
-            .trigger_with(move |_, _, _| trigger)
-            .content(move |_, _, _| list)
+        // The field stays outside the trigger. Popover mouse-down toggles and
+        // stops propagation, which would steal caret clicks from InputState.
+        // Open is derived from the query, so a dismiss has to be remembered or
+        // the next frame forces the popup open again.
+        let query_for_dismiss = query.clone();
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .child(trigger)
+            .child(
+                BasePopover::new(self.id)
+                    .anchor(dropdown_anchor())
+                    .offset(px(4.))
+                    .open(query.is_some() && !suppressed)
+                    .overlay_closable(true)
+                    .on_open_change(move |open, _, cx| {
+                        if !*open {
+                            dismissed.update(cx, |slot, _| *slot = query_for_dismiss.clone());
+                        }
+                    })
+                    .trigger_with(move |_, _, _| {
+                        div().id(anchor_id).w_full().h(px(0.)).into_any_element()
+                    })
+                    .content(move |_, _, _| list),
+            )
             .into_any_element()
     }
 }
@@ -1721,7 +1767,7 @@ impl RenderOnce for AntColorPicker {
         let color = self.color;
         let close_on_pick = on_open.clone();
         BasePopover::new(self.id.clone())
-            .anchor(Anchor::BottomLeft)
+            .anchor(dropdown_anchor())
             .offset(px(4.))
             .open(self.open)
             .overlay_closable(true)
@@ -1741,7 +1787,7 @@ impl RenderOnce for AntColorPicker {
                         .into_any_element()
                 }
             })
-            .content(move |_, window, cx| {
+            .content(move |_, _, _| {
                 div()
                     .flex()
                     .flex_col()
@@ -1836,6 +1882,19 @@ pub fn cascader_column<'a>(
     column
 }
 
+pub fn cascader_labels(options: &[AntCascaderOption], path: &[String]) -> Vec<String> {
+    let mut labels = Vec::new();
+    let mut column = options;
+    for key in path {
+        let Some(option) = column.iter().find(|option| option.value.as_ref() == key) else {
+            break;
+        };
+        labels.push(option.label.to_string());
+        column = &option.children;
+    }
+    labels
+}
+
 pub fn cascader_select(path: &[String], depth: usize, value: &str, leaf: bool) -> Vec<String> {
     let mut next: Vec<String> = path.iter().take(depth).cloned().collect();
     next.push(value.to_owned());
@@ -1904,7 +1963,12 @@ impl RenderOnce for AntCascader {
         let label = if self.path.is_empty() {
             self.placeholder.clone()
         } else {
-            SharedString::from(self.path.join(" / "))
+            let labels = cascader_labels(&self.options, &self.path);
+            if labels.is_empty() {
+                self.placeholder.clone()
+            } else {
+                SharedString::from(labels.join(" / "))
+            }
         };
         let on_open = self.on_open.clone();
         let id = self.id.clone();
@@ -1912,7 +1976,7 @@ impl RenderOnce for AntCascader {
         let path = self.path;
         let on_change = self.on_change;
         BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(dropdown_anchor())
             .offset(px(4.))
             .open(self.open)
             .overlay_closable(true)
@@ -2311,11 +2375,11 @@ impl RenderOnce for AntTreeSelect {
         let on_select = self.on_select.clone();
         let id = self.id.clone();
         BasePopover::new(self.id)
-            .anchor(Anchor::BottomLeft)
+            .anchor(dropdown_anchor())
             .offset(px(4.))
             .open(self.open)
             .overlay_closable(true)
-            .when_some(on_open, |popover, callback| {
+            .when_some(on_open.clone(), |popover, callback| {
                 popover.on_open_change(move |open, window, cx| callback(*open, window, cx))
             })
             .trigger_with({
@@ -2338,6 +2402,9 @@ impl RenderOnce for AntTreeSelect {
                             .on_select(move |key, window, cx| {
                                 if let Some(cb) = &on_select {
                                     cb(key, window, cx);
+                                }
+                                if let Some(close) = &on_open {
+                                    close(false, window, cx);
                                 }
                             }),
                     )
@@ -2412,6 +2479,11 @@ mod tests {
             "hz"
         );
         assert!(cascader_column(&options, &["missing".into()], 1).is_empty());
+        assert_eq!(
+            cascader_labels(&options, &["zj".into(), "hz".into()]),
+            vec!["Zhejiang".to_owned(), "Hangzhou".to_owned()]
+        );
+        assert!(cascader_labels(&options, &["missing".into()]).is_empty());
         assert_eq!(
             cascader_select(&["zj".into()], 0, "js", false),
             vec!["js".to_owned()]

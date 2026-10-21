@@ -12,8 +12,9 @@
 //! - thumb white + 2px primary border, ~14px circle
 //!
 //! Base Slider has no `reverse` API; reverse is applied only to fill geometry
-//! for single-value sliders. Marks and drag-value tooltips are omitted (no
-//! base hooks). Keyboard handling and SliderEvent::Change/Release stay.
+//! for single-value sliders. Marks are painted from caller value/label pairs.
+//! A drag-value tooltip is omitted (no base hook). Keyboard handling and
+//! SliderEvent::Change/Release stay.
 
 use crate::design_tokens::AntComponent;
 use crate::{AntTheme, color};
@@ -24,8 +25,8 @@ use gpui_kit::base::{
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     App, Axis, Entity, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
-    ParentElement as _, RenderOnce, Role, StatefulInteractiveElement as _, Styled as _, Window,
-    div, px, relative,
+    ParentElement as _, RenderOnce, Role, SharedString, StatefulInteractiveElement as _,
+    Styled as _, Window, div, px, relative,
 };
 
 /// Clamp a keyboard increment to an integer or decimal SliderState step.
@@ -87,6 +88,16 @@ pub fn slider_ant_colors(
     (rail, fill, thumb_border)
 }
 
+/// Position of a mark along the track, as a 0..=1 ratio of `min..=max`.
+///
+/// Values outside the range clamp to the ends. Invalid ranges return `None`.
+pub fn slider_mark_ratio(value: f32, min: f32, max: f32) -> Option<f32> {
+    if !value.is_finite() || !min.is_finite() || !max.is_finite() || max <= min {
+        return None;
+    }
+    Some(((value - min) / (max - min)).clamp(0., 1.))
+}
+
 #[derive(IntoElement)]
 pub struct AntSlider {
     state: Entity<SliderState>,
@@ -97,6 +108,7 @@ pub struct AntSlider {
     reverse: bool,
     show_value: bool,
     height: f32,
+    marks: Vec<(f32, SharedString)>,
 }
 impl AntSlider {
     pub fn new(state: &Entity<SliderState>) -> Self {
@@ -108,6 +120,7 @@ impl AntSlider {
             reverse: false,
             show_value: false,
             height: 180.,
+            marks: Vec::new(),
         }
     }
     pub fn theme(mut self, t: AntTheme) -> Self {
@@ -135,6 +148,11 @@ impl AntSlider {
         self.height = v.max(60.);
         self
     }
+    /// Label drawn at `value` on the track. Out-of-range values sit on the nearer end.
+    pub fn mark(mut self, value: f32, label: impl Into<SharedString>) -> Self {
+        self.marks.push((value, label.into()));
+        self
+    }
 }
 impl RenderOnce for AntSlider {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
@@ -142,10 +160,15 @@ impl RenderOnce for AntSlider {
         let vertical = self.vertical;
         let disabled = self.disabled;
         let reverse = self.reverse;
+        let height = self.height;
+        let show_value = self.show_value;
+        let marks = self.marks;
         let state = self.state;
         let value = state.read(cx).value();
         let percentage = state.read(cx).percentage();
         let is_range = value.is_range();
+        let min = state.read(cx).min_value();
+        let max = state.read(cx).max_value();
         let (rail_color, fill_color, thumb_border) = slider_ant_colors(t, disabled);
         let thumb_fill = color(0xffffff);
         let axis = if vertical {
@@ -178,15 +201,16 @@ impl RenderOnce for AntSlider {
             let SliderValue::Single(current) = current else {
                 return;
             };
-            let model = key_state.read(cx);
-            let next = slider_key_value(
-                current,
-                model.min_value(),
-                model.max_value(),
-                model.step_value(),
-                event.keystroke.key.as_str(),
-            );
-            drop(model);
+            let next = {
+                let model = key_state.read(cx);
+                slider_key_value(
+                    current,
+                    model.min_value(),
+                    model.max_value(),
+                    model.step_value(),
+                    event.keystroke.key.as_str(),
+                )
+            };
             if let Some(next) = next {
                 if (next - current).abs() > f32::EPSILON {
                     key_state.update(cx, |model, cx| {
@@ -227,7 +251,7 @@ impl RenderOnce for AntSlider {
             .flex()
             .items_center()
             .justify_center()
-            .when(vertical, |this| this.h(px(self.height)).w(px(22.)))
+            .when(vertical, |this| this.h(px(height)).w(px(22.)))
             .when(!vertical, |this| this.w_full().h(px(26.)))
             .child(
                 SliderTrack::new(&state)
@@ -267,6 +291,41 @@ impl RenderOnce for AntSlider {
                     ),
             );
 
+        let mark_color = if disabled {
+            t.disabled_text
+        } else {
+            t.text_secondary
+        };
+        let mark_row = (!marks.is_empty()).then(|| {
+            div()
+                .relative()
+                .when(!vertical, |this| this.w_full().h(px(18.)).mt(px(2.)))
+                .when(vertical, |this| this.h(px(height)).w(px(36.)))
+                .children(marks.into_iter().filter_map(|(mark_value, label)| {
+                    let mut ratio = slider_mark_ratio(mark_value, min, max)?;
+                    if reverse && !is_range {
+                        ratio = 1. - ratio;
+                    }
+                    Some(
+                        div()
+                            .absolute()
+                            .when(!vertical, |this| {
+                                this.left(relative(ratio))
+                                    .top_0()
+                                    .w(px(48.))
+                                    .ml(px(-24.))
+                                    .text_center()
+                            })
+                            .when(vertical, |this| {
+                                this.bottom(relative(ratio)).left_0().mb(px(-8.))
+                            })
+                            .text_size(px(12.))
+                            .text_color(mark_color)
+                            .child(label),
+                    )
+                }))
+        });
+
         div()
             .id(id)
             .role(Role::Slider)
@@ -277,8 +336,14 @@ impl RenderOnce for AntSlider {
             .when(!vertical, |this| {
                 this.flex().items_center().gap(px(14.)).w_full()
             })
-            .child(slider)
-            .when(self.show_value, |this| {
+            .child(
+                div()
+                    .when(!vertical, |this| this.flex().flex_col().flex_1().w_full())
+                    .when(vertical, |this| this.flex().items_center().gap(px(8.)))
+                    .child(slider)
+                    .children(mark_row),
+            )
+            .when(show_value, |this| {
                 this.child(
                     div()
                         .text_size(px(13.))
@@ -310,6 +375,14 @@ mod tests {
         assert_eq!(slider_key_value(f32::NAN, 0., 10., 1., "up"), None);
         assert_eq!(slider_key_value(5., 10., 0., 1., "up"), None);
         assert_eq!(slider_key_value(5., 0., 10., 1., "space"), None);
+    }
+    #[test]
+    fn slider_marks_clamp_to_the_track() {
+        assert_eq!(slider_mark_ratio(25., 0., 100.), Some(0.25));
+        assert_eq!(slider_mark_ratio(-10., 0., 100.), Some(0.));
+        assert_eq!(slider_mark_ratio(140., 0., 100.), Some(1.));
+        assert_eq!(slider_mark_ratio(1., 10., 0.), None);
+        assert_eq!(slider_mark_ratio(f32::NAN, 0., 10.), None);
     }
     #[test]
     fn slider_ant_colors_follow_disabled_state() {

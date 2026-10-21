@@ -433,7 +433,6 @@ impl RenderOnce for AntSelect {
         let open_for_trigger = open;
         let on_open_trigger = on_open.clone();
         let trigger = {
-            let clear_selected = selected.clone();
             let on_clear = on_select.clone();
             let hover_border = chrome.hover_border;
             let border = chrome.border;

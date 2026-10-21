@@ -730,7 +730,7 @@ impl Gallery {
                         .child(AntText::new("Content under the watermark.").theme(t)),
                 )
                 .into_any_element(),
-            "BorderBeam" => AntBorderBeam::new()
+            "BorderBeam" => AntBorderBeam::new("border-beam")
                 .theme(t)
                 .child(
                     AntText::new(
@@ -2361,7 +2361,10 @@ impl Gallery {
                 div().w(px(520.)).child(
                     AntSlider::new(&self.slider_single)
                         .theme(t)
-                        .show_value(true),
+                        .show_value(true)
+                        .mark(0., "0")
+                        .mark(50., "50")
+                        .mark(100., "100"),
                 ),
             )
             .child(
