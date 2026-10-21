@@ -18,19 +18,19 @@ use gpui_antd::{
     AntDropdownItem, AntEmpty, AntFlex, AntFloatAction, AntFloatButton, AntFloatButtonGroup,
     AntFooter, AntForm, AntFormItem, AntHeader, AntIcon, AntIconAssets, AntIconName, AntImage,
     AntInput, AntInputNumber, AntLayout, AntLink, AntList, AntListItem, AntListyItem, AntMasonry,
-    AntMasonryItem, AntMentionOption, AntMentions, AntMenu, AntMenuItem, AntMenuMode, AntMessage,
-    AntMobileDrawer, AntModal, AntNotification, AntPagination, AntParagraph, AntPopconfirm,
-    AntPopover, AntProgress, AntQrCode, AntRadio, AntRadioGroup, AntRate, AntResolvedToken,
-    AntResult, AntRow, AntSegmented, AntSegmentedOption, AntSelect, AntSider, AntSkeleton,
-    AntSlider, AntSpace, AntSpin, AntSplitter, AntStatistic, AntStep, AntSteps, AntSwitch, AntTab,
-    AntTable, AntTableColumn, AntTableRow, AntTabs, AntTag, AntText, AntTheme, AntTimePicker,
-    AntTimeline, AntTimelineItem, AntTitle, AntTokenLayer, AntTokenValue, AntTooltip, AntTour,
-    AntTourStep, AntTransfer, AntTransferItem, AntTree, AntTreeNode, AntTreeSelect, AntTypography,
-    AntUpload, AntUploadFile, AntWatermark, AvatarShape, AvatarSize, ControlSize, DrawerPlacement,
-    FlexAlign, FlexJustify, FloatShape, FloatVariant, FormRule, FormSchema, GridBreakpoint,
-    InputStatus, InputVariant, ListSize, ListySlot, NoticeTone, ResultStatus, SpaceSize,
-    StepStatus, TableSort, TabsVariant, TextTone, TimelineMode, TimelineTone, Tone, UploadStatus,
-    ant_listy, apply_mention, listy_slots,
+    AntMasonryItem, AntMentionOption, AntMentions, AntMenu, AntMenuItem, AntMenuMode,
+    AntMenuTrigger, AntMessage, AntMobileDrawer, AntModal, AntNotification, AntPagination,
+    AntParagraph, AntPopconfirm, AntPopover, AntProgress, AntQrCode, AntRadio, AntRadioGroup,
+    AntRate, AntResolvedToken, AntResult, AntRow, AntSegmented, AntSegmentedOption, AntSelect,
+    AntSider, AntSkeleton, AntSlider, AntSpace, AntSpin, AntSplitter, AntStatistic, AntStep,
+    AntSteps, AntSwitch, AntTab, AntTable, AntTableColumn, AntTableRow, AntTabs, AntTag, AntText,
+    AntTheme, AntTimePicker, AntTimeline, AntTimelineItem, AntTitle, AntTokenLayer, AntTokenValue,
+    AntTooltip, AntTour, AntTourStep, AntTransfer, AntTransferItem, AntTree, AntTreeNode,
+    AntTreeSelect, AntTypography, AntUpload, AntUploadFile, AntWatermark, AvatarShape, AvatarSize,
+    ControlSize, DrawerPlacement, FlexAlign, FlexJustify, FloatShape, FloatVariant, FormRule,
+    FormSchema, GridBreakpoint, InputStatus, InputVariant, ListSize, ListySlot, NoticeTone,
+    ResultStatus, SpaceSize, StepStatus, TableSort, TabsVariant, TextTone, TimelineMode,
+    TimelineTone, Tone, UploadStatus, ant_listy, apply_mention, listy_slots,
 };
 #[cfg(target_family = "wasm")]
 use gpui_kit::App;
@@ -3832,7 +3832,17 @@ impl Gallery {
 
     /// Horizontal and vertical popup modes share real controlled GPUI state.
     /// Native Popup placement and keyboard focus belong to AntMenu itself.
-    fn menu_modes_demo(&self, t: AntTheme, cx: &mut Context<Self>) -> gpui_kit::AnyElement {
+    fn menu_modes_demo(
+        &self,
+        t: AntTheme,
+        hover: bool,
+        cx: &mut Context<Self>,
+    ) -> gpui_kit::AnyElement {
+        let trigger = if hover {
+            AntMenuTrigger::Hover
+        } else {
+            AntMenuTrigger::Click
+        };
         let select_top = cx.listener(|this, key: &SharedString, _, cx| {
             this.menu_selected = key.to_string();
             cx.notify();
@@ -3866,13 +3876,20 @@ impl Gallery {
             .flex_col()
             .gap(px(18.))
             .child(label(
-                "Horizontal · Left/Right rove, Down opens submenu, Escape dismisses",
+                if hover {
+                    "Hover to open · 160 ms open, 250 ms close grace · Escape dismisses"
+                } else {
+                    "Horizontal · Left/Right rove, Down opens submenu, Escape dismisses"
+                },
                 t,
             ))
             .child(
                 AntMenu::new("top-horizontal-nav")
                     .theme(t)
                     .mode(AntMenuMode::Horizontal)
+                    .submenu_trigger(trigger)
+                    .submenu_open_delay(std::time::Duration::from_millis(160))
+                    .submenu_close_delay(std::time::Duration::from_millis(250))
                     .selected_key(self.menu_selected.clone())
                     .open_keys(self.menu_open_keys.iter())
                     .on_select(move |key, window, cx| select_top(&key, window, cx))
@@ -3904,6 +3921,9 @@ impl Gallery {
                     AntMenu::new("vertical-popup-nav")
                         .theme(t)
                         .mode(AntMenuMode::Vertical)
+                        .submenu_trigger(trigger)
+                        .submenu_open_delay(std::time::Duration::from_millis(160))
+                        .submenu_close_delay(std::time::Duration::from_millis(250))
                         .selected_key(self.menu_selected.clone())
                         .open_keys(self.menu_open_keys.iter())
                         .on_select(move |key, window, cx| select_side(&key, window, cx))
@@ -4573,7 +4593,8 @@ impl Render for Gallery {
             "Menu" => self.menu_demo(t, cx),
             "MenuTree" => self.menu_tree_demo(t, cx),
             "MenuCollapsed" => self.menu_collapsed_demo(t, cx),
-            "MenuModes" => self.menu_modes_demo(t, cx),
+            "MenuModes" => self.menu_modes_demo(t, false, cx),
+            "MenuHover" => self.menu_modes_demo(t, true, cx),
             "Dropdown" => self.dropdown_demo(t, cx),
             "Popover" => self.popover_demo(t, cx),
             "Modal" => self.modal_demo(t, cx),
