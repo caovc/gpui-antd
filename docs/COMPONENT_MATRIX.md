@@ -47,7 +47,7 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | InputNumber | Persistent GPUI Kit numeric state, stacked stepper buttons, placeholder synchronization, 0..100 bounds and decimal steps, status/size/disabled tokens | Precision/formats beyond Kit, exact Ant Design stepper placement, dedicated formatter/parser facade |
 | Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls, caller-supplied track marks | Range keyboard thumbs, drag tooltip, custom handle formatting |
 | Segmented | Controlled selection, disabled options, official icon slots, Arrow/Home/End roving focus, block and size | Animated selection indicator and more exact Ant CSS geometry |
-| TimePicker | Persistent native segmented editor plus scrollable hour/minute/second and AM/PM popup columns, keyboard edit, status/disabled | Auto-scroll to selected time, presets, clear/null semantics, range selection, localization |
+| TimePicker | Persistent native segmented editor plus scrollable hour/minute/second and AM/PM popup columns, scroll-to-selected rows, keyboard edit, status/disabled | Presets, clear/null semantics, range selection, localization |
 | AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Anchored collision-aware popover (current panel is inline), outside click close, full ARIA combobox, virtualization |
 
 DatePicker retains Kit's calendar/preset panel and datetime editor so the
@@ -75,6 +75,12 @@ Browser smoke additionally checks Cascader, ColorPicker, TreeSelect, Image and
 Tour panel pixels below the trigger, Escape and outside dismissal in light and
 dark themes. These checks establish working native overlays, not full Ant
 Design screenshot parity, keyboard list navigation or a screen-reader audit.
+
+Dropdown, Popover and Popconfirm expose `.placement(OverlayPlacement)` for
+`BottomLeft` (default), `BottomRight`, `TopLeft` and `TopRight`. Tooltip uses
+`TooltipPlacement` with those four corner alignments plus `Top` (default),
+`Bottom`, `Left` and `Right`. Kit resolves collisions; other Ant Design
+placement/arrow variants and keyboard-focus tooltip activation remain open.
 
 ## Wave 3: feedback and enterprise display foundations
 
