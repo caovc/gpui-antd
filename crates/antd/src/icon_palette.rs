@@ -46,7 +46,9 @@ pub(crate) fn normalize_two_tone_svg(bytes: &[u8]) -> Vec<u8> {
     let mut cursor = 0;
     while let Some(relative) = svg[cursor..].find("<path") {
         let start = cursor + relative;
-        let Some(close) = svg[start..].find('>') else { break; };
+        let Some(close) = svg[start..].find('>') else {
+            break;
+        };
         let end = start + close + 1;
         normalized.push_str(&svg[cursor..start]);
         let tag = &svg[start..end];
@@ -141,7 +143,10 @@ pub(crate) fn recolor_svg(svg: &[u8], primary: &str, secondary: &str) -> Vec<u8>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AntIconAssets, AntIconName, tokens::{AntTheme, color}};
+    use crate::{
+        AntIconAssets, AntIconName,
+        tokens::{AntTheme, color},
+    };
     use gpui_kit::AssetSource as _;
 
     #[test]
@@ -167,7 +172,11 @@ mod tests {
     #[test]
     fn split_color_layers_preserve_shapes_for_the_full_catalog() {
         let source = AntIconAssets;
-        for name in AntIconName::ALL.iter().copied().filter(|name| name.style() == "twotone") {
+        for name in AntIconName::ALL
+            .iter()
+            .copied()
+            .filter(|name| name.style() == "twotone")
+        {
             let original = source.load(name.path()).unwrap().unwrap();
             for layer in [TwoToneLayer::Primary, TwoToneLayer::Secondary] {
                 let key = layer_asset_key(name.path(), layer);
@@ -186,10 +195,13 @@ mod tests {
                 if old_svg.contains(other) {
                     assert!(svg.contains("fill=\"none\""), "{key}");
                 }
-                assert!(!svg.contains(match layer {
-                    TwoToneLayer::Primary => r##"fill="#e6f4ff""##,
-                    TwoToneLayer::Secondary => r##"fill="#1677ff""##,
-                }), "{key}");
+                assert!(
+                    !svg.contains(match layer {
+                        TwoToneLayer::Primary => r##"fill="#e6f4ff""##,
+                        TwoToneLayer::Secondary => r##"fill="#1677ff""##,
+                    }),
+                    "{key}"
+                );
                 assert!(data.len() <= original.len() + 50, "{key}");
             }
         }
@@ -225,7 +237,11 @@ mod tests {
         let custom_secondary = color(0xf6ffed);
         let mut two_tone_count = 0;
 
-        for name in AntIconName::ALL.iter().copied().filter(|name| name.style() == "twotone") {
+        for name in AntIconName::ALL
+            .iter()
+            .copied()
+            .filter(|name| name.style() == "twotone")
+        {
             two_tone_count += 1;
             for key in [
                 name.path().to_owned(),
@@ -256,11 +272,17 @@ mod tests {
             assert!(svg.contains(r##"fill="#111d2cff""##), "{key}");
             assert!(!svg.contains(r##"fill="#e6f4ff""##), "{key}");
         }
-        assert!(source.load(
-            "antd-icons/twotone/check-circle.svg?primary=green&secondary=red"
-        ).unwrap().is_none());
-        assert!(source.load(
-            "antd-icons/twotone/missing.svg?primary=1668dcff&secondary=111d2cff"
-        ).unwrap().is_none());
+        assert!(
+            source
+                .load("antd-icons/twotone/check-circle.svg?primary=green&secondary=red")
+                .unwrap()
+                .is_none()
+        );
+        assert!(
+            source
+                .load("antd-icons/twotone/missing.svg?primary=1668dcff&secondary=111d2cff")
+                .unwrap()
+                .is_none()
+        );
     }
 }

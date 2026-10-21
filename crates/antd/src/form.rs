@@ -4,13 +4,13 @@
 //! `AntForm` and `AntFormItem` draw GPUI controls; applications own field
 //! state and send values to `FormSchema::validate` on change or submission.
 
-use std::collections::BTreeMap;
-use gpui_kit::{
-    AnyElement, App, IntoElement, ParentElement as _, RenderOnce,
-    SharedString, Styled as _, Window, div, px,
-};
-use gpui_kit::prelude::FluentBuilder as _;
 use crate::AntTheme;
+use gpui_kit::prelude::FluentBuilder as _;
+use gpui_kit::{
+    AnyElement, App, IntoElement, ParentElement as _, RenderOnce, SharedString, Styled as _,
+    Window, div, px,
+};
+use std::collections::BTreeMap;
 
 /// Simple, deterministic validation rules; optional empty fields do not
 /// trigger rules other than Required.
@@ -44,7 +44,9 @@ pub struct FormValidation {
 }
 
 impl FormValidation {
-    pub fn is_valid(&self) -> bool { self.errors.is_empty() }
+    pub fn is_valid(&self) -> bool {
+        self.errors.is_empty()
+    }
     pub fn message(&self, field: &str) -> Option<&str> {
         self.errors.get(field).map(String::as_str)
     }
@@ -55,16 +57,22 @@ fn email_shape_valid(input: &str) -> bool {
     if input.bytes().any(|c| c.is_ascii_whitespace()) {
         return false;
     }
-    let Some((local, domain)) = input.split_once('@') else { return false; };
+    let Some((local, domain)) = input.split_once('@') else {
+        return false;
+    };
     if local.is_empty() || domain.is_empty() || domain.contains('@') {
         return false;
     }
-    let Some((host, suffix)) = domain.rsplit_once('.') else { return false; };
+    let Some((host, suffix)) = domain.rsplit_once('.') else {
+        return false;
+    };
     !host.is_empty() && suffix.len() >= 2 && !suffix.starts_with('-')
 }
 
 impl FormSchema {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     pub fn field(
         mut self,
@@ -83,18 +91,28 @@ impl FormSchema {
     pub fn validate(&self, values: &BTreeMap<String, String>) -> FormValidation {
         let mut errors = BTreeMap::new();
         for field in &self.fields {
-            let value = values.get(&field.name).map(String::as_str).unwrap_or("").trim();
+            let value = values
+                .get(&field.name)
+                .map(String::as_str)
+                .unwrap_or("")
+                .trim();
             for rule in &field.rules {
                 let error = match rule {
                     FormRule::Required if value.is_empty() => {
                         Some(format!("Please enter {}", field.label))
                     }
-                    FormRule::MinLength(min) if !value.is_empty() && value.chars().count() < *min => {
-                        Some(format!("{} must contain at least {} characters", field.label, min))
+                    FormRule::MinLength(min)
+                        if !value.is_empty() && value.chars().count() < *min =>
+                    {
+                        Some(format!(
+                            "{} must contain at least {} characters",
+                            field.label, min
+                        ))
                     }
-                    FormRule::MaxLength(max) if value.chars().count() > *max => {
-                        Some(format!("{} must contain at most {} characters", field.label, max))
-                    }
+                    FormRule::MaxLength(max) if value.chars().count() > *max => Some(format!(
+                        "{} must contain at most {} characters",
+                        field.label, max
+                    )),
                     FormRule::Email if !value.is_empty() && !email_shape_valid(value) => {
                         Some(format!("Enter a valid {}", field.label))
                     }
@@ -124,21 +142,41 @@ pub struct AntForm {
     gap: f32,
     theme: AntTheme,
 }
-impl Default for AntForm { fn default() -> Self { Self::new() } }
+impl Default for AntForm {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl AntForm {
     pub fn new() -> Self {
-        Self { children: Vec::new(), gap: 18.0, theme: AntTheme::default() }
+        Self {
+            children: Vec::new(),
+            gap: 18.0,
+            theme: AntTheme::default(),
+        }
     }
-    pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
-    pub fn gap(mut self, value: f32) -> Self { self.gap = value.max(0.); self }
+    pub fn theme(mut self, theme: AntTheme) -> Self {
+        self.theme = theme;
+        self
+    }
+    pub fn gap(mut self, value: f32) -> Self {
+        self.gap = value.max(0.);
+        self
+    }
     pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_any_element()); self
+        self.children.push(child.into_any_element());
+        self
     }
 }
 impl RenderOnce for AntForm {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        div().w_full().flex().flex_col().gap(px(self.gap))
-            .text_color(self.theme.text).children(self.children)
+        div()
+            .w_full()
+            .flex()
+            .flex_col()
+            .gap(px(self.gap))
+            .text_color(self.theme.text)
+            .children(self.children)
     }
 }
 
@@ -155,38 +193,66 @@ pub struct AntFormItem {
 }
 impl AntFormItem {
     pub fn new(label: impl Into<SharedString>) -> Self {
-        Self { label: label.into(), required: false, help: None,
-            error: None, children: Vec::new(), theme: AntTheme::default() }
+        Self {
+            label: label.into(),
+            required: false,
+            help: None,
+            error: None,
+            children: Vec::new(),
+            theme: AntTheme::default(),
+        }
     }
-    pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
-    pub fn required(mut self, yes: bool) -> Self { self.required = yes; self }
+    pub fn theme(mut self, theme: AntTheme) -> Self {
+        self.theme = theme;
+        self
+    }
+    pub fn required(mut self, yes: bool) -> Self {
+        self.required = yes;
+        self
+    }
     pub fn help(mut self, help: impl Into<SharedString>) -> Self {
-        self.help = Some(help.into()); self
+        self.help = Some(help.into());
+        self
     }
     pub fn error(mut self, error: Option<SharedString>) -> Self {
-        self.error = error; self
+        self.error = error;
+        self
     }
     pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_any_element()); self
+        self.children.push(child.into_any_element());
+        self
     }
 }
 impl RenderOnce for AntFormItem {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
         let t = self.theme;
-        let label = div().flex().items_center().gap(px(4.))
-            .text_color(t.text).text_size(px(14.))
+        let label = div()
+            .flex()
+            .items_center()
+            .gap(px(4.))
+            .text_color(t.text)
+            .text_size(px(14.))
             .child(self.label)
-            .when(self.required, |this| this.child(
-                div().text_color(t.error).child("*")
-            ));
-        div().flex().flex_col().w_full().gap(px(7.))
+            .when(self.required, |this| {
+                this.child(div().text_color(t.error).child("*"))
+            });
+        div()
+            .flex()
+            .flex_col()
+            .w_full()
+            .gap(px(7.))
             .child(label)
             .children(self.children)
             .when_some(self.error, |this, error| {
                 this.child(div().text_size(px(12.)).text_color(t.error).child(error))
             })
             .when_some(self.help, |this, help| {
-                this.child(div().text_size(px(12.)).text_color(t.text_secondary).child(help))
+                this.child(
+                    div()
+                        .text_size(px(12.))
+                        .text_color(t.text_secondary)
+                        .child(help),
+                )
             })
     }
 }
@@ -196,14 +262,23 @@ mod tests {
     use super::*;
 
     fn values(entries: &[(&str, &str)]) -> BTreeMap<String, String> {
-        entries.iter().map(|(k, v)| ((*k).to_string(), (*v).to_string())).collect()
+        entries
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+            .collect()
     }
 
     #[test]
     fn required_is_checked_even_when_field_missing() {
         let schema = FormSchema::new().field("name", "name", [FormRule::Required]);
-        assert_eq!(schema.validate(&values(&[])).message("name"), Some("Please enter name"));
-        assert_eq!(schema.validate(&values(&[("name", "   ")])).is_valid(), false);
+        assert_eq!(
+            schema.validate(&values(&[])).message("name"),
+            Some("Please enter name")
+        );
+        assert_eq!(
+            schema.validate(&values(&[("name", "   ")])).is_valid(),
+            false
+        );
         assert!(schema.validate(&values(&[("name", "Jane")])).is_valid());
     }
 
@@ -224,10 +299,26 @@ mod tests {
 
     #[test]
     fn email_format_is_conservative() {
-        let schema = FormSchema::new().field("email", "Email", [FormRule::Required, FormRule::Email]);
-        assert!(schema.validate(&values(&[("email", "hello@example.com")])).is_valid());
-        for invalid in ["hello", "x@", "a@@example.com", "x@host", "x@.com", "x@foo.c"] {
-            assert!(!schema.validate(&values(&[("email", invalid)])).is_valid(), "{}", invalid);
+        let schema =
+            FormSchema::new().field("email", "Email", [FormRule::Required, FormRule::Email]);
+        assert!(
+            schema
+                .validate(&values(&[("email", "hello@example.com")]))
+                .is_valid()
+        );
+        for invalid in [
+            "hello",
+            "x@",
+            "a@@example.com",
+            "x@host",
+            "x@.com",
+            "x@foo.c",
+        ] {
+            assert!(
+                !schema.validate(&values(&[("email", invalid)])).is_valid(),
+                "{}",
+                invalid
+            );
         }
     }
 
@@ -235,18 +326,40 @@ mod tests {
     fn field_equality_and_maximum_length() {
         let schema = FormSchema::new()
             .field("password", "Password", [FormRule::MaxLength(8)])
-            .field("confirmation", "Confirmation",
-                [FormRule::Required, FormRule::EqualsField("password".into())]);
-        assert!(schema.validate(&values(&[("password", "welcome"), ("confirmation", "welcome")])).is_valid());
-        assert!(!schema.validate(&values(&[("password", "longpassword"), ("confirmation", "wrong")])).is_valid());
+            .field(
+                "confirmation",
+                "Confirmation",
+                [FormRule::Required, FormRule::EqualsField("password".into())],
+            );
+        assert!(
+            schema
+                .validate(&values(&[
+                    ("password", "welcome"),
+                    ("confirmation", "welcome")
+                ]))
+                .is_valid()
+        );
+        assert!(
+            !schema
+                .validate(&values(&[
+                    ("password", "longpassword"),
+                    ("confirmation", "wrong")
+                ]))
+                .is_valid()
+        );
     }
 
     #[test]
     fn first_failing_rule_wins() {
-        let schema = FormSchema::new().field("name", "Name",
-            [FormRule::Required, FormRule::MinLength(4)]);
-        assert_eq!(schema.validate(&values(&[])).message("name"), Some("Please enter Name"));
-        assert_eq!(schema.validate(&values(&[("name", "Hi")])).message("name"),
-            Some("Name must contain at least 4 characters"));
+        let schema =
+            FormSchema::new().field("name", "Name", [FormRule::Required, FormRule::MinLength(4)]);
+        assert_eq!(
+            schema.validate(&values(&[])).message("name"),
+            Some("Please enter Name")
+        );
+        assert_eq!(
+            schema.validate(&values(&[("name", "Hi")])).message("name"),
+            Some("Name must contain at least 4 characters")
+        );
     }
 }

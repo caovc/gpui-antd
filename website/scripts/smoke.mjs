@@ -272,7 +272,7 @@ try {
     { name: 'Layout', x: 98, y: 500, minChanged: 12000, minOutside: 8000 },
   ];
 
-  const changedPixels = async (page, beforePng, afterPng, viewportWidth=900) => page.evaluate(async ({before,after,viewportWidth}) => {
+  const changedPixels = async (page, beforePng, afterPng, viewportWidth=900, triggerArea={right:220,bottom:112}) => page.evaluate(async ({before,after,viewportWidth,triggerArea}) => {
     async function decode(base64) {
       const binary = atob(base64);
       const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
@@ -293,13 +293,12 @@ try {
           Math.abs(a[i+2]-b[i+2])>35) {
         total++;
         const pixel=i/4, x=pixel%viewportWidth, y=Math.floor(pixel/viewportWidth);
-        // All four popup triggers live in the top-left area of the canvas.
-        // Require change OUTSIDE that button area to reject hover/focus-only.
-        if (x>220 || y>112) outside++;
+        // Exclude the actual trigger area to reject hover/focus-only changes.
+        if (x>triggerArea.right || y>triggerArea.bottom) outside++;
       }
     }
     return {total,outside};
-  }, {before:beforePng.toString('base64'),after:afterPng.toString('base64'),viewportWidth});
+  }, {before:beforePng.toString('base64'),after:afterPng.toString('base64'),viewportWidth,triggerArea});
 
   // Exercise a real GPUI two-color spinning SVG at 2x device scale.
   // Neither colored DOM controls nor a nonempty canvas count as proof.
@@ -338,6 +337,72 @@ try {
     console.error('FAIL: TwoTone 2x animation',String(error));
   } finally {
     await spinning.close();
+  }
+
+  // Catalog panels must paint outside their real Rust triggers and dismiss
+  // through Kit. Exercise both palettes; these are GPUI canvas pixels.
+  for (const dark of [false, true]) {
+    for (const spec of [
+      {name:'Cascader',initialOpen:true,bottom:56},
+      {name:'ColorPicker',bottom:56},
+      {name:'TreeSelect',bottom:56},
+      {name:'Image',bottom:164},
+      {name:'Tour',initialOpen:true,bottom:58},
+    ]) {
+      const page=await browser.newPage({viewport:{width:900,height:550}});
+      const errors=[];
+      page.on('pageerror',error=>errors.push(error.message));
+      page.on('console',message=>{
+        if(message.type()==='error' && message.text().trim()!=='Wasm assets loading, will be available soon...')
+          errors.push(message.text());
+      });
+      try {
+        const url=base+'demo.html?component='+spec.name+'&dark='+(dark?'1':'0');
+        const ready=async()=>{
+          await page.goto(url,{waitUntil:'domcontentloaded'});
+          await page.waitForFunction(()=>document.querySelector('canvas')&&!document.querySelector('#status'),null,{timeout:60000});
+          await page.waitForTimeout(600);
+        };
+        await ready();
+        let opened;
+        if(spec.initialOpen) opened=await page.screenshot();
+        await page.keyboard.press('Escape');
+        await page.mouse.move(880,530);
+        await page.waitForTimeout(300);
+        const closed=await page.screenshot();
+        if(!spec.initialOpen) {
+          await page.mouse.click(40,40);
+          await page.mouse.move(880,530);
+          await page.waitForTimeout(400);
+          opened=await page.screenshot();
+        }
+        const area={right:876,bottom:spec.bottom};
+        const delta=await changedPixels(page,closed,opened,900,area);
+        if(delta.outside<200)throw Error('No panel pixels below trigger: '+JSON.stringify(delta));
+        // For initially open demos, reload instead of assuming the Tour
+        // close-only callback can request a new controlled session.
+        if(spec.initialOpen) await ready();
+        await page.keyboard.press('Escape');
+        await page.waitForTimeout(350);
+        const escaped=await page.screenshot({path:join(screenshots,spec.name.toLowerCase()+'-catalog-escape'+(dark?'-dark':'')+'.png')});
+        const residual=await changedPixels(page,closed,escaped,900,area);
+        if(residual.outside>delta.outside*0.3+80)throw Error('Escape left panel pixels: '+JSON.stringify(residual));
+        if(spec.initialOpen) await ready();
+        else {
+          await page.mouse.click(40,40);
+          await page.waitForTimeout(300);
+        }
+        await page.mouse.click(880,530);
+        await page.waitForTimeout(350);
+        const outside=await changedPixels(page,closed,await page.screenshot(),900,area);
+        if(outside.outside>delta.outside*0.3+80)throw Error('Outside click left panel pixels: '+JSON.stringify(outside));
+        if(errors.length)throw Error(errors.join('; '));
+        console.log('PASS: '+spec.name+(dark?' dark':'')+' GPUI panel below trigger, Escape and outside dismissal');
+      } catch(error) {
+        failures++;
+        console.error('FAIL: catalog '+spec.name+(dark?' dark':''),String(error));
+      } finally { await page.close(); }
+    }
   }
 
   for (const spec of interactions) {
@@ -789,13 +854,16 @@ try {
     await flyout.mouse.move(625,480);
     await flyout.waitForTimeout(650);
     const opened=await flyout.screenshot({path:join(screenshots,'menu-collapsed-open.png')});
-    const delta=await changedPixels(flyout,before,opened,660);
+    // The collapsed rail ends at x=100. The usual top-left button exclusion
+    // (x<=220, y<=112) masks most of this right-hand popup, including its title.
+    const railArea={right:100,bottom:238};
+    const delta=await changedPixels(flyout,before,opened,660,railArea);
     if(delta.total<3500||delta.outside<2500)
       throw new Error('Collapsed native flyout not visible: '+JSON.stringify(delta));
     await flyout.keyboard.press('Escape');
     await flyout.waitForTimeout(470);
     const closed=await flyout.screenshot({path:join(screenshots,'menu-collapsed-escape-closed.png')});
-    const residual=await changedPixels(flyout,before,closed,660);
+    const residual=await changedPixels(flyout,before,closed,660,railArea);
     if(residual.total>delta.total*0.5+1200)
       throw new Error('Collapsed flyout failed native Escape dismissal: '+JSON.stringify(residual));
     if(flyoutErrors.length)throw new Error(flyoutErrors.join('; '));

@@ -4,15 +4,15 @@
 //! accessibility position, a single Tab stop, and arrow/Home/End navigation.
 //! Disabled items are skipped. The same Rust renderer works in GPUI Web.
 
-use std::rc::Rc;
-use gpui_kit::{
-    App, Axis, ElementId, FocusHandle, InteractiveElement as _, IntoElement,
-    KeyDownEvent, ParentElement as _, RenderOnce, SharedString,
-    StatefulInteractiveElement as _, Styled as _, Window, div, px,
-};
+use crate::{AntTheme, ControlSize, color};
 use gpui_kit::base::{Radio as BaseRadio, RadioGroup as BaseRadioGroup, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
-use crate::{AntTheme, ControlSize, color};
+use gpui_kit::{
+    App, Axis, ElementId, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
+    ParentElement as _, RenderOnce, SharedString, StatefulInteractiveElement as _, Styled as _,
+    Window, div, px,
+};
+use std::rc::Rc;
 
 type RadioChange = Rc<dyn Fn(bool, &mut Window, &mut App)>;
 type GroupChange = Rc<dyn Fn(usize, &mut Window, &mut App)>;
@@ -49,12 +49,30 @@ impl AntRadio {
         }
     }
 
-    pub fn checked(mut self, checked: bool) -> Self { self.checked = checked; self }
-    pub fn disabled(mut self, disabled: bool) -> Self { self.disabled = disabled; self }
-    pub fn button_style(mut self, button: bool) -> Self { self.button = button; self }
-    pub fn size(mut self, size: ControlSize) -> Self { self.size = size; self }
-    pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
-    pub fn tab_stop(mut self, enabled: bool) -> Self { self.tab_stop = enabled; self }
+    pub fn checked(mut self, checked: bool) -> Self {
+        self.checked = checked;
+        self
+    }
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+    pub fn button_style(mut self, button: bool) -> Self {
+        self.button = button;
+        self
+    }
+    pub fn size(mut self, size: ControlSize) -> Self {
+        self.size = size;
+        self
+    }
+    pub fn theme(mut self, theme: AntTheme) -> Self {
+        self.theme = theme;
+        self
+    }
+    pub fn tab_stop(mut self, enabled: bool) -> Self {
+        self.tab_stop = enabled;
+        self
+    }
     pub fn position(mut self, position: usize, size: usize) -> Self {
         self.position = Some((position, size));
         self
@@ -69,14 +87,21 @@ impl RenderOnce for AntRadio {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let focus = window
             .use_keyed_state(self.id.clone(), cx, |_, cx| cx.focus_handle())
-            .read(cx).clone();
+            .read(cx)
+            .clone();
         let focused = focus.is_focused(window);
         let t = self.theme;
         let checked = self.checked;
         let disabled = self.disabled;
         let button = self.button;
         let height = self.size.height();
-        let outer_bg = if disabled { t.disabled_bg } else if button && checked { t.primary } else { t.surface };
+        let outer_bg = if disabled {
+            t.disabled_bg
+        } else if button && checked {
+            t.primary
+        } else {
+            t.surface
+        };
         let foreground = if disabled {
             t.disabled_text
         } else if button && checked {
@@ -91,13 +116,14 @@ impl RenderOnce for AntRadio {
             .border_1()
             .border_color(if disabled { t.disabled_text } else { border })
             .bg(if disabled { t.disabled_bg } else { t.surface })
-            .flex().items_center().justify_center()
-            .child(
-                div()
-                    .size(px(8.))
-                    .rounded_full()
-                    .bg(if checked { t.primary } else { t.surface })
-            );
+            .flex()
+            .items_center()
+            .justify_center()
+            .child(div().size(px(8.)).rounded_full().bg(if checked {
+                t.primary
+            } else {
+                t.surface
+            }));
 
         BaseRadio::new(self.id)
             .checked(checked)
@@ -105,17 +131,32 @@ impl RenderOnce for AntRadio {
             .accessibility_label(self.label.clone())
             .track_focus(&focus)
             .tab_stop(self.tab_stop)
-            .when_some(self.position, |radio, (index, count)| radio.set_position(index, count))
+            .when_some(self.position, |radio, (index, count)| {
+                radio.set_position(index, count)
+            })
             .flex()
             .items_center()
             .gap(px(if button { 0. } else { 8. }))
             .h(px(if button { height } else { height.max(28.) }))
-            .px(px(if button { self.size.horizontal_padding() } else { 0. }))
+            .px(px(if button {
+                self.size.horizontal_padding()
+            } else {
+                0.
+            }))
             .rounded(px(if button { t.border_radius } else { 4. }))
-            .when(button, |radio| radio.border_1().border_color(if focused { t.primary } else { border }).bg(outer_bg))
+            .when(button, |radio| {
+                radio
+                    .border_1()
+                    .border_color(if focused { t.primary } else { border })
+                    .bg(outer_bg)
+            })
             .when(!button && focused, |radio| radio.bg(t.info_bg))
             .when(!disabled, |radio| radio.cursor_pointer())
-            .text_size(px(if self.size == ControlSize::Large { 16. } else { 14. }))
+            .text_size(px(if self.size == ControlSize::Large {
+                16.
+            } else {
+                14.
+            }))
             .text_color(foreground)
             .when(!button, |radio| radio.child(indicator))
             .child(self.label)
@@ -134,8 +175,11 @@ pub fn next_enabled_index(enabled: &[bool], current: usize, forward: bool) -> Op
     let len = enabled.len();
     let current = current % len;
     for step in 1..=len {
-        let index = if forward { (current + step) % len }
-        else { (current + len - (step % len)) % len };
+        let index = if forward {
+            (current + step) % len
+        } else {
+            (current + len - (step % len)) % len
+        };
         if enabled[index] {
             return Some(index);
         }
@@ -165,27 +209,63 @@ pub struct AntRadioGroup {
 impl AntRadioGroup {
     pub fn new(id: impl Into<ElementId>) -> Self {
         Self {
-            id: id.into(), radios: Vec::new(), selected_index: None,
-            axis: Axis::Horizontal, disabled: false, button_style: false,
-            size: ControlSize::Middle, theme: AntTheme::default(),
-            label: None, on_change: None,
+            id: id.into(),
+            radios: Vec::new(),
+            selected_index: None,
+            axis: Axis::Horizontal,
+            disabled: false,
+            button_style: false,
+            size: ControlSize::Middle,
+            theme: AntTheme::default(),
+            label: None,
+            on_change: None,
         }
     }
-    pub fn horizontal(id: impl Into<ElementId>) -> Self { Self::new(id) }
-    pub fn vertical(id: impl Into<ElementId>) -> Self { Self::new(id).axis(Axis::Vertical) }
-    pub fn axis(mut self, axis: Axis) -> Self { self.axis = axis; self }
-    pub fn label(mut self, label: impl Into<SharedString>) -> Self { self.label = Some(label.into()); self }
-    pub fn child(mut self, radio: AntRadio) -> Self { self.radios.push(radio); self }
-    pub fn children(mut self, radios: impl IntoIterator<Item=AntRadio>) -> Self {
-        self.radios.extend(radios); self
+    pub fn horizontal(id: impl Into<ElementId>) -> Self {
+        Self::new(id)
     }
-    pub fn selected_index(mut self, index: Option<usize>) -> Self { self.selected_index = index; self }
-    pub fn disabled(mut self, disabled: bool) -> Self { self.disabled = disabled; self }
-    pub fn button_style(mut self, button: bool) -> Self { self.button_style = button; self }
-    pub fn size(mut self, size: ControlSize) -> Self { self.size = size; self }
-    pub fn theme(mut self, theme: AntTheme) -> Self { self.theme = theme; self }
+    pub fn vertical(id: impl Into<ElementId>) -> Self {
+        Self::new(id).axis(Axis::Vertical)
+    }
+    pub fn axis(mut self, axis: Axis) -> Self {
+        self.axis = axis;
+        self
+    }
+    pub fn label(mut self, label: impl Into<SharedString>) -> Self {
+        self.label = Some(label.into());
+        self
+    }
+    pub fn child(mut self, radio: AntRadio) -> Self {
+        self.radios.push(radio);
+        self
+    }
+    pub fn children(mut self, radios: impl IntoIterator<Item = AntRadio>) -> Self {
+        self.radios.extend(radios);
+        self
+    }
+    pub fn selected_index(mut self, index: Option<usize>) -> Self {
+        self.selected_index = index;
+        self
+    }
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+    pub fn button_style(mut self, button: bool) -> Self {
+        self.button_style = button;
+        self
+    }
+    pub fn size(mut self, size: ControlSize) -> Self {
+        self.size = size;
+        self
+    }
+    pub fn theme(mut self, theme: AntTheme) -> Self {
+        self.theme = theme;
+        self
+    }
     pub fn on_change(mut self, handler: impl Fn(usize, &mut Window, &mut App) + 'static) -> Self {
-        self.on_change = Some(Rc::new(handler)); self
+        self.on_change = Some(Rc::new(handler));
+        self
     }
 }
 
@@ -194,17 +274,31 @@ impl RenderOnce for AntRadioGroup {
         let selected = self.selected_index;
         let axis = self.axis;
         let total = self.radios.len();
-        let enabled: Vec<bool> = self.radios.iter().map(|radio| !radio.disabled && !self.disabled).collect();
+        let enabled: Vec<bool> = self
+            .radios
+            .iter()
+            .map(|radio| !radio.disabled && !self.disabled)
+            .collect();
         let first_enabled = enabled.iter().position(|enabled| *enabled);
-        let tab_index = selected.filter(|index| enabled.get(*index).copied().unwrap_or(false))
+        let tab_index = selected
+            .filter(|index| enabled.get(*index).copied().unwrap_or(false))
             .or(first_enabled);
-        let handles: Vec<FocusHandle> = self.radios.iter().map(|radio| {
-            window.use_keyed_state(radio.id.clone(), cx, |_, cx| cx.focus_handle())
-                .read(cx).clone()
-        }).collect();
-        let group_focus = window.use_keyed_state(self.id.clone(), cx, |_, cx| {
-            cx.focus_handle().tab_stop(false)
-        }).read(cx).clone();
+        let handles: Vec<FocusHandle> = self
+            .radios
+            .iter()
+            .map(|radio| {
+                window
+                    .use_keyed_state(radio.id.clone(), cx, |_, cx| cx.focus_handle())
+                    .read(cx)
+                    .clone()
+            })
+            .collect();
+        let group_focus = window
+            .use_keyed_state(self.id.clone(), cx, |_, cx| {
+                cx.focus_handle().tab_stop(false)
+            })
+            .read(cx)
+            .clone();
 
         let group_handler = self.on_change.clone();
         let keyboard_handler = self.on_change.clone();
@@ -212,7 +306,10 @@ impl RenderOnce for AntRadioGroup {
         let enabled_keys = enabled;
         let disabled = self.disabled;
         let on_keyboard = move |event: &KeyDownEvent, window: &mut Window, cx: &mut App| {
-            if disabled || event.keystroke.modifiers.modified() || event.keystroke.is_ime_in_progress() {
+            if disabled
+                || event.keystroke.modifiers.modified()
+                || event.keystroke.is_ime_in_progress()
+            {
                 return;
             }
             let direction = match event.keystroke.key.as_str() {
@@ -223,7 +320,9 @@ impl RenderOnce for AntRadioGroup {
                 _ => None,
             };
             let next = if let Some(forward) = direction {
-                let origin = focus_handles.iter().position(|handle| handle.is_focused(window))
+                let origin = focus_handles
+                    .iter()
+                    .position(|handle| handle.is_focused(window))
                     .or(selected)
                     .or_else(|| enabled_keys.iter().position(|enabled| *enabled))
                     .unwrap_or(0);
@@ -232,11 +331,15 @@ impl RenderOnce for AntRadioGroup {
                 enabled_keys.iter().position(|enabled| *enabled)
             } else if event.keystroke.key == "end" {
                 enabled_keys.iter().rposition(|enabled| *enabled)
-            } else { return };
+            } else {
+                return;
+            };
             if let Some(index) = next {
                 window.focus(&focus_handles[index], cx);
                 if selected != Some(index) {
-                    if let Some(listener) = &keyboard_handler { listener(index, window, cx); }
+                    if let Some(listener) = &keyboard_handler {
+                        listener(index, window, cx);
+                    }
                 }
                 window.prevent_default();
                 cx.stop_propagation();
@@ -267,7 +370,9 @@ impl RenderOnce for AntRadioGroup {
             .on_key_down(on_keyboard)
             .flex()
             .when(axis == Axis::Vertical, |group| group.flex_col())
-            .when(axis == Axis::Horizontal, |group| group.flex_wrap().items_center())
+            .when(axis == Axis::Horizontal, |group| {
+                group.flex_wrap().items_center()
+            })
             .gap(px(if self.button_style { 4. } else { 16. }))
             .children(radios)
     }

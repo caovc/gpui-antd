@@ -15,9 +15,9 @@ use gpui_kit::component::{
 };
 use gpui_kit::test::TestWindowExt;
 use gpui_kit::{
-    App, AppContext, Bounds, Context, Entity, IntoElement, ParentElement as _, Render, ScrollDelta,
-    SharedString, Styled as _, TestAppContext, Window, WindowBounds, WindowOptions, div, point, px,
-    size,
+    App, AppContext, Bounds, Context, Entity, Focusable as _, IntoElement, ParentElement as _,
+    Render, ScrollDelta, SharedString, Styled as _, TestAppContext, Window, WindowBounds,
+    WindowOptions, div, point, px, size,
 };
 use std::time::Duration;
 
@@ -435,7 +435,11 @@ impl Render for Tip {
 fn tooltip_side_matches_requested_placement(cx: &mut TestAppContext) {
     for placement in [
         TooltipPlacement::Top,
+        TooltipPlacement::TopLeft,
+        TooltipPlacement::TopRight,
         TooltipPlacement::Bottom,
+        TooltipPlacement::BottomLeft,
+        TooltipPlacement::BottomRight,
         TooltipPlacement::Left,
         TooltipPlacement::Right,
     ] {
@@ -457,12 +461,282 @@ fn tooltip_side_matches_requested_placement(cx: &mut TestAppContext) {
                 .find("ant-tooltip-text")
                 .bounds();
             match placement {
-                TooltipPlacement::Top => assert!(bubble.bottom() <= trigger.top()),
-                TooltipPlacement::Bottom => assert!(bubble.top() >= trigger.bottom()),
+                TooltipPlacement::Top | TooltipPlacement::TopLeft | TooltipPlacement::TopRight => {
+                    assert!(bubble.bottom() <= trigger.top());
+                }
+                TooltipPlacement::Bottom
+                | TooltipPlacement::BottomLeft
+                | TooltipPlacement::BottomRight => {
+                    assert!(bubble.top() >= trigger.bottom());
+                }
                 TooltipPlacement::Left => assert!(bubble.right() <= trigger.left()),
                 TooltipPlacement::Right => assert!(bubble.left() >= trigger.right()),
             }
         })
         .unwrap();
     }
+}
+
+struct CatalogPicker {
+    open: bool,
+    path: Vec<String>,
+    dark: bool,
+}
+impl Render for CatalogPicker {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        use gpui_antd::{AntCascader, AntCascaderOption};
+        let owner = cx.weak_entity();
+        let selection = owner.clone();
+        div()
+            .size_full()
+            .p_4()
+            .child(
+                AntCascader::new("catalog-cascader")
+                    .theme(if self.dark {
+                        AntTheme::dark()
+                    } else {
+                        AntTheme::light()
+                    })
+                    .open(self.open)
+                    .path(self.path.clone())
+                    .option(
+                        AntCascaderOption::new("province", "Province")
+                            .child(AntCascaderOption::new("city", "City"))
+                            .child(AntCascaderOption::new("disabled", "Disabled").disabled(true)),
+                    )
+                    .on_open_change(move |open, _, cx| {
+                        owner
+                            .update(cx, |view, cx| {
+                                view.open = open;
+                                cx.notify();
+                            })
+                            .unwrap();
+                    })
+                    .on_change(move |path, _, _, cx| {
+                        selection
+                            .update(cx, |view, cx| {
+                                view.path = path;
+                                cx.notify();
+                            })
+                            .unwrap();
+                    }),
+            )
+            .child(Button::new("outside").child("Outside"))
+    }
+}
+#[gpui_kit::test]
+fn cascader_places_below_trigger_selects_and_dismisses(cx: &mut TestAppContext) {
+    for dark in [false, true] {
+        let (handle, view) = open(cx, |_, cx| {
+            cx.new(|_| CatalogPicker {
+                open: false,
+                path: vec![],
+                dark,
+            })
+        });
+        cx.update_window(handle, |_, window, cx| {
+            window.render_frame(cx);
+            let trigger = "cascader-trigger-Name(\"catalog-cascader\")";
+            window.click(trigger, cx);
+            assert!(
+                window.find("cascader-0-province").bounds().top()
+                    >= window.find(trigger).bounds().bottom()
+            );
+            window.click("cascader-0-province", cx);
+            window.click("cascader-1-disabled", cx);
+            assert_eq!(view.read(cx).path, ["province"]);
+            window.click("cascader-1-city", cx);
+            assert_eq!(view.read(cx).path, ["province", "city"]);
+            assert!(!view.read(cx).open);
+            assert!(window.try_find("cascader-0-province").is_none());
+            window.click(trigger, cx);
+            window.press("escape", cx);
+            assert!(!view.read(cx).open);
+            window.click(trigger, cx);
+            window.click("outside", cx);
+            assert!(!view.read(cx).open);
+        })
+        .unwrap();
+    }
+}
+
+struct MentionField {
+    input: Entity<InputState>,
+    _subscription: gpui_kit::Subscription,
+}
+impl Render for MentionField {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        use gpui_antd::{AntInput, AntMentionOption, AntMentions};
+        let text = self.input.read(cx).value().to_string();
+        div()
+            .size_full()
+            .p_4()
+            .child(
+                AntMentions::new("mentions")
+                    .track_focus(&self.input.read(cx).focus_handle(cx))
+                    .text(text.clone(), text.len())
+                    .trigger(AntInput::new(&self.input))
+                    .option(AntMentionOption::new("ada", "Ada Lovelace")),
+            )
+            .child(Button::new("outside").child("Outside"))
+    }
+}
+#[gpui_kit::test]
+fn mentions_dismissal_survives_rerender_and_query_changes(cx: &mut TestAppContext) {
+    let (handle, view) = open(cx, |window, cx| {
+        cx.new(|cx| {
+            let input = cx.new(|cx| InputState::new(window, cx));
+            let subscription = cx.subscribe(
+                &input,
+                |_, _, _: &gpui_kit::component::input::InputEvent, cx| cx.notify(),
+            );
+            MentionField {
+                input,
+                _subscription: subscription,
+            }
+        })
+    });
+    cx.update_window(handle, |_, window, cx| {
+        view.read(cx)
+            .input
+            .clone()
+            .update(cx, |input, cx| input.set_value("@a", window, cx));
+        window.render_frame(cx);
+        assert!(window.find("mention-ada").visible());
+        window.press("escape", cx);
+        assert!(window.try_find("mention-ada").is_none());
+        view.update(cx, |_, cx| cx.notify());
+        window.render_frame(cx);
+        assert!(window.try_find("mention-ada").is_none());
+    })
+    .unwrap();
+    cx.update_window(handle, |_, window, cx| {
+        view.read(cx)
+            .input
+            .clone()
+            .update(cx, |input, cx| input.set_value("@ad", window, cx));
+        window.render_frame(cx);
+        assert!(window.find("mention-ada").visible());
+        window.click("outside", cx);
+        window.render_frame(cx);
+        assert!(window.try_find("mention-ada").is_none());
+    })
+    .unwrap();
+}
+
+#[gpui_kit::test]
+fn mentions_keeps_typing_in_the_editor_when_suggestions_open(cx: &mut TestAppContext) {
+    let (handle, view) = open(cx, |window, cx| {
+        cx.new(|cx| {
+            let input = cx.new(|cx| InputState::new(window, cx));
+            let subscription = cx.subscribe(
+                &input,
+                |_, _, _: &gpui_kit::component::input::InputEvent, cx| cx.notify(),
+            );
+            MentionField {
+                input,
+                _subscription: subscription,
+            }
+        })
+    });
+    cx.update_window(handle, |_, window, cx| {
+        window.render_frame(cx);
+        let id = ("input", view.read(cx).input.entity_id());
+        window.click(id, cx);
+        window.input("@", cx);
+        assert!(window.find("mention-ada").visible());
+        window.input("a", cx);
+        assert_eq!(view.read(cx).input.read(cx).value().as_ref(), "@a");
+        window.press("escape", cx);
+        assert!(window.try_find("mention-ada").is_none());
+        window.input("d", cx);
+        assert_eq!(view.read(cx).input.read(cx).value().as_ref(), "@ad");
+        assert!(window.find("mention-ada").visible());
+        window.press("escape", cx);
+        window.press("secondary-a", cx);
+        window.press("backspace", cx);
+        window.input("@ad", cx);
+        assert!(window.find("mention-ada").visible());
+    })
+    .unwrap();
+}
+
+struct TourCard {
+    open: bool,
+}
+impl Render for TourCard {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        use gpui_antd::{AntTour, AntTourStep};
+        div().size_full().child(
+            AntTour::new("tour")
+                .open(self.open)
+                .step(AntTourStep::new("Welcome", "First step")),
+        )
+    }
+}
+#[gpui_kit::test]
+fn targetless_tour_honors_parent_visibility(cx: &mut TestAppContext) {
+    let (handle, view) = open(cx, |_, cx| cx.new(|_| TourCard { open: false }));
+    cx.update_window(handle, |_, window, cx| {
+        window.render_frame(cx);
+        assert!(window.try_find("Name(\"tour\")-next").is_none());
+        view.update(cx, |view, cx| {
+            view.open = true;
+            cx.notify();
+        });
+        window.render_frame(cx);
+        assert!(window.find("Name(\"tour\")-next").visible());
+        view.update(cx, |view, cx| {
+            view.open = false;
+            cx.notify();
+        });
+        window.render_frame(cx);
+        assert!(window.try_find("Name(\"tour\")-next").is_none());
+    })
+    .unwrap();
+}
+
+struct CollapsedMenu {
+    open: bool,
+}
+impl Render for CollapsedMenu {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        use gpui_antd::{AntMenu, AntMenuItem};
+        let owner = cx.weak_entity();
+        div().size_full().p_4().child(
+            div().w(px(76.)).child(
+                AntMenu::new("rail")
+                    .inline_collapsed(true)
+                    .open_keys(if self.open { vec!["reports"] } else { vec![] })
+                    .item(
+                        AntMenuItem::submenu("reports", "Reports")
+                            .child(AntMenuItem::new("daily", "Daily report")),
+                    )
+                    .on_open_change(move |_, open, _, cx| {
+                        owner
+                            .update(cx, |view, cx| {
+                                view.open = open;
+                                cx.notify();
+                            })
+                            .unwrap();
+                    }),
+            ),
+        )
+    }
+}
+#[gpui_kit::test]
+fn collapsed_menu_flyout_is_right_of_rail_and_escape_closes(cx: &mut TestAppContext) {
+    let (handle, view) = open(cx, |_, cx| cx.new(|_| CollapsedMenu { open: false }));
+    cx.update_window(handle, |_, window, cx| {
+        window.render_frame(cx);
+        let trigger = "ant-menu-Name(\"rail\")-reports";
+        let child = "ant-menu-Name(\"ant-menu-flyout-list-Name(\\\"rail\\\")-reports\")-daily";
+        window.click(trigger, cx);
+        assert!(view.read(cx).open);
+        assert!(window.find(child).bounds().left() >= window.find(trigger).bounds().right());
+        window.press("escape", cx);
+        assert!(!view.read(cx).open);
+        assert!(window.try_find(child).is_none());
+    })
+    .unwrap();
 }

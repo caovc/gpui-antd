@@ -1,8 +1,8 @@
 //! Ant Design-inspired semantic color and geometry tokens.
 //! Defaults align with the familiar Ant Design 5/6 light palette.
 
-use gpui_kit::{Hsla, rgb};
 use crate::design_tokens::AntComponentTokens;
+use gpui_kit::{Hsla, rgb};
 
 /// GPUI paints in HSLA. Keeping a single conversion routine makes token
 /// expressions usable with `.bg`, `.border_color` and `.text_color`.
@@ -60,7 +60,9 @@ pub struct AntTheme {
 }
 
 impl Default for AntTheme {
-    fn default() -> Self { Self::light() }
+    fn default() -> Self {
+        Self::light()
+    }
 }
 
 impl AntTheme {

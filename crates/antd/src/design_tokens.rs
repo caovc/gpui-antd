@@ -6,60 +6,78 @@
 //! overrides are typed, copyable and retain their own namespace.
 //! Token scopes require explicit `.theme(theme)` until ConfigProvider ships.
 
-use gpui_kit::Hsla;
 use crate::tokens::{AntTheme, Appearance, color};
+use gpui_kit::Hsla;
 
 /// The four supported combinations of light/dark and regular/compact.
 /// These are approximate GPUI-native derivations, not the React JS algorithm.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum AntThemeAlgorithm {
-    #[default] Default,
+    #[default]
+    Default,
     Dark,
     Compact,
     DarkCompact,
 }
 impl AntThemeAlgorithm {
-    pub const fn is_dark(self)->bool { matches!(self,Self::Dark|Self::DarkCompact) }
-    pub const fn is_compact(self)->bool { matches!(self,Self::Compact|Self::DarkCompact) }
+    pub const fn is_dark(self) -> bool {
+        matches!(self, Self::Dark | Self::DarkCompact)
+    }
+    pub const fn is_compact(self) -> bool {
+        matches!(self, Self::Compact | Self::DarkCompact)
+    }
 }
 
 /// First-class Seed Tokens. Hex colors are RGB integers, not Hsla; this
 /// keeps theme configs reproducible and easy to serialize to Rust/JSON.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AntSeedTokens {
-    pub color_primary:u32,
-    pub color_success:u32,
-    pub color_warning:u32,
-    pub color_error:u32,
-    pub color_info:u32,
-    pub color_link:u32,
-    pub color_bg_base:u32,
-    pub color_text_base:u32,
-    pub control_height:f32,
-    pub border_radius:f32,
-    pub font_size:f32,
-    pub spacing_unit:f32,
-    pub motion:bool,
+    pub color_primary: u32,
+    pub color_success: u32,
+    pub color_warning: u32,
+    pub color_error: u32,
+    pub color_info: u32,
+    pub color_link: u32,
+    pub color_bg_base: u32,
+    pub color_text_base: u32,
+    pub control_height: f32,
+    pub border_radius: f32,
+    pub font_size: f32,
+    pub spacing_unit: f32,
+    pub motion: bool,
 }
 impl Default for AntSeedTokens {
-    fn default()->Self {
+    fn default() -> Self {
         Self {
-            color_primary:0x1677ff, color_success:0x52c41a,
-            color_warning:0xfaad14, color_error:0xff4d4f,
-            color_info:0x1677ff,color_link:0x1677ff,
-            color_bg_base:0xffffff,color_text_base:0x262626,
-            control_height:32.,border_radius:6.,font_size:14.,
-            spacing_unit:4.,motion:true,
+            color_primary: 0x1677ff,
+            color_success: 0x52c41a,
+            color_warning: 0xfaad14,
+            color_error: 0xff4d4f,
+            color_info: 0x1677ff,
+            color_link: 0x1677ff,
+            color_bg_base: 0xffffff,
+            color_text_base: 0x262626,
+            control_height: 32.,
+            border_radius: 6.,
+            font_size: 14.,
+            spacing_unit: 4.,
+            motion: true,
         }
     }
 }
 impl AntSeedTokens {
-    pub fn dark()->Self {
-        Self { color_primary:0x1668dc,color_success:0x49aa19,
-            color_warning:0xd89614,color_error:0xdc4446,
-            color_info:0x1668dc,color_link:0x3c89e8,
-            color_bg_base:0x141414,color_text_base:0xf3f3f3,
-            ..Self::default() }
+    pub fn dark() -> Self {
+        Self {
+            color_primary: 0x1668dc,
+            color_success: 0x49aa19,
+            color_warning: 0xd89614,
+            color_error: 0xdc4446,
+            color_info: 0x1668dc,
+            color_link: 0x3c89e8,
+            color_bg_base: 0x141414,
+            color_text_base: 0xf3f3f3,
+            ..Self::default()
+        }
     }
 }
 
@@ -68,39 +86,64 @@ impl AntSeedTokens {
 /// Fields left None inherit resolved global Map/Alias tokens. The fields
 /// are shared shape values; consuming components only support the fields
 /// listed in their own API/compatibility documentation.
-#[derive(Clone,Copy,Debug,Default,PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct AntComponentToken {
-    pub color_primary:Option<Hsla>,
-    pub color_bg:Option<Hsla>,
-    pub color_text:Option<Hsla>,
-    pub color_border:Option<Hsla>,
-    pub color_bg_hover:Option<Hsla>,
-    pub color_bg_selected:Option<Hsla>,
-    pub color_header_bg:Option<Hsla>,
-    pub border_radius:Option<f32>,
-    pub control_height:Option<f32>,
-    pub font_size:Option<f32>,
-    pub padding:Option<f32>,
+    pub color_primary: Option<Hsla>,
+    pub color_bg: Option<Hsla>,
+    pub color_text: Option<Hsla>,
+    pub color_border: Option<Hsla>,
+    pub color_bg_hover: Option<Hsla>,
+    pub color_bg_selected: Option<Hsla>,
+    pub color_header_bg: Option<Hsla>,
+    pub border_radius: Option<f32>,
+    pub control_height: Option<f32>,
+    pub font_size: Option<f32>,
+    pub padding: Option<f32>,
 }
 impl AntComponentToken {
-    pub fn color_primary(mut self,value:Hsla)->Self{self.color_primary=Some(value);self}
-    pub fn color_bg(mut self,value:Hsla)->Self{self.color_bg=Some(value);self}
-    pub fn color_text(mut self,value:Hsla)->Self{self.color_text=Some(value);self}
-    pub fn color_border(mut self,value:Hsla)->Self{self.color_border=Some(value);self}
-    pub fn color_bg_hover(mut self,value:Hsla)->Self{self.color_bg_hover=Some(value);self}
-    pub fn color_bg_selected(mut self,value:Hsla)->Self{self.color_bg_selected=Some(value);self}
-    pub fn color_header_bg(mut self,value:Hsla)->Self{self.color_header_bg=Some(value);self}
-    pub fn border_radius(mut self,value:f32)->Self{
-        self.border_radius=Some(value.max(0.));self
+    pub fn color_primary(mut self, value: Hsla) -> Self {
+        self.color_primary = Some(value);
+        self
     }
-    pub fn control_height(mut self,value:f32)->Self{
-        self.control_height=Some(value.max(0.));self
+    pub fn color_bg(mut self, value: Hsla) -> Self {
+        self.color_bg = Some(value);
+        self
     }
-    pub fn font_size(mut self,value:f32)->Self{
-        self.font_size=Some(value.max(8.));self
+    pub fn color_text(mut self, value: Hsla) -> Self {
+        self.color_text = Some(value);
+        self
     }
-    pub fn padding(mut self,value:f32)->Self{
-        self.padding=Some(value.max(0.));self
+    pub fn color_border(mut self, value: Hsla) -> Self {
+        self.color_border = Some(value);
+        self
+    }
+    pub fn color_bg_hover(mut self, value: Hsla) -> Self {
+        self.color_bg_hover = Some(value);
+        self
+    }
+    pub fn color_bg_selected(mut self, value: Hsla) -> Self {
+        self.color_bg_selected = Some(value);
+        self
+    }
+    pub fn color_header_bg(mut self, value: Hsla) -> Self {
+        self.color_header_bg = Some(value);
+        self
+    }
+    pub fn border_radius(mut self, value: f32) -> Self {
+        self.border_radius = Some(value.max(0.));
+        self
+    }
+    pub fn control_height(mut self, value: f32) -> Self {
+        self.control_height = Some(value.max(0.));
+        self
+    }
+    pub fn font_size(mut self, value: f32) -> Self {
+        self.font_size = Some(value.max(8.));
+        self
+    }
+    pub fn padding(mut self, value: f32) -> Self {
+        self.padding = Some(value.max(0.));
+        self
     }
 }
 
@@ -108,54 +151,93 @@ impl AntComponentToken {
 ///
 /// Apply after `AntTheme::from_seed`; unspecified tokens retain algorithmic
 /// values. This is not the complete Ant Design MapToken schema.
-#[derive(Clone,Copy,Debug,Default,PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct AntMapTokenOverrides {
-    pub color_primary_hover:Option<Hsla>,
-    pub color_primary_active:Option<Hsla>,
-    pub color_primary_bg:Option<Hsla>,
-    pub color_primary_border:Option<Hsla>,
-    pub color_bg_elevated:Option<Hsla>,
-    pub color_bg_layout:Option<Hsla>,
-    pub control_height_sm:Option<f32>,
-    pub control_height_lg:Option<f32>,
+    pub color_primary_hover: Option<Hsla>,
+    pub color_primary_active: Option<Hsla>,
+    pub color_primary_bg: Option<Hsla>,
+    pub color_primary_border: Option<Hsla>,
+    pub color_bg_elevated: Option<Hsla>,
+    pub color_bg_layout: Option<Hsla>,
+    pub control_height_sm: Option<f32>,
+    pub control_height_lg: Option<f32>,
 }
 impl AntMapTokenOverrides {
-    pub fn color_primary_hover(mut self,v:Hsla)->Self{self.color_primary_hover=Some(v);self}
-    pub fn color_primary_active(mut self,v:Hsla)->Self{self.color_primary_active=Some(v);self}
-    pub fn color_primary_bg(mut self,v:Hsla)->Self{self.color_primary_bg=Some(v);self}
-    pub fn color_primary_border(mut self,v:Hsla)->Self{self.color_primary_border=Some(v);self}
-    pub fn color_bg_elevated(mut self,v:Hsla)->Self{self.color_bg_elevated=Some(v);self}
-    pub fn color_bg_layout(mut self,v:Hsla)->Self{self.color_bg_layout=Some(v);self}
-    pub fn control_height_sm(mut self,v:f32)->Self{
-        if v.is_finite(){self.control_height_sm=Some(v.clamp(18.,64.));}self
+    pub fn color_primary_hover(mut self, v: Hsla) -> Self {
+        self.color_primary_hover = Some(v);
+        self
     }
-    pub fn control_height_lg(mut self,v:f32)->Self{
-        if v.is_finite(){self.control_height_lg=Some(v.clamp(20.,72.));}self
+    pub fn color_primary_active(mut self, v: Hsla) -> Self {
+        self.color_primary_active = Some(v);
+        self
+    }
+    pub fn color_primary_bg(mut self, v: Hsla) -> Self {
+        self.color_primary_bg = Some(v);
+        self
+    }
+    pub fn color_primary_border(mut self, v: Hsla) -> Self {
+        self.color_primary_border = Some(v);
+        self
+    }
+    pub fn color_bg_elevated(mut self, v: Hsla) -> Self {
+        self.color_bg_elevated = Some(v);
+        self
+    }
+    pub fn color_bg_layout(mut self, v: Hsla) -> Self {
+        self.color_bg_layout = Some(v);
+        self
+    }
+    pub fn control_height_sm(mut self, v: f32) -> Self {
+        if v.is_finite() {
+            self.control_height_sm = Some(v.clamp(18., 64.));
+        }
+        self
+    }
+    pub fn control_height_lg(mut self, v: f32) -> Self {
+        if v.is_finite() {
+            self.control_height_lg = Some(v.clamp(20., 72.));
+        }
+        self
     }
 }
 
 /// Optional Alias Token overrides. Alias values are applied *after* the
 /// Map layer and before per-component overrides. Consumers use the resolved
 /// `AntTheme` fields so the same colors reach native and WASM components.
-#[derive(Clone,Copy,Debug,Default,PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct AntAliasTokenOverrides {
-    pub color_link:Option<Hsla>,
-    pub color_text_disabled:Option<Hsla>,
-    pub color_success:Option<Hsla>,
-    pub color_warning:Option<Hsla>,
-    pub color_error:Option<Hsla>,
+    pub color_link: Option<Hsla>,
+    pub color_text_disabled: Option<Hsla>,
+    pub color_success: Option<Hsla>,
+    pub color_warning: Option<Hsla>,
+    pub color_error: Option<Hsla>,
 }
 impl AntAliasTokenOverrides {
-    pub fn color_link(mut self,v:Hsla)->Self{self.color_link=Some(v);self}
-    pub fn color_text_disabled(mut self,v:Hsla)->Self{self.color_text_disabled=Some(v);self}
-    pub fn color_success(mut self,v:Hsla)->Self{self.color_success=Some(v);self}
-    pub fn color_warning(mut self,v:Hsla)->Self{self.color_warning=Some(v);self}
-    pub fn color_error(mut self,v:Hsla)->Self{self.color_error=Some(v);self}
+    pub fn color_link(mut self, v: Hsla) -> Self {
+        self.color_link = Some(v);
+        self
+    }
+    pub fn color_text_disabled(mut self, v: Hsla) -> Self {
+        self.color_text_disabled = Some(v);
+        self
+    }
+    pub fn color_success(mut self, v: Hsla) -> Self {
+        self.color_success = Some(v);
+        self
+    }
+    pub fn color_warning(mut self, v: Hsla) -> Self {
+        self.color_warning = Some(v);
+        self
+    }
+    pub fn color_error(mut self, v: Hsla) -> Self {
+        self.color_error = Some(v);
+        self
+    }
 }
 
 /// Public, stable Ant Design component token namespaces. Not all component
 /// overrides have connected styling yet; see the per-component parity map.
-#[derive(Clone,Copy,Debug,PartialEq,Eq,Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[repr(usize)]
 pub enum AntComponent {
     Button,
@@ -213,8 +295,62 @@ pub enum AntComponent {
     FloatButton,
 }
 impl AntComponent {
-    pub const ALL:[Self;53]=[Self::Button, Self::Input, Self::Select, Self::DatePicker, Self::Form, Self::Checkbox, Self::Radio, Self::Switch, Self::Tag, Self::Badge, Self::Alert, Self::Card, Self::Progress, Self::Divider, Self::Tabs, Self::Tooltip, Self::Icons, Self::Typography, Self::Space, Self::Flex, Self::Grid, Self::Layout, Self::Menu, Self::Dropdown, Self::Popover, Self::Modal, Self::Popconfirm, Self::Avatar, Self::Statistic, Self::Empty, Self::Breadcrumb, Self::Pagination, Self::Steps, Self::Rate, Self::Collapse, Self::Descriptions, Self::Result, Self::Skeleton, Self::Spin, Self::InputNumber, Self::Slider, Self::Segmented, Self::TimePicker, Self::AutoComplete, Self::Drawer, Self::Message, Self::Notification, Self::Tree, Self::Table, Self::Timeline, Self::List, Self::Calendar, Self::FloatButton];
-    pub const fn name(self)->&'static str {
+    pub const ALL: [Self; 53] = [
+        Self::Button,
+        Self::Input,
+        Self::Select,
+        Self::DatePicker,
+        Self::Form,
+        Self::Checkbox,
+        Self::Radio,
+        Self::Switch,
+        Self::Tag,
+        Self::Badge,
+        Self::Alert,
+        Self::Card,
+        Self::Progress,
+        Self::Divider,
+        Self::Tabs,
+        Self::Tooltip,
+        Self::Icons,
+        Self::Typography,
+        Self::Space,
+        Self::Flex,
+        Self::Grid,
+        Self::Layout,
+        Self::Menu,
+        Self::Dropdown,
+        Self::Popover,
+        Self::Modal,
+        Self::Popconfirm,
+        Self::Avatar,
+        Self::Statistic,
+        Self::Empty,
+        Self::Breadcrumb,
+        Self::Pagination,
+        Self::Steps,
+        Self::Rate,
+        Self::Collapse,
+        Self::Descriptions,
+        Self::Result,
+        Self::Skeleton,
+        Self::Spin,
+        Self::InputNumber,
+        Self::Slider,
+        Self::Segmented,
+        Self::TimePicker,
+        Self::AutoComplete,
+        Self::Drawer,
+        Self::Message,
+        Self::Notification,
+        Self::Tree,
+        Self::Table,
+        Self::Timeline,
+        Self::List,
+        Self::Calendar,
+        Self::FloatButton,
+    ];
+    pub const fn name(self) -> &'static str {
         match self {
             Self::Button => "Button",
             Self::Input => "Input",
@@ -271,7 +407,7 @@ impl AntComponent {
             Self::FloatButton => "FloatButton",
         }
     }
-    pub fn from_name(name:&str)->Option<Self> {
+    pub fn from_name(name: &str) -> Option<Self> {
         match name {
             "Button" => Some(Self::Button),
             "Input" => Some(Self::Input),
@@ -326,322 +462,384 @@ impl AntComponent {
             "List" => Some(Self::List),
             "Calendar" => Some(Self::Calendar),
             "FloatButton" => Some(Self::FloatButton),
-            _=>None,
+            _ => None,
         }
     }
 }
 
 /// Copyable per-component overrides. Each Ant Design component has a
 /// separate slot; changing Card.padding does not affect Button.padding.
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct AntComponentTokens {
-    entries:[AntComponentToken;53],
+    entries: [AntComponentToken; 53],
 }
 impl Default for AntComponentTokens {
-    fn default()->Self{
-        Self {entries:[AntComponentToken::default();53]}
+    fn default() -> Self {
+        Self {
+            entries: [AntComponentToken::default(); 53],
+        }
     }
 }
 impl AntComponentTokens {
-    pub fn get(&self,name:AntComponent)->AntComponentToken {
+    pub fn get(&self, name: AntComponent) -> AntComponentToken {
         self.entries[name as usize]
     }
-    pub fn set(&mut self,name:AntComponent,token:AntComponentToken) {
-        self.entries[name as usize]=token;
+    pub fn set(&mut self, name: AntComponent, token: AntComponentToken) {
+        self.entries[name as usize] = token;
     }
-    pub fn with(mut self,name:AntComponent,token:AntComponentToken)->Self {
-        self.set(name,token);self
+    pub fn with(mut self, name: AntComponent, token: AntComponentToken) -> Self {
+        self.set(name, token);
+        self
     }
 }
 
 /// Derived Map Token snapshot (non-exhaustive, extend alongside actual
 /// component adoption). Aliases and component properties derive from these.
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct AntMapTokens {
-    pub color_primary:Hsla,
-    pub color_primary_hover:Hsla,
-    pub color_primary_active:Hsla,
-    pub color_primary_bg:Hsla,
-    pub color_primary_border:Hsla,
-    pub color_primary_text:Hsla,
-    pub color_bg_container:Hsla,
-    pub color_bg_elevated:Hsla,
-    pub color_bg_layout:Hsla,
-    pub color_text:Hsla,
-    pub color_text_secondary:Hsla,
-    pub color_success_bg:Hsla,
-    pub color_warning_bg:Hsla,
-    pub color_error_bg:Hsla,
-    pub color_border:Hsla,
-    pub border_radius:f32,
-    pub border_radius_sm:f32,
-    pub border_radius_lg:f32,
-    pub control_height:f32,
-    pub control_height_sm:f32,
-    pub control_height_lg:f32,
-    pub font_size:f32,
-    pub padding:f32,
-    pub motion:bool,
+    pub color_primary: Hsla,
+    pub color_primary_hover: Hsla,
+    pub color_primary_active: Hsla,
+    pub color_primary_bg: Hsla,
+    pub color_primary_border: Hsla,
+    pub color_primary_text: Hsla,
+    pub color_bg_container: Hsla,
+    pub color_bg_elevated: Hsla,
+    pub color_bg_layout: Hsla,
+    pub color_text: Hsla,
+    pub color_text_secondary: Hsla,
+    pub color_success_bg: Hsla,
+    pub color_warning_bg: Hsla,
+    pub color_error_bg: Hsla,
+    pub color_border: Hsla,
+    pub border_radius: f32,
+    pub border_radius_sm: f32,
+    pub border_radius_lg: f32,
+    pub control_height: f32,
+    pub control_height_sm: f32,
+    pub control_height_lg: f32,
+    pub font_size: f32,
+    pub padding: f32,
+    pub motion: bool,
 }
 /// Derived Alias Tokens consumed across multiple components.
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct AntAliasTokens {
-    pub color_text:Hsla,
-    pub color_text_secondary:Hsla,
-    pub color_link:Hsla,
-    pub color_bg_container:Hsla,
-    pub color_bg_layout:Hsla,
-    pub color_border:Hsla,
-    pub color_text_disabled:Hsla,
-    pub color_success:Hsla,
-    pub color_warning:Hsla,
-    pub color_error:Hsla,
-    pub padding:f32,
-    pub font_size:f32,
-    pub border_radius:f32,
-    pub control_height:f32,
-    pub motion:bool,
+    pub color_text: Hsla,
+    pub color_text_secondary: Hsla,
+    pub color_link: Hsla,
+    pub color_bg_container: Hsla,
+    pub color_bg_layout: Hsla,
+    pub color_border: Hsla,
+    pub color_text_disabled: Hsla,
+    pub color_success: Hsla,
+    pub color_warning: Hsla,
+    pub color_error: Hsla,
+    pub padding: f32,
+    pub font_size: f32,
+    pub border_radius: f32,
+    pub control_height: f32,
+    pub motion: bool,
 }
 
 /// One resolved token, intended for inspection by native apps and the WASM studio.
 /// This exposes GPUI-resolved values, never a second JavaScript theme algorithm.
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub enum AntTokenLayer { Map, Alias }
-#[derive(Clone,Copy,Debug,PartialEq)]
-pub enum AntTokenValue { Color(Hsla), Number(f32), Boolean(bool) }
-#[derive(Clone,Copy,Debug,PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AntTokenLayer {
+    Map,
+    Alias,
+}
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum AntTokenValue {
+    Color(Hsla),
+    Number(f32),
+    Boolean(bool),
+}
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AntResolvedToken {
-    pub layer:AntTokenLayer,
-    pub name:&'static str,
-    pub value:AntTokenValue,
+    pub layer: AntTokenLayer,
+    pub name: &'static str,
+    pub value: AntTokenValue,
 }
 
-fn mix_rgb(a:u32,b:u32,blend:f32)->u32 {
-    let amt=blend.clamp(0.,1.);
-    let channel=|shift:u32| {
-        let x=((a>>shift)&255) as f32;
-        let y=((b>>shift)&255) as f32;
-        ((x*(1.-amt)+y*amt).round() as u32).min(255)
+fn mix_rgb(a: u32, b: u32, blend: f32) -> u32 {
+    let amt = blend.clamp(0., 1.);
+    let channel = |shift: u32| {
+        let x = ((a >> shift) & 255) as f32;
+        let y = ((b >> shift) & 255) as f32;
+        ((x * (1. - amt) + y * amt).round() as u32).min(255)
     };
-    (channel(16)<<16)|(channel(8)<<8)|channel(0)
+    (channel(16) << 16) | (channel(8) << 8) | channel(0)
 }
-fn finite_token(value:f32,min:f32,max:f32,fallback:f32)->f32 {
-    if value.is_finite() {value.clamp(min,max)} else {fallback}
+fn finite_token(value: f32, min: f32, max: f32, fallback: f32) -> f32 {
+    if value.is_finite() {
+        value.clamp(min, max)
+    } else {
+        fallback
+    }
 }
 impl AntTheme {
     /// Resolve Seed -> Map/Alias values for the selected native algorithm.
     /// The default primary is #1677ff and regular/compact heights are 32/28.
-    pub fn from_seed(seed:AntSeedTokens,algorithm:AntThemeAlgorithm)->Self {
-        let dark=algorithm.is_dark();
-        let mut theme=if dark {Self::dark()} else {Self::light()};
-        let preset=if dark {AntSeedTokens::dark()} else {AntSeedTokens::default()};
-        let reference=theme;
-        theme.appearance=if dark {Appearance::Dark} else {Appearance::Light};
-        let primary=seed.color_primary;
-        let surface=seed.color_bg_base;
-        let text=seed.color_text_base;
-        theme.primary=color(primary);
-        theme.primary_hover=color(mix_rgb(primary,if dark {0xffffff} else {0xffffff},
-            if dark {0.26} else {0.19}));
-        theme.primary_active=color(mix_rgb(primary,0x000000,
-            if dark {0.10} else {0.17}));
-        theme.primary_bg=color(mix_rgb(primary,surface,if dark {0.88} else {0.90}));
-        theme.primary_border=color(mix_rgb(primary,surface,if dark {0.70} else {0.55}));
-        theme.primary_text=color(mix_rgb(primary,
-            if dark {0xffffff} else {0x000000},if dark {0.26} else {0.15}));
-        theme.success=color(seed.color_success);
-        theme.warning=color(seed.color_warning);
-        theme.error=color(seed.color_error);
-        theme.color_info=color(seed.color_info);
-        theme.color_link=color(seed.color_link);
-        theme.surface=color(surface);
-        theme.layout_body=color(mix_rgb(surface,text,if dark {0.10} else {0.045}));
-        theme.surface_secondary=color(mix_rgb(surface,text,if dark {0.075} else {0.025}));
-        theme.bg_elevated=color(mix_rgb(surface,if dark {0xffffff}else{0xffffff},
-            if dark {0.06} else {0.}));
-        theme.text=color(text);
-        theme.text_secondary=color(mix_rgb(text,surface,if dark {0.28} else {0.27}));
-        theme.border=color(mix_rgb(surface,text,if dark {0.20} else {0.17}));
-        theme.disabled_bg=color(mix_rgb(surface,text,if dark {0.11} else {0.045}));
-        theme.disabled_text=color(mix_rgb(text,surface,0.54));
-        theme.info_bg=color(mix_rgb(seed.color_info,surface,if dark {0.87} else {0.88}));
-        theme.success_bg=color(mix_rgb(seed.color_success,surface,0.92));
-        theme.warning_bg=color(mix_rgb(seed.color_warning,surface,0.91));
-        theme.error_bg=color(mix_rgb(seed.color_error,surface,0.92));
-        theme.border_radius=finite_token(seed.border_radius,0.,32.,6.);
-        theme.border_radius_sm=(theme.border_radius-2.).max(0.);
-        theme.border_radius_lg=theme.border_radius+2.;
-        theme.font_size=finite_token(seed.font_size,10.,28.,14.);
-        theme.padding=finite_token(seed.spacing_unit,1.,16.,4.)*4.;
-        theme.control_height=(finite_token(seed.control_height,20.,64.,32.)-
-            if algorithm.is_compact(){4.}else{0.}).clamp(20.,64.);
-        theme.control_height_sm=(theme.control_height-8.).max(18.);
-        theme.control_height_lg=theme.control_height+8.;
-        theme.motion=seed.motion;
+    pub fn from_seed(seed: AntSeedTokens, algorithm: AntThemeAlgorithm) -> Self {
+        let dark = algorithm.is_dark();
+        let mut theme = if dark { Self::dark() } else { Self::light() };
+        let preset = if dark {
+            AntSeedTokens::dark()
+        } else {
+            AntSeedTokens::default()
+        };
+        let reference = theme;
+        theme.appearance = if dark {
+            Appearance::Dark
+        } else {
+            Appearance::Light
+        };
+        let primary = seed.color_primary;
+        let surface = seed.color_bg_base;
+        let text = seed.color_text_base;
+        theme.primary = color(primary);
+        theme.primary_hover = color(mix_rgb(
+            primary,
+            if dark { 0xffffff } else { 0xffffff },
+            if dark { 0.26 } else { 0.19 },
+        ));
+        theme.primary_active = color(mix_rgb(primary, 0x000000, if dark { 0.10 } else { 0.17 }));
+        theme.primary_bg = color(mix_rgb(primary, surface, if dark { 0.88 } else { 0.90 }));
+        theme.primary_border = color(mix_rgb(primary, surface, if dark { 0.70 } else { 0.55 }));
+        theme.primary_text = color(mix_rgb(
+            primary,
+            if dark { 0xffffff } else { 0x000000 },
+            if dark { 0.26 } else { 0.15 },
+        ));
+        theme.success = color(seed.color_success);
+        theme.warning = color(seed.color_warning);
+        theme.error = color(seed.color_error);
+        theme.color_info = color(seed.color_info);
+        theme.color_link = color(seed.color_link);
+        theme.surface = color(surface);
+        theme.layout_body = color(mix_rgb(surface, text, if dark { 0.10 } else { 0.045 }));
+        theme.surface_secondary = color(mix_rgb(surface, text, if dark { 0.075 } else { 0.025 }));
+        theme.bg_elevated = color(mix_rgb(
+            surface,
+            if dark { 0xffffff } else { 0xffffff },
+            if dark { 0.06 } else { 0. },
+        ));
+        theme.text = color(text);
+        theme.text_secondary = color(mix_rgb(text, surface, if dark { 0.28 } else { 0.27 }));
+        theme.border = color(mix_rgb(surface, text, if dark { 0.20 } else { 0.17 }));
+        theme.disabled_bg = color(mix_rgb(surface, text, if dark { 0.11 } else { 0.045 }));
+        theme.disabled_text = color(mix_rgb(text, surface, 0.54));
+        theme.info_bg = color(mix_rgb(
+            seed.color_info,
+            surface,
+            if dark { 0.87 } else { 0.88 },
+        ));
+        theme.success_bg = color(mix_rgb(seed.color_success, surface, 0.92));
+        theme.warning_bg = color(mix_rgb(seed.color_warning, surface, 0.91));
+        theme.error_bg = color(mix_rgb(seed.color_error, surface, 0.92));
+        theme.border_radius = finite_token(seed.border_radius, 0., 32., 6.);
+        theme.border_radius_sm = (theme.border_radius - 2.).max(0.);
+        theme.border_radius_lg = theme.border_radius + 2.;
+        theme.font_size = finite_token(seed.font_size, 10., 28., 14.);
+        theme.padding = finite_token(seed.spacing_unit, 1., 16., 4.) * 4.;
+        theme.control_height = (finite_token(seed.control_height, 20., 64., 32.)
+            - if algorithm.is_compact() { 4. } else { 0. })
+        .clamp(20., 64.);
+        theme.control_height_sm = (theme.control_height - 8.).max(18.);
+        theme.control_height_lg = theme.control_height + 8.;
+        theme.motion = seed.motion;
         // Preserve Ant Design's canonical light/dark palette for unchanged
         // reference colors. Without this, even a radius-only edit replaces
         // the official blue/neutral/status colors with rough RGB blends.
-        if seed.color_primary==preset.color_primary &&
-           seed.color_bg_base==preset.color_bg_base {
-            theme.primary_hover=reference.primary_hover;
-            theme.primary_active=reference.primary_active;
-            theme.primary_bg=reference.primary_bg;
-            theme.primary_border=reference.primary_border;
-            theme.primary_text=reference.primary_text;
+        if seed.color_primary == preset.color_primary && seed.color_bg_base == preset.color_bg_base
+        {
+            theme.primary_hover = reference.primary_hover;
+            theme.primary_active = reference.primary_active;
+            theme.primary_bg = reference.primary_bg;
+            theme.primary_border = reference.primary_border;
+            theme.primary_text = reference.primary_text;
         }
-        if seed.color_bg_base==preset.color_bg_base &&
-           seed.color_text_base==preset.color_text_base {
-            theme.layout_body=reference.layout_body;
-            theme.surface_secondary=reference.surface_secondary;
-            theme.bg_elevated=reference.bg_elevated;
-            theme.text_secondary=reference.text_secondary;
-            theme.border=reference.border;
-            theme.disabled_bg=reference.disabled_bg;
-            theme.disabled_text=reference.disabled_text;
+        if seed.color_bg_base == preset.color_bg_base
+            && seed.color_text_base == preset.color_text_base
+        {
+            theme.layout_body = reference.layout_body;
+            theme.surface_secondary = reference.surface_secondary;
+            theme.bg_elevated = reference.bg_elevated;
+            theme.text_secondary = reference.text_secondary;
+            theme.border = reference.border;
+            theme.disabled_bg = reference.disabled_bg;
+            theme.disabled_text = reference.disabled_text;
         }
-        if seed.color_info==preset.color_info &&
-           seed.color_bg_base==preset.color_bg_base {
-            theme.info_bg=reference.info_bg;
+        if seed.color_info == preset.color_info && seed.color_bg_base == preset.color_bg_base {
+            theme.info_bg = reference.info_bg;
         }
-        if seed.color_success==preset.color_success &&
-           seed.color_bg_base==preset.color_bg_base {
-            theme.success_bg=reference.success_bg;
+        if seed.color_success == preset.color_success && seed.color_bg_base == preset.color_bg_base
+        {
+            theme.success_bg = reference.success_bg;
         }
-        if seed.color_warning==preset.color_warning &&
-           seed.color_bg_base==preset.color_bg_base {
-            theme.warning_bg=reference.warning_bg;
+        if seed.color_warning == preset.color_warning && seed.color_bg_base == preset.color_bg_base
+        {
+            theme.warning_bg = reference.warning_bg;
         }
-        if seed.color_error==preset.color_error &&
-           seed.color_bg_base==preset.color_bg_base {
-            theme.error_bg=reference.error_bg;
+        if seed.color_error == preset.color_error && seed.color_bg_base == preset.color_bg_base {
+            theme.error_bg = reference.error_bg;
         }
         theme
     }
-    pub fn map_tokens(self)->AntMapTokens{
+    pub fn map_tokens(self) -> AntMapTokens {
         AntMapTokens {
-            color_primary:self.primary,
-            color_primary_hover:self.primary_hover,
-            color_primary_active:self.primary_active,
-            color_primary_bg:self.primary_bg,
-            color_primary_border:self.primary_border,
-            color_primary_text:self.primary_text,
-            color_bg_container:self.surface,
-            color_bg_elevated:self.bg_elevated,
-            color_bg_layout:self.layout_body,
-            color_text:self.text,
-            color_text_secondary:self.text_secondary,
-            color_success_bg:self.success_bg,
-            color_warning_bg:self.warning_bg,
-            color_error_bg:self.error_bg,
-            color_border:self.border,
-            border_radius:self.border_radius,
-            border_radius_sm:self.border_radius_sm,
-            border_radius_lg:self.border_radius_lg,
-            control_height:self.control_height,
-            control_height_sm:self.control_height_sm,
-            control_height_lg:self.control_height_lg,
-            font_size:self.font_size,
-            padding:self.padding,
-            motion:self.motion,
+            color_primary: self.primary,
+            color_primary_hover: self.primary_hover,
+            color_primary_active: self.primary_active,
+            color_primary_bg: self.primary_bg,
+            color_primary_border: self.primary_border,
+            color_primary_text: self.primary_text,
+            color_bg_container: self.surface,
+            color_bg_elevated: self.bg_elevated,
+            color_bg_layout: self.layout_body,
+            color_text: self.text,
+            color_text_secondary: self.text_secondary,
+            color_success_bg: self.success_bg,
+            color_warning_bg: self.warning_bg,
+            color_error_bg: self.error_bg,
+            color_border: self.border,
+            border_radius: self.border_radius,
+            border_radius_sm: self.border_radius_sm,
+            border_radius_lg: self.border_radius_lg,
+            control_height: self.control_height,
+            control_height_sm: self.control_height_sm,
+            control_height_lg: self.control_height_lg,
+            font_size: self.font_size,
+            padding: self.padding,
+            motion: self.motion,
         }
     }
-    pub fn alias_tokens(self)->AntAliasTokens {
+    pub fn alias_tokens(self) -> AntAliasTokens {
         AntAliasTokens {
-            color_text:self.text,color_text_secondary:self.text_secondary,
-            color_link:self.color_link,
-            color_bg_container:self.surface,color_bg_layout:self.layout_body,
-            color_border:self.border,color_text_disabled:self.disabled_text,
-            color_success:self.success,
-            color_warning:self.warning,color_error:self.error,
-            padding:self.padding,font_size:self.font_size,
-            border_radius:self.border_radius,
-            control_height:self.control_height,motion:self.motion,
+            color_text: self.text,
+            color_text_secondary: self.text_secondary,
+            color_link: self.color_link,
+            color_bg_container: self.surface,
+            color_bg_layout: self.layout_body,
+            color_border: self.border,
+            color_text_disabled: self.disabled_text,
+            color_success: self.success,
+            color_warning: self.warning,
+            color_error: self.error,
+            padding: self.padding,
+            font_size: self.font_size,
+            border_radius: self.border_radius,
+            control_height: self.control_height,
+            motion: self.motion,
         }
     }
     /// Typed, resolved token inspector analogous to `getDesignToken` in Ant Design.
     /// Components consume these native values and their scoped overrides;
     /// component token namespaces are inspected separately via `component()`.
-    pub fn resolved_tokens(self)->Vec<AntResolvedToken> {
-        use AntTokenLayer::{Alias,Map};
-        use AntTokenValue::{Color,Number,Boolean};
-        let m=self.map_tokens();
-        let a=self.alias_tokens();
-        let item=|layer,name,value| AntResolvedToken{layer,name,value};
+    pub fn resolved_tokens(self) -> Vec<AntResolvedToken> {
+        use AntTokenLayer::{Alias, Map};
+        use AntTokenValue::{Boolean, Color, Number};
+        let m = self.map_tokens();
+        let a = self.alias_tokens();
+        let item = |layer, name, value| AntResolvedToken { layer, name, value };
         vec![
-            item(Map,"colorPrimary",Color(m.color_primary)),
-            item(Map,"colorPrimaryHover",Color(m.color_primary_hover)),
-            item(Map,"colorPrimaryActive",Color(m.color_primary_active)),
-            item(Map,"colorPrimaryBg",Color(m.color_primary_bg)),
-            item(Map,"colorPrimaryBorder",Color(m.color_primary_border)),
-            item(Map,"colorPrimaryText",Color(m.color_primary_text)),
-            item(Map,"colorBgContainer",Color(m.color_bg_container)),
-            item(Map,"colorBgElevated",Color(m.color_bg_elevated)),
-            item(Map,"colorBgLayout",Color(m.color_bg_layout)),
-            item(Map,"colorText",Color(m.color_text)),
-            item(Map,"colorTextSecondary",Color(m.color_text_secondary)),
-            item(Map,"colorSuccessBg",Color(m.color_success_bg)),
-            item(Map,"colorWarningBg",Color(m.color_warning_bg)),
-            item(Map,"colorErrorBg",Color(m.color_error_bg)),
-            item(Map,"colorBorder",Color(m.color_border)),
-            item(Map,"borderRadius",Number(m.border_radius)),
-            item(Map,"borderRadiusSM",Number(m.border_radius_sm)),
-            item(Map,"borderRadiusLG",Number(m.border_radius_lg)),
-            item(Map,"controlHeight",Number(m.control_height)),
-            item(Map,"controlHeightSM",Number(m.control_height_sm)),
-            item(Map,"controlHeightLG",Number(m.control_height_lg)),
-            item(Map,"fontSize",Number(m.font_size)),
-            item(Map,"padding",Number(m.padding)),
-            item(Map,"motion",Boolean(m.motion)),
-            item(Alias,"colorText",Color(a.color_text)),
-            item(Alias,"colorTextSecondary",Color(a.color_text_secondary)),
-            item(Alias,"colorTextDisabled",Color(a.color_text_disabled)),
-            item(Alias,"colorLink",Color(a.color_link)),
-            item(Alias,"colorBgContainer",Color(a.color_bg_container)),
-            item(Alias,"colorBgLayout",Color(a.color_bg_layout)),
-            item(Alias,"colorBorder",Color(a.color_border)),
-            item(Alias,"colorSuccess",Color(a.color_success)),
-            item(Alias,"colorWarning",Color(a.color_warning)),
-            item(Alias,"colorError",Color(a.color_error)),
-            item(Alias,"padding",Number(a.padding)),
-            item(Alias,"fontSize",Number(a.font_size)),
-            item(Alias,"borderRadius",Number(a.border_radius)),
-            item(Alias,"controlHeight",Number(a.control_height)),
-            item(Alias,"motion",Boolean(a.motion)),
+            item(Map, "colorPrimary", Color(m.color_primary)),
+            item(Map, "colorPrimaryHover", Color(m.color_primary_hover)),
+            item(Map, "colorPrimaryActive", Color(m.color_primary_active)),
+            item(Map, "colorPrimaryBg", Color(m.color_primary_bg)),
+            item(Map, "colorPrimaryBorder", Color(m.color_primary_border)),
+            item(Map, "colorPrimaryText", Color(m.color_primary_text)),
+            item(Map, "colorBgContainer", Color(m.color_bg_container)),
+            item(Map, "colorBgElevated", Color(m.color_bg_elevated)),
+            item(Map, "colorBgLayout", Color(m.color_bg_layout)),
+            item(Map, "colorText", Color(m.color_text)),
+            item(Map, "colorTextSecondary", Color(m.color_text_secondary)),
+            item(Map, "colorSuccessBg", Color(m.color_success_bg)),
+            item(Map, "colorWarningBg", Color(m.color_warning_bg)),
+            item(Map, "colorErrorBg", Color(m.color_error_bg)),
+            item(Map, "colorBorder", Color(m.color_border)),
+            item(Map, "borderRadius", Number(m.border_radius)),
+            item(Map, "borderRadiusSM", Number(m.border_radius_sm)),
+            item(Map, "borderRadiusLG", Number(m.border_radius_lg)),
+            item(Map, "controlHeight", Number(m.control_height)),
+            item(Map, "controlHeightSM", Number(m.control_height_sm)),
+            item(Map, "controlHeightLG", Number(m.control_height_lg)),
+            item(Map, "fontSize", Number(m.font_size)),
+            item(Map, "padding", Number(m.padding)),
+            item(Map, "motion", Boolean(m.motion)),
+            item(Alias, "colorText", Color(a.color_text)),
+            item(Alias, "colorTextSecondary", Color(a.color_text_secondary)),
+            item(Alias, "colorTextDisabled", Color(a.color_text_disabled)),
+            item(Alias, "colorLink", Color(a.color_link)),
+            item(Alias, "colorBgContainer", Color(a.color_bg_container)),
+            item(Alias, "colorBgLayout", Color(a.color_bg_layout)),
+            item(Alias, "colorBorder", Color(a.color_border)),
+            item(Alias, "colorSuccess", Color(a.color_success)),
+            item(Alias, "colorWarning", Color(a.color_warning)),
+            item(Alias, "colorError", Color(a.color_error)),
+            item(Alias, "padding", Number(a.padding)),
+            item(Alias, "fontSize", Number(a.font_size)),
+            item(Alias, "borderRadius", Number(a.border_radius)),
+            item(Alias, "controlHeight", Number(a.control_height)),
+            item(Alias, "motion", Boolean(a.motion)),
         ]
     }
     /// Override selected derived Map Tokens without re-running seed derivation.
     /// Color states/geometry are written to the same resolved fields used by
     /// actual GPUI components and by the token inspector.
-    pub fn with_map_overrides(mut self,overrides:AntMapTokenOverrides)->Self {
-        if let Some(v)=overrides.color_primary_hover {self.primary_hover=v;}
-        if let Some(v)=overrides.color_primary_active {self.primary_active=v;}
-        if let Some(v)=overrides.color_primary_bg {self.primary_bg=v;}
-        if let Some(v)=overrides.color_primary_border {self.primary_border=v;}
-        if let Some(v)=overrides.color_bg_elevated {self.bg_elevated=v;}
-        if let Some(v)=overrides.color_bg_layout {self.layout_body=v;}
-        if let Some(v)=overrides.control_height_sm.filter(|v|v.is_finite()) {
-            self.control_height_sm=v.clamp(18.,64.);
+    pub fn with_map_overrides(mut self, overrides: AntMapTokenOverrides) -> Self {
+        if let Some(v) = overrides.color_primary_hover {
+            self.primary_hover = v;
         }
-        if let Some(v)=overrides.control_height_lg.filter(|v|v.is_finite()) {
-            self.control_height_lg=v.clamp(20.,72.);
+        if let Some(v) = overrides.color_primary_active {
+            self.primary_active = v;
+        }
+        if let Some(v) = overrides.color_primary_bg {
+            self.primary_bg = v;
+        }
+        if let Some(v) = overrides.color_primary_border {
+            self.primary_border = v;
+        }
+        if let Some(v) = overrides.color_bg_elevated {
+            self.bg_elevated = v;
+        }
+        if let Some(v) = overrides.color_bg_layout {
+            self.layout_body = v;
+        }
+        if let Some(v) = overrides.control_height_sm.filter(|v| v.is_finite()) {
+            self.control_height_sm = v.clamp(18., 64.);
+        }
+        if let Some(v) = overrides.control_height_lg.filter(|v| v.is_finite()) {
+            self.control_height_lg = v.clamp(20., 72.);
         }
         self
     }
     /// Override shared semantic Alias Tokens after the derived Map layer.
     /// Component Tokens remain the final, independently scoped layer.
-    pub fn with_alias_overrides(mut self,overrides:AntAliasTokenOverrides)->Self {
-        if let Some(v)=overrides.color_link {self.color_link=v;}
-        if let Some(v)=overrides.color_text_disabled {self.disabled_text=v;}
-        if let Some(v)=overrides.color_success {self.success=v;}
-        if let Some(v)=overrides.color_warning {self.warning=v;}
-        if let Some(v)=overrides.color_error {self.error=v;}
+    pub fn with_alias_overrides(mut self, overrides: AntAliasTokenOverrides) -> Self {
+        if let Some(v) = overrides.color_link {
+            self.color_link = v;
+        }
+        if let Some(v) = overrides.color_text_disabled {
+            self.disabled_text = v;
+        }
+        if let Some(v) = overrides.color_success {
+            self.success = v;
+        }
+        if let Some(v) = overrides.color_warning {
+            self.warning = v;
+        }
+        if let Some(v) = overrides.color_error {
+            self.error = v;
+        }
         self
     }
-    pub fn component(self,name:AntComponent)->AntComponentToken {
+    pub fn component(self, name: AntComponent) -> AntComponentToken {
         self.components.get(name)
     }
-    pub fn with_component(mut self,name:AntComponent,token:AntComponentToken)->Self {
-        self.components.set(name,token);
+    pub fn with_component(mut self, name: AntComponent, token: AntComponentToken) -> Self {
+        self.components.set(name, token);
         self
     }
 }
@@ -652,146 +850,199 @@ mod tests {
 
     #[test]
     fn names_include_each_documented_component_without_collisions() {
-        let keys:std::collections::HashSet<&str>=AntComponent::ALL.iter()
-            .map(|kind|kind.name()).collect();
-        assert_eq!(keys.len(),53);
+        let keys: std::collections::HashSet<&str> =
+            AntComponent::ALL.iter().map(|kind| kind.name()).collect();
+        assert_eq!(keys.len(), 53);
         for kind in AntComponent::ALL {
-            assert_eq!(AntComponent::from_name(kind.name()),Some(kind));
+            assert_eq!(AntComponent::from_name(kind.name()), Some(kind));
         }
-        assert_eq!(AntComponent::from_name("ReactOnly"),None);
+        assert_eq!(AntComponent::from_name("ReactOnly"), None);
     }
     #[test]
     fn all_theme_algorithms_resolve_seed_values() {
-        let mut seed=AntSeedTokens::default();
-        seed.color_primary=0x15aa77;
-        seed.border_radius=12.;
-        let a=AntTheme::from_seed(seed,AntThemeAlgorithm::Default);
-        assert_eq!(a.primary,color(0x15aa77));
-        assert_eq!(a.border_radius,12.);
-        assert_eq!(a.border_radius_sm,10.);
-        assert_eq!(a.border_radius_lg,14.);
-        assert_eq!(a.control_height,32.);
-        assert_eq!(a.appearance,Appearance::Light);
-        let compact=AntTheme::from_seed(seed,AntThemeAlgorithm::Compact);
-        assert_eq!(compact.control_height,28.);
-        let dark=AntTheme::from_seed(AntSeedTokens::dark(),AntThemeAlgorithm::DarkCompact);
-        assert_eq!(dark.appearance,Appearance::Dark);
-        assert_eq!(dark.control_height,28.);
-        assert_eq!(dark.map_tokens().control_height_sm,20.);
+        let mut seed = AntSeedTokens::default();
+        seed.color_primary = 0x15aa77;
+        seed.border_radius = 12.;
+        let a = AntTheme::from_seed(seed, AntThemeAlgorithm::Default);
+        assert_eq!(a.primary, color(0x15aa77));
+        assert_eq!(a.border_radius, 12.);
+        assert_eq!(a.border_radius_sm, 10.);
+        assert_eq!(a.border_radius_lg, 14.);
+        assert_eq!(a.control_height, 32.);
+        assert_eq!(a.appearance, Appearance::Light);
+        let compact = AntTheme::from_seed(seed, AntThemeAlgorithm::Compact);
+        assert_eq!(compact.control_height, 28.);
+        let dark = AntTheme::from_seed(AntSeedTokens::dark(), AntThemeAlgorithm::DarkCompact);
+        assert_eq!(dark.appearance, Appearance::Dark);
+        assert_eq!(dark.control_height, 28.);
+        assert_eq!(dark.map_tokens().control_height_sm, 20.);
     }
     #[test]
     fn unmodified_seed_matches_canonical_ant_design_palette() {
-        let light=AntTheme::from_seed(AntSeedTokens::default(),AntThemeAlgorithm::Default);
-        let ref_light=AntTheme::light();
-        assert_eq!(light.primary_hover,ref_light.primary_hover);
-        assert_eq!(light.primary_active,ref_light.primary_active);
-        assert_eq!(light.primary_bg,ref_light.primary_bg);
-        assert_eq!(light.primary_border,ref_light.primary_border);
-        assert_eq!(light.layout_body,ref_light.layout_body);
-        assert_eq!(light.success_bg,ref_light.success_bg);
-        let mut partial=AntSeedTokens::default();
-        partial.border_radius=14.;
-        partial.font_size=16.;
-        let changed=AntTheme::from_seed(partial,AntThemeAlgorithm::Compact);
-        assert_eq!(changed.primary_hover,ref_light.primary_hover);
-        assert_eq!(changed.border_radius,14.);
-        assert_eq!(changed.control_height,28.);
-        let dark=AntTheme::from_seed(AntSeedTokens::dark(),AntThemeAlgorithm::Dark);
-        assert_eq!(dark.primary_hover,AntTheme::dark().primary_hover);
-        assert_eq!(dark.layout_body,AntTheme::dark().layout_body);
+        let light = AntTheme::from_seed(AntSeedTokens::default(), AntThemeAlgorithm::Default);
+        let ref_light = AntTheme::light();
+        assert_eq!(light.primary_hover, ref_light.primary_hover);
+        assert_eq!(light.primary_active, ref_light.primary_active);
+        assert_eq!(light.primary_bg, ref_light.primary_bg);
+        assert_eq!(light.primary_border, ref_light.primary_border);
+        assert_eq!(light.layout_body, ref_light.layout_body);
+        assert_eq!(light.success_bg, ref_light.success_bg);
+        let mut partial = AntSeedTokens::default();
+        partial.border_radius = 14.;
+        partial.font_size = 16.;
+        let changed = AntTheme::from_seed(partial, AntThemeAlgorithm::Compact);
+        assert_eq!(changed.primary_hover, ref_light.primary_hover);
+        assert_eq!(changed.border_radius, 14.);
+        assert_eq!(changed.control_height, 28.);
+        let dark = AntTheme::from_seed(AntSeedTokens::dark(), AntThemeAlgorithm::Dark);
+        assert_eq!(dark.primary_hover, AntTheme::dark().primary_hover);
+        assert_eq!(dark.layout_body, AntTheme::dark().layout_body);
     }
     #[test]
     fn invalid_seed_geometry_remains_finite() {
-        let seed=AntSeedTokens{
-            border_radius:f32::NAN, control_height:f32::INFINITY,
-            spacing_unit:f32::NEG_INFINITY, font_size:f32::NAN,
+        let seed = AntSeedTokens {
+            border_radius: f32::NAN,
+            control_height: f32::INFINITY,
+            spacing_unit: f32::NEG_INFINITY,
+            font_size: f32::NAN,
             ..AntSeedTokens::default()
         };
-        let theme=AntTheme::from_seed(seed,AntThemeAlgorithm::Default);
-        assert_eq!(theme.border_radius,6.);
-        assert_eq!(theme.control_height,32.);
-        assert_eq!(theme.padding,16.);
-        assert_eq!(theme.font_size,14.);
+        let theme = AntTheme::from_seed(seed, AntThemeAlgorithm::Default);
+        assert_eq!(theme.border_radius, 6.);
+        assert_eq!(theme.control_height, 32.);
+        assert_eq!(theme.padding, 16.);
+        assert_eq!(theme.font_size, 14.);
     }
     #[test]
     fn component_overrides_are_scoped() {
-        let theme=AntTheme::light().with_component(
-            AntComponent::Card,AntComponentToken::default().padding(32.).border_radius(16.)
+        let theme = AntTheme::light().with_component(
+            AntComponent::Card,
+            AntComponentToken::default().padding(32.).border_radius(16.),
         );
-        assert_eq!(theme.component(AntComponent::Card).padding,Some(32.));
-        assert_eq!(theme.component(AntComponent::Card).border_radius,Some(16.));
-        assert_eq!(theme.component(AntComponent::Button).padding,None);
+        assert_eq!(theme.component(AntComponent::Card).padding, Some(32.));
+        assert_eq!(theme.component(AntComponent::Card).border_radius, Some(16.));
+        assert_eq!(theme.component(AntComponent::Button).padding, None);
     }
     #[test]
     fn resolved_inspector_reflects_seed_and_preserves_token_layers() {
-        let mut seed=AntSeedTokens::default();
-        seed.color_primary=0x9a44b2;
-        seed.color_bg_base=0xeef8ec;
-        seed.motion=false;
-        let t=AntTheme::from_seed(seed,AntThemeAlgorithm::Compact);
-        let tokens=t.resolved_tokens();
-        assert_eq!(tokens.iter().filter(|v| v.name=="colorPrimaryBg" &&
-            v.layer==AntTokenLayer::Map).count(),1);
-        assert_eq!(tokens.iter().find(|v|v.name=="colorPrimaryBg").unwrap().value,
-            AntTokenValue::Color(t.primary_bg));
-        assert_eq!(tokens.iter().find(|v|v.name=="colorBgLayout").unwrap().value,
-            AntTokenValue::Color(t.layout_body));
-        assert_eq!(tokens.iter().find(|v|v.name=="motion").unwrap().value,
-            AntTokenValue::Boolean(false));
-        assert_eq!(tokens.iter().find(|v|v.name=="controlHeight").unwrap().value,
-            AntTokenValue::Number(28.));
-        assert!(tokens.iter().any(|v|v.layer==AntTokenLayer::Alias && v.name=="colorTextDisabled"));
-        assert_ne!(t.primary_bg,AntTheme::light().primary_bg);
-        assert_ne!(t.layout_body,AntTheme::light().layout_body);
+        let mut seed = AntSeedTokens::default();
+        seed.color_primary = 0x9a44b2;
+        seed.color_bg_base = 0xeef8ec;
+        seed.motion = false;
+        let t = AntTheme::from_seed(seed, AntThemeAlgorithm::Compact);
+        let tokens = t.resolved_tokens();
+        assert_eq!(
+            tokens
+                .iter()
+                .filter(|v| v.name == "colorPrimaryBg" && v.layer == AntTokenLayer::Map)
+                .count(),
+            1
+        );
+        assert_eq!(
+            tokens
+                .iter()
+                .find(|v| v.name == "colorPrimaryBg")
+                .unwrap()
+                .value,
+            AntTokenValue::Color(t.primary_bg)
+        );
+        assert_eq!(
+            tokens
+                .iter()
+                .find(|v| v.name == "colorBgLayout")
+                .unwrap()
+                .value,
+            AntTokenValue::Color(t.layout_body)
+        );
+        assert_eq!(
+            tokens.iter().find(|v| v.name == "motion").unwrap().value,
+            AntTokenValue::Boolean(false)
+        );
+        assert_eq!(
+            tokens
+                .iter()
+                .find(|v| v.name == "controlHeight")
+                .unwrap()
+                .value,
+            AntTokenValue::Number(28.)
+        );
+        assert!(
+            tokens
+                .iter()
+                .any(|v| v.layer == AntTokenLayer::Alias && v.name == "colorTextDisabled")
+        );
+        assert_ne!(t.primary_bg, AntTheme::light().primary_bg);
+        assert_ne!(t.layout_body, AntTheme::light().layout_body);
     }
     #[test]
     fn explicit_map_and_alias_layers_preserve_independent_component_overrides() {
-        let mut seed=AntSeedTokens::default();
-        seed.color_primary=0x744acc;
-        let theme=AntTheme::from_seed(seed,AntThemeAlgorithm::Compact)
-            .with_map_overrides(AntMapTokenOverrides::default()
-                .color_primary_bg(color(0x010203))
-                .color_primary_hover(color(0x223344))
-                .control_height_sm(22.))
-            .with_alias_overrides(AntAliasTokenOverrides::default()
-                .color_link(color(0xaabbcc))
-                .color_text_disabled(color(0x778899)))
-            .with_component(AntComponent::Button,
-                AntComponentToken::default().color_primary(color(0x123456)));
-        assert_eq!(theme.primary,color(0x744acc));
-        assert_eq!(theme.map_tokens().color_primary_bg,color(0x010203));
-        assert_eq!(theme.map_tokens().color_primary_hover,color(0x223344));
-        assert_eq!(theme.map_tokens().control_height_sm,22.);
-        assert_eq!(theme.alias_tokens().color_link,color(0xaabbcc));
-        assert_eq!(theme.alias_tokens().color_text_disabled,color(0x778899));
-        assert_eq!(theme.component(AntComponent::Button).color_primary,Some(color(0x123456)));
-        assert_eq!(theme.component(AntComponent::Card).color_primary,None);
-        let resolved=theme.resolved_tokens();
-        assert!(resolved.iter().any(|t|t.layer==AntTokenLayer::Map &&
-            t.name=="colorPrimaryBg" && t.value==AntTokenValue::Color(color(0x010203))));
-        assert!(resolved.iter().any(|t|t.layer==AntTokenLayer::Alias &&
-            t.name=="colorLink" && t.value==AntTokenValue::Color(color(0xaabbcc))));
+        let mut seed = AntSeedTokens::default();
+        seed.color_primary = 0x744acc;
+        let theme = AntTheme::from_seed(seed, AntThemeAlgorithm::Compact)
+            .with_map_overrides(
+                AntMapTokenOverrides::default()
+                    .color_primary_bg(color(0x010203))
+                    .color_primary_hover(color(0x223344))
+                    .control_height_sm(22.),
+            )
+            .with_alias_overrides(
+                AntAliasTokenOverrides::default()
+                    .color_link(color(0xaabbcc))
+                    .color_text_disabled(color(0x778899)),
+            )
+            .with_component(
+                AntComponent::Button,
+                AntComponentToken::default().color_primary(color(0x123456)),
+            );
+        assert_eq!(theme.primary, color(0x744acc));
+        assert_eq!(theme.map_tokens().color_primary_bg, color(0x010203));
+        assert_eq!(theme.map_tokens().color_primary_hover, color(0x223344));
+        assert_eq!(theme.map_tokens().control_height_sm, 22.);
+        assert_eq!(theme.alias_tokens().color_link, color(0xaabbcc));
+        assert_eq!(theme.alias_tokens().color_text_disabled, color(0x778899));
+        assert_eq!(
+            theme.component(AntComponent::Button).color_primary,
+            Some(color(0x123456))
+        );
+        assert_eq!(theme.component(AntComponent::Card).color_primary, None);
+        let resolved = theme.resolved_tokens();
+        assert!(resolved.iter().any(|t| t.layer == AntTokenLayer::Map
+            && t.name == "colorPrimaryBg"
+            && t.value == AntTokenValue::Color(color(0x010203))));
+        assert!(resolved.iter().any(|t| t.layer == AntTokenLayer::Alias
+            && t.name == "colorLink"
+            && t.value == AntTokenValue::Color(color(0xaabbcc))));
     }
     #[test]
     fn map_geometry_overrides_reject_nonfinite_values_and_clamp_bounds() {
-        let t=AntTheme::light().with_map_overrides(
+        let t = AntTheme::light().with_map_overrides(
             AntMapTokenOverrides::default()
-                .control_height_sm(f32::NAN).control_height_lg(f32::INFINITY));
-        assert_eq!(t.control_height_sm,24.);
-        assert_eq!(t.control_height_lg,40.);
-        let t=t.with_map_overrides(AntMapTokenOverrides::default()
-            .control_height_sm(-500.).control_height_lg(900.));
-        assert_eq!(t.control_height_sm,18.);
-        assert_eq!(t.control_height_lg,72.);
+                .control_height_sm(f32::NAN)
+                .control_height_lg(f32::INFINITY),
+        );
+        assert_eq!(t.control_height_sm, 24.);
+        assert_eq!(t.control_height_lg, 40.);
+        let t = t.with_map_overrides(
+            AntMapTokenOverrides::default()
+                .control_height_sm(-500.)
+                .control_height_lg(900.),
+        );
+        assert_eq!(t.control_height_sm, 18.);
+        assert_eq!(t.control_height_lg, 72.);
     }
     #[test]
     fn invalid_scalar_values_are_clamped() {
-        let seed=AntSeedTokens{border_radius:-45.,control_height:4.,
-            font_size:500.,spacing_unit:-6.,..AntSeedTokens::default()};
-        let t=AntTheme::from_seed(seed,AntThemeAlgorithm::Compact);
-        assert_eq!(t.border_radius,0.);
-        assert_eq!(t.control_height,20.);
-        assert_eq!(t.font_size,28.);
-        assert_eq!(t.padding,4.);
+        let seed = AntSeedTokens {
+            border_radius: -45.,
+            control_height: 4.,
+            font_size: 500.,
+            spacing_unit: -6.,
+            ..AntSeedTokens::default()
+        };
+        let t = AntTheme::from_seed(seed, AntThemeAlgorithm::Compact);
+        assert_eq!(t.border_radius, 0.);
+        assert_eq!(t.control_height, 20.);
+        assert_eq!(t.font_size, 28.);
+        assert_eq!(t.padding, 4.);
     }
 }

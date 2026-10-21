@@ -22,8 +22,8 @@ Data Entry or Feedback's similarly named full component.
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
 higher-level packages and do not count toward this 72-item core overview.
 Presence is alpha, not API or pixel parity. Issue #25 records the remaining
-gaps: no viewport sticky, no OS file dialog, inline Cascader/TreeSelect panels,
-Tour cards that are not measured to a target, and no moving BorderBeam.
+gaps: no viewport sticky, no OS file dialog, Tour has no spotlight mask,
+and BorderBeam is a moving edge segment rather than a shader stroke.
 This matrix tracks **component presence**, not API completeness. A complete
 Ant Design-equivalent implementation still requires multiple release cycles.
 
@@ -45,9 +45,9 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | Component | Implemented foundation | Remaining Ant Design parity work |
 | --- | --- | --- |
 | InputNumber | Persistent GPUI Kit numeric state, stacked stepper buttons, placeholder synchronization, 0..100 bounds and decimal steps, status/size/disabled tokens | Precision/formats beyond Kit, exact Ant Design stepper placement, dedicated formatter/parser facade |
-| Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls | Range keyboard thumbs, marks, tooltips, custom handle formatting |
+| Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls, caller-supplied track marks | Range keyboard thumbs, drag tooltip, custom handle formatting |
 | Segmented | Controlled selection, disabled options, official icon slots, Arrow/Home/End roving focus, block and size | Animated selection indicator and more exact Ant CSS geometry |
-| TimePicker | Persistent native segmented editor plus scrollable hour/minute/second and AM/PM popup columns, keyboard edit, status/disabled | Auto-scroll to selected time, presets, clear/null semantics, range selection, localization |
+| TimePicker | Persistent native segmented editor plus scrollable hour/minute/second and AM/PM popup columns, scroll-to-selected rows, keyboard edit, status/disabled | Presets, clear/null semantics, range selection, localization |
 | AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Anchored collision-aware popover (current panel is inline), outside click close, full ARIA combobox, virtualization |
 
 DatePicker retains Kit's calendar/preset panel and datetime editor so the
@@ -61,6 +61,26 @@ consume the host's Confirm action and select once. Regression coverage lives in
 `crates/antd/tests/control_interactions.rs`; these headless native tests also
 check date presets/disabled dates/datetime, time scrolling, number hints and
 Tooltip side geometry. Browser smoke and pixel parity are separate checks.
+
+Catalog popup regressions in the same native test target cover Cascader
+placement, disabled options, selection and dismissal in both themes; Mentions
+continuous editor typing, Escape/outside dismissal and query changes; targetless
+Tour visibility; and collapsed Menu flyout geometry. When supplying a Mentions
+field with `.trigger(AntInput::new(&input))`, also pass
+`.track_focus(&input.read(cx).focus_handle(cx))` (import `Focusable`) so the
+suggestion popover retains editor focus. Dismissal is transient element state;
+the field text and selected value remain owned by the parent.
+
+Browser smoke additionally checks Cascader, ColorPicker, TreeSelect, Image and
+Tour panel pixels below the trigger, Escape and outside dismissal in light and
+dark themes. These checks establish working native overlays, not full Ant
+Design screenshot parity, keyboard list navigation or a screen-reader audit.
+
+Dropdown, Popover and Popconfirm expose `.placement(OverlayPlacement)` for
+`BottomLeft` (default), `BottomRight`, `TopLeft` and `TopRight`. Tooltip uses
+`TooltipPlacement` with those four corner alignments plus `Top` (default),
+`Bottom`, `Left` and `Right`. Kit resolves collisions; other Ant Design
+placement/arrow variants and keyboard-focus tooltip activation remain open.
 
 ## Wave 3: feedback and enterprise display foundations
 
@@ -93,16 +113,17 @@ Tooltip side geometry. Browser smoke and pixel parity are separate checks.
 
 1. **Data-entry parity:** AutoComplete and TimePicker popup semantics, Slider
    range keyboard, InputNumber formatter/parser. Cascader, ColorPicker,
-   Mentions, Transfer, TreeSelect and Upload now have alpha builders; their
-   popups, OS dialog and search are still open.
+   Mentions and TreeSelect open through base Popover; search, Transfer search
+   and the Upload file dialog are still open.
 2. **Enterprise data display:** Table/Tree virtualization and ARIA. Image,
    Carousel, Listy, QRCode and Tour exist as alpha; portals, autoplay and
    target measurement do not.
 3. **Rich feedback:** Drawer open-state parity, Message/Notification action APIs, richer Spin/Skeleton;
    use real Kit Root overlays and focus management (never paint a fake DOM
    dialog or toast over a WASM screenshot).
-4. **Alpha follow-ups:** viewport Affix, moving BorderBeam, collision-aware
-   Cascader/TreeSelect, Upload file dialog, Watermark images.
+4. **Alpha follow-ups:** viewport Affix, Upload file dialog, Watermark images.
+   Cascader, TreeSelect, ColorPicker, Mentions, Image and Tour already open
+   through base Popover.
 5. **Parity hardening:** Screenshot/reference diffs against actual Ant Design,
    dark-mode contrast, accessible value/role semantics, focus restoration,
    keyboard e2e, viewport responsiveness and mobile interactions.
