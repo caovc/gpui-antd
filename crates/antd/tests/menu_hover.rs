@@ -43,7 +43,11 @@ impl Render for MenuHarness {
                 .item(
                     AntMenuItem::submenu("reports", "Reports")
                         .disabled(self.disabled)
-                        .child(AntMenuItem::new("daily", "Daily report")),
+                        .child(AntMenuItem::new("daily", "Daily report"))
+                        .child(
+                            AntMenuItem::submenu("more", "More")
+                                .child(AntMenuItem::new("team", "Team")),
+                        ),
                 )
                 .item(
                     AntMenuItem::submenu("locked", "Restricted")
@@ -324,8 +328,21 @@ fn parent_can_refuse_hover_requests_and_click_mode_stays_click_only(cx: &mut Tes
         assert!(window.try_find(LEAF).is_none());
         window.hover("outside", cx);
         view.update(cx, |view, cx| {
-            view.trigger = AntMenuTrigger::Click;
             view.accept_requests = true;
+            cx.notify();
+        });
+        window.click("outside", cx);
+        window.press("shift-tab", cx);
+        window.press("right", cx);
+    })
+    .unwrap();
+    advance(cx, handle, 500);
+    cx.update_window(handle, |_, window, cx| {
+        // A new keyboard activation supersedes the refused hover intent.
+        assert!(view.read(cx).open.contains("reports"));
+        window.press("escape", cx);
+        view.update(cx, |view, cx| {
+            view.trigger = AntMenuTrigger::Click;
             cx.notify();
         });
         window.render_frame(cx);
@@ -367,11 +384,75 @@ fn keyboard_opens_immediately_and_restores_trigger_focus(cx: &mut TestAppContext
         window.press("space", cx);
         assert!(view.read(cx).open.contains("reports"));
         assert!(window.find(LEAF).visible());
+    })
+    .unwrap();
+    advance(cx, handle, 500);
+    cx.update_window(handle, |_, window, cx| {
+        assert!(view.read(cx).open.contains("reports"));
         window.press("escape", cx);
         assert!(!view.read(cx).open.contains("reports"));
         assert_eq!(window.find(TRIGGER).focused(), Some(true));
         window.press("right", cx);
         assert!(view.read(cx).open.contains("reports"));
+    })
+    .unwrap();
+    advance(cx, handle, 500);
+    cx.update(|cx| assert!(view.read(cx).open.contains("reports")));
+}
+
+#[gpui_kit::test]
+fn delayed_parent_acceptance_honors_the_latest_pointer_intent(cx: &mut TestAppContext) {
+    let (handle, view) = open(cx, AntMenuMode::Vertical, false, false);
+    cx.update_window(handle, |_, window, cx| {
+        view.update(cx, |view, cx| {
+            view.accept_requests = false;
+            cx.notify();
+        });
+        window.render_frame(cx);
+        window.hover(TRIGGER, cx);
+    })
+    .unwrap();
+    advance(cx, handle, 100);
+    cx.update_window(handle, |_, window, cx| {
+        assert_eq!(view.read(cx).changes, [("reports".into(), true)]);
+        window.hover("outside", cx);
+        // The parent accepts the request after the pointer already left.
+        view.update(cx, |view, cx| {
+            view.open.insert("reports".into());
+            view.accept_requests = true;
+            cx.notify();
+        });
+        window.render_frame(cx);
+    })
+    .unwrap();
+    advance(cx, handle, 200);
+    cx.update(|cx| assert!(view.read(cx).open.is_empty()));
+}
+
+#[gpui_kit::test]
+fn nested_inline_submenu_keeps_its_ancestor_popup_open(cx: &mut TestAppContext) {
+    let (handle, view) = open(cx, AntMenuMode::Horizontal, false, false);
+    cx.update_window(handle, |_, window, cx| {
+        window.render_frame(cx);
+        window.hover(TRIGGER, cx);
+    })
+    .unwrap();
+    advance(cx, handle, 100);
+    let more = "ant-menu-Name(\"ant-menu-flyout-list-Name(\\\"hover-nav\\\")-reports\")-more";
+    let team = "ant-menu-Name(\"ant-menu-flyout-list-Name(\\\"hover-nav\\\")-reports\")-team";
+    cx.update_window(handle, |_, window, cx| {
+        window.click(more, cx);
+        assert!(view.read(cx).open.contains("more"));
+        window.hover(team, cx);
+    })
+    .unwrap();
+    advance(cx, handle, 500);
+    cx.update_window(handle, |_, window, cx| {
+        assert!(view.read(cx).open.contains("reports"));
+        assert!(window.find(team).visible());
+        window.click(team, cx);
+        assert_eq!(view.read(cx).selections, ["team"]);
+        assert!(!view.read(cx).open.contains("reports"));
     })
     .unwrap();
 }

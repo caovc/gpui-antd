@@ -26,6 +26,10 @@ Alternatives considered:
   work and cannot reopen the same hovered trigger until the pointer exits.
 - Disabling a submenu, switching activation mode, or unmounting cancels tasks.
 - Hover requests do not select routes or mutate parent-owned open keys.
+- Reconcile a late parent acceptance with current pointer intent, while a new
+  keyboard/click activation supersedes the earlier hover request.
+- Descendants currently expand inline inside a flyout; preserve that behavior
+  and test that traversing nested rows keeps the ancestor open.
 
 ## Verification
 

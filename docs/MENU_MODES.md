@@ -82,6 +82,15 @@ remains immediate. Escape/outside dismissal cancels pending work; exiting and
 re-entering is required to start a new hover session. Disable, trigger-mode
 changes and unmount also cancel delayed requests.
 
+If the parent applies a hover-open request after the pointer has left, the
+newly opened panel starts the close grace period. A new click or keyboard
+activation supersedes that stale hover intent.
+
+Descendant menus inside the current flyout use Inline mode: nested titles
+expand rows inside the same panel, so hovering those rows keeps the ancestor
+open. Separate nested flyouts and their cross-overlay hover coordination
+remain future parity work.
+
 Positioning, focus and dismissal still belong to Base Popover. Element-local
 state holds only pointer intent and cancellable weak tasks. GPUI retains its
 existing popup focus policy; this is not a promise of Ant Design focus parity.

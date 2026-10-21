@@ -115,6 +115,7 @@ struct SubmenuHover {
     trigger_hovered: bool,
     content_hovered: bool,
     suppressed: bool,
+    hover_open_requested: bool,
     epoch: usize,
     task: Option<Task<()>>,
     open_delay: Duration,
@@ -130,6 +131,7 @@ impl SubmenuHover {
             trigger_hovered: false,
             content_hovered: false,
             suppressed: false,
+            hover_open_requested: false,
             epoch: 0,
             task: None,
             open_delay: Duration::ZERO,
@@ -146,7 +148,13 @@ impl SubmenuHover {
 
     fn dismiss(&mut self) {
         self.cancel();
+        self.hover_open_requested = false;
         self.suppressed = self.trigger_hovered || self.content_hovered;
+    }
+
+    fn activate(&mut self) {
+        self.cancel();
+        self.hover_open_requested = false;
     }
 
     fn sync(
@@ -156,7 +164,8 @@ impl SubmenuHover {
         open_delay: Duration,
         close_delay: Duration,
         callback: Option<MenuOpenChange>,
-    ) {
+    ) -> bool {
+        let just_opened = !self.open && open;
         if self.open && !open {
             self.dismiss();
         }
@@ -177,7 +186,16 @@ impl SubmenuHover {
             self.trigger_hovered = false;
             self.content_hovered = false;
             self.suppressed = false;
+            self.hover_open_requested = false;
         }
+        // A controlled parent can accept after the pointer has left, even
+        // between the request and the next frame. Reconcile that hover intent
+        // only for a prior hover request; keyboard activation clears it.
+        just_opened
+            && enabled
+            && self.hover_open_requested
+            && !self.trigger_hovered
+            && !self.content_hovered
     }
 
     fn hover(&mut self, trigger: bool, hovered: bool, window: &mut Window, cx: &mut Context<Self>) {
@@ -210,6 +228,7 @@ impl SubmenuHover {
                     && (state.trigger_hovered || state.content_hovered) == desired
                 {
                     if let Some(callback) = state.on_open_change.clone() {
+                        state.hover_open_requested = desired;
                         callback(state.key.clone(), desired, window, cx);
                     }
                 }
@@ -699,14 +718,17 @@ impl RenderOnce for AntMenu {
                         cx,
                         |_, _| SubmenuHover::new(row.item.key.clone()),
                     );
-                    state.update(cx, |state, _| {
-                        state.sync(
+                    state.update(cx, |state, cx| {
+                        let left_before_open = state.sync(
                             row_expanded,
                             submenu_trigger == AntMenuTrigger::Hover && !is_disabled,
                             open_delay,
                             close_delay,
                             flyout_callback.clone(),
                         );
+                        if left_before_open {
+                            state.hover(false, false, window, cx);
+                        }
                     });
                     state
                 });
@@ -720,9 +742,24 @@ impl RenderOnce for AntMenu {
                     .tab_stop(active == Some(index))
                     .when(is_submenu, |this| this.aria_expanded(row.expanded))
                     .when_some(trigger_hover, |button, state| {
-                        button.on_hover(move |hovered, window, cx| {
-                            state.update(cx, |state, cx| state.hover(true, *hovered, window, cx));
-                        })
+                        let keyboard_state = state.clone();
+                        button
+                            .on_hover(move |hovered, window, cx| {
+                                state.update(cx, |state, cx| {
+                                    state.hover(true, *hovered, window, cx)
+                                });
+                            })
+                            .on_key_down(move |event, _, cx| {
+                                let key = event.keystroke.key.as_str();
+                                if !event.keystroke.modifiers.modified()
+                                    && !event.keystroke.is_ime_in_progress()
+                                    && (key == "enter"
+                                        || key == "space"
+                                        || key == if horizontal { "down" } else { "right" })
+                                {
+                                    keyboard_state.update(cx, |state, _| state.activate());
+                                }
+                            })
                     })
                     .when(!horizontal, |this| this.w_full())
                     .when(horizontal, |this| this.flex_none())
@@ -795,7 +832,7 @@ impl RenderOnce for AntMenu {
                             if let Some(state) = &dismiss_hover {
                                 state.update(cx, |state, _| {
                                     if *open {
-                                        state.cancel();
+                                        state.activate();
                                     } else {
                                         state.dismiss();
                                     }
