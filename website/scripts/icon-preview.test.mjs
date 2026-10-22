@@ -14,11 +14,15 @@ function fixture() {
   let now = 0, next = 0;
   const timers = new Map();
   const messages = new Set();
+  const blurs = new Set();
+  const focusListeners = new Set();
+  const handlers = { message: messages, blur: blurs };
   let observer;
   const owner = {
     location: { origin: 'https://example.test' },
-    addEventListener: (name, handler) => { assert.equal(name, 'message'); messages.add(handler); },
-    removeEventListener: (_, handler) => messages.delete(handler),
+    addEventListener: (name, handler) => handlers[name].add(handler),
+    removeEventListener: (name, handler) => handlers[name].delete(handler),
+    queueMicrotask: handler => handler(),
     setTimeout: (handler, ms) => { const id = ++next; timers.set(id, { at: now + ms, handler }); return id; },
     clearTimeout: id => timers.delete(id),
     MutationObserver: class {
@@ -29,7 +33,9 @@ function fixture() {
   };
   const requests = [];
   const frame = Object.assign(new EventTarget(), {
-    ownerDocument: { defaultView: owner, baseURI: base, documentElement: {} },
+    ownerDocument: { defaultView: owner, baseURI: base, documentElement: {}, body: {},
+      addEventListener: (_, handler) => focusListeners.add(handler),
+      removeEventListener: (_, handler) => focusListeners.delete(handler) },
     dataset: {}, isConnected: true, contentWindow: {}, contentDocument: null,
     attributes: {}, setAttribute(name, value) { this.attributes[name] = value; },
   });
@@ -37,7 +43,11 @@ function fixture() {
     get: () => requests.at(-1), set: value => requests.push(value),
   });
   const retry = Object.assign(new EventTarget(), { hidden: true });
-  const status = { textContent: '', focus() { frame.ownerDocument.activeElement = this; } };
+  function focus(element) {
+    frame.ownerDocument.activeElement = element;
+    for (const handler of focusListeners) handler({ target: element });
+  }
+  const status = { textContent: '', isConnected: true, focus() { focus(this); } };
   const controller = createIconPreview(frame, status, retry);
   function currentAttempt(url) {
     return frame.src && withoutAttempt(frame.src) === url ? frame.src : url;
@@ -59,7 +69,7 @@ function fixture() {
       if (item.at <= now && timers.delete(id)) item.handler();
     }
   }
-  return { controller, frame, retry, status, requests, timers, messages,
+  return { controller, frame, retry, status, requests, timers, messages, blurs, focusListeners, focus,
     commit, message, tick, detach() { frame.isConnected = false; observer.callback(); },
     observer: () => observer };
 }
@@ -212,11 +222,56 @@ test('route removal cancels deadlines and releases listeners; cross-origin route
   f.controller.request(route('CiTwoTone'));
   f.detach();
   assert.equal(f.messages.size, 0);
+  assert.equal(f.blurs.size, 0);
+  assert.equal(f.focusListeners.size, 0);
   assert.equal(f.timers.size, 0);
   assert.equal(f.observer().connected, false);
   assert.equal(f.controller.request(route('SearchOutlined')), false);
   f.retry.dispatchEvent(new Event('click'));
   f.tick(ICON_PREVIEW_TIMEOUT_MS);
   assert.equal(f.requests.length, 1);
+  f.controller.destroy();
+});
+
+test('initialization preserves the latest host focus without trapping the ready preview', () => {
+  const f = fixture(), a = route('CiTwoTone');
+  const first = { isConnected: true, focus() { f.focus(this); } };
+  const latest = { isConnected: true, focus() { f.focus(this); } };
+  f.focus(first);
+  f.controller.request(a);
+  f.focus(latest);
+  f.focus(f.frame); // browser moves focus into GPUI's initializing IME mirror
+  for (const handler of f.blurs) handler();
+  assert.equal(f.frame.ownerDocument.activeElement, latest);
+  f.focus(f.frame);
+  f.commit(a); f.message(a);
+  assert.equal(f.frame.ownerDocument.activeElement, latest);
+  // Once ready, intentionally entering the preview must remain possible.
+  f.focus(f.frame);
+  for (const handler of f.blurs) handler();
+  f.message(a);
+  assert.equal(f.frame.ownerDocument.activeElement, f.frame);
+  f.controller.destroy();
+});
+
+test('an adjacent GPUI example cannot steal host focus while it initializes', () => {
+  const f = fixture(), a = route('CiTwoTone');
+  const control = { isConnected: true, focus() { f.focus(this); } };
+  let initializing = true;
+  const example = { isConnected: true, tagName: 'IFRAME', matches: () => true,
+    contentDocument: { URL: base + 'demo.html?component=Icons',
+      querySelector: () => initializing ? {} : null }, focus() { f.focus(this); } };
+  f.focus(control);
+  f.controller.request(a); f.commit(a); f.message(a);
+  f.focus(example);
+  for (const handler of f.blurs) handler();
+  assert.equal(f.frame.ownerDocument.activeElement, control);
+  initializing = false;
+  f.focus(example);
+  for (const handler of f.blurs) handler();
+  assert.equal(f.frame.ownerDocument.activeElement, example);
+  example.contentDocument.querySelector = () => ({ classList: { contains: () => true } });
+  for (const handler of f.blurs) handler();
+  assert.equal(f.frame.ownerDocument.activeElement, example);
   f.controller.destroy();
 });

@@ -11,6 +11,40 @@ export function createIconPreview(frame, status, retry) {
   let attempt = 0;
   let timer;
   let disposed = false;
+  let focusOwner;
+
+  function rememberFocus(event) {
+    const element = event.target;
+    if (element && element !== frame && element.tagName !== 'IFRAME' && element !== document.body &&
+        element !== document.documentElement && element.isConnected &&
+        typeof element.focus === 'function') focusOwner = element;
+  }
+
+  function initializingExample(element) {
+    if (!element?.matches?.('iframe.wasm-iframe')) return false;
+    try {
+      const doc = element.contentDocument;
+      const startup = doc?.querySelector('#status');
+      return doc && new URL(doc.URL).origin === owner.location.origin &&
+        Boolean(startup) && !startup.classList?.contains('error');
+    } catch { return false; }
+  }
+
+  function restoreFocus() {
+    if (!focusOwner?.isConnected) return;
+    if ([frame, document.body, document.documentElement].includes(document.activeElement) ||
+        initializingExample(document.activeElement)) {
+      focusOwner.focus({ preventScroll: true });
+    }
+  }
+
+  function onBlur() {
+    // GPUI initializes a hidden IME textarea and focuses it. A microtask
+    // observes the resulting active iframe before the next keyboard task.
+    owner.queueMicrotask(() => {
+      if (!disposed && (phase !== 'ready' || initializingExample(document.activeElement))) restoreFocus();
+    });
+  }
 
   function currentDocument() {
     try { return frame.contentDocument; } catch { return null; }
@@ -69,6 +103,7 @@ export function createIconPreview(frame, status, retry) {
       if (phase === 'loading' && !reselect) return false;
     }
     target = href;
+    rememberFocus({ target: document.activeElement });
     attempt++;
     const navigation = new URL(href);
     navigation.searchParams.set('previewRequest', String(attempt));
@@ -91,8 +126,10 @@ export function createIconPreview(frame, status, retry) {
     // actual loaded document, including all color/size/theme parameters.
     if (currentDocument()?.URL !== documentUrl) return;
     if (event.data?.type === 'gpui-antd:ready' && painted()) {
+      const initializing = phase !== 'ready';
       clearDeadline();
       show('ready', 'Preview ready');
+      if (initializing) restoreFocus();
     } else if (event.data?.type === 'gpui-antd:error' && phase !== 'ready') {
       fail('Icon preview could not be loaded. Retry preview.');
     }
@@ -115,6 +152,8 @@ export function createIconPreview(frame, status, retry) {
     disposed = true;
     clearDeadline();
     owner.removeEventListener('message', onMessage);
+    owner.removeEventListener('blur', onBlur);
+    document.removeEventListener('focusin', rememberFocus);
     frame.removeEventListener('load', onLoad);
     retry.removeEventListener('click', onRetry);
     observer.disconnect();
@@ -125,6 +164,8 @@ export function createIconPreview(frame, status, retry) {
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
   owner.addEventListener('message', onMessage);
+  owner.addEventListener('blur', onBlur);
+  document.addEventListener('focusin', rememberFocus);
   frame.addEventListener('load', onLoad);
   retry.addEventListener('click', onRetry);
   show('idle', 'Loading icon preview…');

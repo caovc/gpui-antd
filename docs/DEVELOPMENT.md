@@ -104,8 +104,14 @@ navigation. A 60-second readiness deadline offers **Retry preview**;
 reselecting the desired icon also retries a cancelled navigation. Healthy
 unchanged selections retain their running preview. Route removal cancels
 timers and listeners.
-Keyboard Retry moves focus to the live status while the button is hidden;
-once ready, focus may remain there or enter the labelled GPUI frame.
+Keyboard Retry keeps focus at the live status while the button is hidden
+and through readiness; the labelled GPUI frame can then be focused intentionally.
+During startup, the host remembers the latest focused control and restores
+it if GPUI's initializing IME textarea takes focus. This keeps an Enter meant
+for the next search result from activating the old canvas; a ready preview
+can still be focused intentionally.
+The same startup guard covers the adjacent same-origin GPUI Icons example;
+it does not redirect focus away from a ready example or preview.
 
 `npm run test:icons` also checks navigation state, stale notifications,
 timeout/retry and cleanup. `icon-preview-smoke.mjs` gates the initial real

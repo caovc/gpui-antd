@@ -18,12 +18,21 @@ export async function checkIconPreviewRecovery(browser, base, screenshots) {
     const initialGate = new Promise(resolve => { releaseInitial = resolve; });
     let initialRequested;
     const initialSeen = new Promise(resolve => { initialRequested = resolve; });
+    let releaseIntermediate;
+    const intermediateGate = new Promise(resolve => { releaseIntermediate = resolve; });
+    let intermediateRequested;
+    const intermediateSeen = new Promise(resolve => { intermediateRequested = resolve; });
     try {
       await page.addInitScript(value => localStorage.setItem('gpui-antd-dark', value), dark ? '1' : '0');
       await page.route('**/demo.html?component=Icon%3ASearchOutlined*', async route => {
         initialRequested();
         await initialGate;
         await route.continue().catch(() => {}); // a newer selection can cancel it
+      }, { times: 1 });
+      await page.route('**/demo.html?component=Icon%3ACheckCircleFilled*', async route => {
+        intermediateRequested();
+        await intermediateGate;
+        await route.continue().catch(() => {});
       }, { times: 1 });
       await page.goto(base + '#/components/Icons', { waitUntil: 'domcontentloaded' });
       await page.locator('#icon-source[href]').waitFor();
@@ -37,7 +46,15 @@ export async function checkIconPreviewRecovery(browser, base, screenshots) {
         await page.locator('#icon-query').fill(name);
         const hit = page.locator('button[data-icon-name="' + name + '"]');
         await hit.focus();
+        if (name === 'CiTwoTone') {
+          // Complete the prior GPUI startup between focus and Enter. Its IME
+          // initialization must not redirect this key into the old canvas.
+          releaseIntermediate();
+          await waitForIconPreview(page);
+          assert.equal(await hit.evaluate(el => el === document.activeElement), true);
+        }
         await page.keyboard.press('Enter');
+        if (name === 'CheckCircleFilled') await intermediateSeen;
       }
       releaseInitial();
       await waitForIconPreview(page);
@@ -85,11 +102,7 @@ export async function checkIconPreviewRecovery(browser, base, screenshots) {
       await page.keyboard.press('Enter');
       assert.equal(await page.locator('#icon-preview-status').evaluate(el => el === document.activeElement), true);
       await waitForIconPreview(page);
-      // GPUI may claim focus once interactive. Either the announcing status
-      // or the actual, labelled preview is a valid target; body is not.
-      assert.equal(await page.evaluate(() =>
-        [document.querySelector('#icon-preview-status'), document.querySelector('#icon-live-preview')]
-          .includes(document.activeElement)), true);
+      assert.equal(await page.locator('#icon-preview-status').evaluate(el => el === document.activeElement), true);
       assert.equal(await frame.evaluate(f => f.inert), false);
       assert.equal(await frame.evaluate(f => getComputedStyle(f).opacity), '1');
       assert.equal(await page.locator('#icon-preview-retry').isVisible(), false);
@@ -99,14 +112,17 @@ export async function checkIconPreviewRecovery(browser, base, screenshots) {
       await page.screenshot({ path: join(screenshots, 'icon-preview-recovered-' + label + '.png') });
       console.log('PASS: GPUI icon delayed startup, cancelled navigation, reselection and timeout/retry (' + label + ')');
     } catch (error) {
-      console.error('Icon recovery state:', await page.locator('#icon-live-preview').evaluate(f => ({
-        target: f.src, documentUrl: f.contentDocument?.URL, state: f.dataset.previewState,
-        status: f.contentDocument?.querySelector('#status')?.textContent,
-      })).catch(() => null));
+      console.error('Icon recovery state:', await page.evaluate(() => {
+        const f = document.querySelector('#icon-live-preview');
+        return { target: f?.src, documentUrl: f?.contentDocument?.URL, state: f?.dataset.previewState,
+          status: f?.contentDocument?.querySelector('#status')?.textContent,
+          focused: document.activeElement?.outerHTML };
+      }).catch(() => null));
       await page.screenshot({ path: join(screenshots, 'icon-preview-failed-' + label + '.png') }).catch(() => {});
       throw error;
     } finally {
       releaseInitial();
+      releaseIntermediate();
       await page.close();
     }
   }

@@ -26,6 +26,13 @@ Each navigation gets a `previewRequest` query value echoed by `demo.js` in
 both ready and error messages; even a queued error from an identical-route
 retry cannot fail the new attempt.
 
+GPUI Web initializes and focuses an IME textarea even for the icon canvas.
+Remember the host's latest focused control during loading, restoring it if
+startup enters the iframe. Also reconcile focus when readiness is accepted;
+once ready, leave intentional preview focus alone. A real-browser gate that
+finishes the prior GPUI load between focusing the next result and Enter
+failed before this focus handoff and passes with it.
+
 Hide and make the previous frame inert while loading or failed. Preserve its
 layout, show progress and expose Retry after renderer failure or timeout.
 Repeated normal settings deduplicate a live request; an explicit reselection
