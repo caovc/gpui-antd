@@ -6,8 +6,8 @@
 //! here from `AntTheme`, not from Kit's component chrome. Text entry still uses
 //! `InputState` so IME and caret behavior are not reimplemented.
 //!
-//! These are alpha APIs. Viewport-sticky Affix and OS file dialogs remain gaps.
-//! Cascader, TreeSelect, ColorPicker, Mentions, Image and Tour use base Popover
+//! These are alpha APIs. OS file dialogs remain a gap.
+//! Cascader, TreeSelect, ColorPicker, Mentions and Tour use base Popover
 //! for placement, outside dismissal and Escape. BorderBeam moves a token-colored
 //! segment; it is not a shader stroke.
 
@@ -27,7 +27,7 @@ use gpui_kit::{
 use qrcode::{Color as QrColor, EcLevel, QrCode};
 
 use crate::overlays::{OverlayPlacement, overlay_anchor};
-use crate::{AntIcon, AntIconName, AntText, AntTheme, AntTree, AntTreeNode, ControlSize, TextTone};
+use crate::{AntIcon, AntIconName, AntText, AntTheme, AntTree, AntTreeNode, TextTone};
 
 /// Menus open below the trigger, left-aligned. The named anchor is the popup
 /// corner pinned to the opposite edge of the trigger.
@@ -37,202 +37,6 @@ fn dropdown_anchor() -> Anchor {
 
 type Notify = Rc<dyn Fn(&mut Window, &mut App)>;
 type KeyNotify = Rc<dyn Fn(SharedString, &mut Window, &mut App)>;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum AntDirection {
-    #[default]
-    Ltr,
-    Rtl,
-}
-
-/// Explicit configuration. GPUI has no React context, so parents pass this
-/// value into children. `AntConfigProvider` only paints the subtree surface.
-#[derive(Clone, Copy, Debug)]
-pub struct AntConfig {
-    pub theme: AntTheme,
-    pub size: ControlSize,
-    pub direction: AntDirection,
-    pub disabled: bool,
-}
-impl Default for AntConfig {
-    fn default() -> Self {
-        Self {
-            theme: AntTheme::default(),
-            size: ControlSize::Middle,
-            direction: AntDirection::Ltr,
-            disabled: false,
-        }
-    }
-}
-impl AntConfig {
-    pub fn new(theme: AntTheme) -> Self {
-        Self {
-            theme,
-            ..Self::default()
-        }
-    }
-    pub fn size(mut self, size: ControlSize) -> Self {
-        self.size = size;
-        self
-    }
-    pub fn direction(mut self, direction: AntDirection) -> Self {
-        self.direction = direction;
-        self
-    }
-    pub fn disabled(mut self, disabled: bool) -> Self {
-        self.disabled = disabled;
-        self
-    }
-    pub fn control_height(self) -> f32 {
-        self.size.height()
-    }
-}
-
-#[derive(IntoElement)]
-pub struct AntConfigProvider {
-    config: AntConfig,
-    children: Vec<AnyElement>,
-}
-impl AntConfigProvider {
-    pub fn new(config: AntConfig) -> Self {
-        Self {
-            config,
-            children: Vec::new(),
-        }
-    }
-    pub fn config(&self) -> AntConfig {
-        self.config
-    }
-    pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_any_element());
-        self
-    }
-}
-impl RenderOnce for AntConfigProvider {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        let t = self.config.theme;
-        div()
-            .id("ant-config")
-            .w_full()
-            .flex()
-            .flex_col()
-            .gap(px(8.))
-            .p(px(8.))
-            .rounded(px(t.border_radius))
-            .bg(t.surface)
-            .text_color(t.text)
-            .when(self.config.direction == AntDirection::Rtl, |row| {
-                row.flex_row_reverse()
-            })
-            .when(self.config.disabled, |row| row.opacity(0.45))
-            .children(self.children)
-    }
-}
-
-/// Application surface. Message and Notification stay imperative Kit toasts;
-/// this wrapper does not invent a second host.
-#[derive(IntoElement)]
-pub struct AntApp {
-    config: AntConfig,
-    children: Vec<AnyElement>,
-}
-impl AntApp {
-    pub fn new(config: AntConfig) -> Self {
-        Self {
-            config,
-            children: Vec::new(),
-        }
-    }
-    pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_any_element());
-        self
-    }
-}
-impl RenderOnce for AntApp {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        let config = self.config;
-        self.children
-            .into_iter()
-            .fold(AntConfigProvider::new(config), |provider, child| {
-                provider.child(child)
-            })
-    }
-}
-
-/// Pins a child to the top of its parent. This is not viewport `position: sticky`;
-/// GPUI has no sticky style, so the bar is absolutely placed in a relative parent.
-#[derive(IntoElement)]
-pub struct AntAffix {
-    offset: f32,
-    theme: AntTheme,
-    children: Vec<AnyElement>,
-    body: Vec<AnyElement>,
-}
-impl AntAffix {
-    pub fn new() -> Self {
-        Self {
-            offset: 0.,
-            theme: AntTheme::default(),
-            children: Vec::new(),
-            body: Vec::new(),
-        }
-    }
-    pub fn offset(mut self, offset: f32) -> Self {
-        self.offset = offset.max(0.);
-        self
-    }
-    pub fn theme(mut self, theme: AntTheme) -> Self {
-        self.theme = theme;
-        self
-    }
-    pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_any_element());
-        self
-    }
-    pub fn body(mut self, child: impl IntoElement) -> Self {
-        self.body.push(child.into_any_element());
-        self
-    }
-}
-impl Default for AntAffix {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-impl RenderOnce for AntAffix {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        let t = self.theme;
-        div()
-            .relative()
-            .w_full()
-            .h(px(180.))
-            .overflow_hidden()
-            .bg(t.surface_secondary)
-            .rounded(px(t.border_radius))
-            .child(
-                div()
-                    .absolute()
-                    .top(px(self.offset))
-                    .left(px(0.))
-                    .right(px(0.))
-                    .px(px(12.))
-                    .py(px(8.))
-                    .bg(t.surface)
-                    .border_b_1()
-                    .border_color(t.border)
-                    .children(self.children),
-            )
-            .child(
-                div()
-                    .pt(px(44. + self.offset))
-                    .px(px(12.))
-                    .flex()
-                    .flex_col()
-                    .gap(px(8.))
-                    .children(self.body),
-            )
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct AntAnchorLink {
@@ -1152,119 +956,6 @@ fn step_button(
                 })
                 .child(label),
         )
-}
-
-#[derive(Clone, Debug)]
-pub struct AntImageState {
-    pub open: bool,
-}
-impl AntImageState {
-    pub fn toggle(open: bool) -> bool {
-        !open
-    }
-}
-
-#[derive(IntoElement)]
-pub struct AntImage {
-    id: ElementId,
-    alt: SharedString,
-    open: bool,
-    theme: AntTheme,
-    on_open: Option<Rc<dyn Fn(bool, &mut Window, &mut App)>>,
-}
-impl AntImage {
-    pub fn new(id: impl Into<ElementId>, alt: impl Into<SharedString>) -> Self {
-        Self {
-            id: id.into(),
-            alt: alt.into(),
-            open: false,
-            theme: AntTheme::default(),
-            on_open: None,
-        }
-    }
-    pub fn open(mut self, open: bool) -> Self {
-        self.open = open;
-        self
-    }
-    pub fn theme(mut self, theme: AntTheme) -> Self {
-        self.theme = theme;
-        self
-    }
-    pub fn on_open(mut self, f: impl Fn(bool, &mut Window, &mut App) + 'static) -> Self {
-        self.on_open = Some(Rc::new(f));
-        self
-    }
-}
-impl RenderOnce for AntImage {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        let t = self.theme;
-        let alt = self.alt.clone();
-        let on_open = self.on_open.clone();
-        let id = self.id.clone();
-        BasePopover::new(self.id)
-            .anchor(dropdown_anchor())
-            .offset(px(8.))
-            .open(self.open)
-            .overlay_closable(true)
-            .when_some(on_open, |popover, callback| {
-                popover.on_open_change(move |open, window, cx| callback(*open, window, cx))
-            })
-            .trigger_with(move |open, _, _| {
-                div()
-                    .id(SharedString::from(format!("image-trigger-{id:?}")))
-                    .relative()
-                    .w(px(220.))
-                    .h(px(140.))
-                    .rounded(px(t.border_radius))
-                    .overflow_hidden()
-                    .bg(t.primary_bg)
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .child(
-                        AntIcon::new(AntIconName::PictureOutlined)
-                            .theme(t)
-                            .size(36.),
-                    )
-                    .child(
-                        div()
-                            .absolute()
-                            .bottom(px(8.))
-                            .right(px(8.))
-                            .px(px(8.))
-                            .py(px(4.))
-                            .rounded(px(t.border_radius))
-                            .bg(t.surface)
-                            .child(if open { "Close preview" } else { "Preview" }),
-                    )
-                    .into_any_element()
-            })
-            .content(move |_, _, _| {
-                div()
-                    .w(px(280.))
-                    .h(px(180.))
-                    .p(px(12.))
-                    .rounded(px(t.border_radius))
-                    .bg(t.surface)
-                    .border_1()
-                    .border_color(t.border)
-                    .flex()
-                    .flex_col()
-                    .gap(px(8.))
-                    .justify_center()
-                    .child(
-                        AntIcon::new(AntIconName::PictureOutlined)
-                            .theme(t)
-                            .size(28.),
-                    )
-                    .child(AntText::new(alt).theme(t))
-                    .child(
-                        AntText::new("Window mask and a real image source are still open.")
-                            .theme(t)
-                            .tone(TextTone::Secondary),
-                    )
-            })
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -2553,17 +2244,6 @@ mod tests {
         assert_eq!(slots.len(), 5);
         assert!(matches!(slots[0], ListySlot::Header(_)));
         assert!(matches!(slots[3], ListySlot::Header(_)));
-    }
-
-    #[test]
-    fn config_height_follows_control_size() {
-        assert_eq!(
-            AntConfig::default()
-                .size(ControlSize::Large)
-                .control_height(),
-            40.
-        );
-        assert_eq!(AntImageState::toggle(false), true);
     }
 
     #[test]

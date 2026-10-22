@@ -53,6 +53,10 @@ jobs:
         working-directory: website
         run: npm install --no-audit --no-fund
 
+      - name: Verify public native component catalog and withdrawn routes
+        working-directory: website
+        run: npm run test:catalog
+
       - name: Test theme token editor state and source generation
         working-directory: website
         run: npm run test:tokens

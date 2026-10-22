@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "smoke": "node scripts/smoke.mjs",
+    "test:catalog": "node --test scripts/component-catalog.test.mjs",
     "test:tokens": "node --test scripts/token-studio.test.mjs",
     "test:icons": "node --test scripts/icon-source.test.mjs scripts/icon-preview.test.mjs",
     "audit:icons": "node scripts/audit-icons.mjs"

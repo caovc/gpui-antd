@@ -14,15 +14,16 @@ Data Entry or Feedback's similarly named full component.
 | Layout (7) | Divider, Flex, Grid, Layout, Masonry, Space, Splitter | — |
 | Navigation (7) | Anchor, Breadcrumb, Dropdown, Menu, Pagination, Steps, Tabs | — |
 | Data Entry (18) | AutoComplete, Cascader, Checkbox, ColorPicker, DatePicker, Form, Input, InputNumber, Mentions, Radio, Rate, Select, Slider, Switch, TimePicker, Transfer, TreeSelect, Upload | — |
-| Data Display (21) | Avatar, Badge, Calendar, Card, Carousel, Collapse, Descriptions, Empty, Image, List, Listy, Popover, QRCode, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tour, Tree | — |
+| Data Display (21) | Avatar, Badge, Calendar, Card, Carousel, Collapse, Descriptions, Empty, List, Listy, Popover, QRCode, Segmented, Statistic, Table, Tag, Timeline, Tooltip, Tour, Tree | Image (withdrawn) |
 | Feedback (11) | Alert, Drawer, Message, Modal, Notification, Popconfirm, Progress, Result, Skeleton, Spin, Watermark | — |
-| Other (4) | Affix, App, BorderBeam, ConfigProvider | — |
-| **Total (72)** | **72 alpha** | **0 missing** |
+| Other (4) | BorderBeam | Affix, App, ConfigProvider (withdrawn) |
+| **Total (72)** | **68 alpha** | **4 withdrawn** |
 
 The extra Pro Components (ProTable, ProForm, ProLayout, etc.) are separate
 higher-level packages and do not count toward this 72-item core overview.
-Presence is alpha, not API or pixel parity. Issue #25 records the remaining
-gaps: no viewport sticky, no OS file dialog, Tour has no spotlight mask,
+[Four placeholders were withdrawn](COMPONENT_SUPPORT.md): App, ConfigProvider,
+Affix and Image. They are not supported components. Issue #25 records the
+remaining gaps: no OS file dialog, Tour has no spotlight mask,
 and BorderBeam is a moving edge segment rather than a shader stroke.
 This matrix tracks **component presence**, not API completeness. A complete
 Ant Design-equivalent implementation still requires multiple release cycles.
@@ -71,7 +72,7 @@ field with `.trigger(AntInput::new(&input))`, also pass
 suggestion popover retains editor focus. Dismissal is transient element state;
 the field text and selected value remain owned by the parent.
 
-Browser smoke additionally checks Cascader, ColorPicker, TreeSelect, Image and
+Browser smoke additionally checks Cascader, ColorPicker, TreeSelect and
 Tour panel pixels below the trigger, Escape and outside dismissal in light and
 dark themes. These checks establish working native overlays, not full Ant
 Design screenshot parity, keyboard list navigation or a screen-reader audit.
@@ -99,7 +100,7 @@ placement/arrow variants and keyboard-focus tooltip activation remain open.
 | Tree | Cascaded check/uncheck of collapsed descendants, bottom-up parent checks, indeterminate icon, strict independent mode, disabled subtree barrier | Lazy loading, virtualization, drag/drop, fully audited treeitem ARIA check states |
 | Table | Controlled per-column exact-match filters via native Dropdown menus; filter before sort/page, total reflects filtered rows; select/deselect all enabled visible page rows | Multi-choice filters, search/fuzzy predicates, fixed columns, large data virtualization, editable cells |
 | Timeline | Left/Right/Alternate alignment, status dots/icons, reverse ordering, pending spinner, timestamps and native GPUI child content | Animated connector/entry motion, responsive alternate layout, exact Ant pixel parity |
-| Token Studio | 50 independent component names, live Table/Tree/Timeline overrides and Rust GPU scene | Seed derivation parity, broader native consumption, global ConfigProvider |
+| Token Studio | 68 public preview choices (53 token namespaces), live Table/Tree/Timeline overrides and Rust GPU scene | Seed derivation parity, broader native consumption, native application configuration |
 
 ## Wave 5: Calendar and floating actions
 
@@ -115,14 +116,14 @@ placement/arrow variants and keyboard-focus tooltip activation remain open.
    range keyboard, InputNumber formatter/parser. Cascader, ColorPicker,
    Mentions and TreeSelect open through base Popover; search, Transfer search
    and the Upload file dialog are still open.
-2. **Enterprise data display:** Table/Tree virtualization and ARIA. Image,
-   Carousel, Listy, QRCode and Tour exist as alpha; portals, autoplay and
-   target measurement do not.
+2. **Enterprise data display:** Table/Tree virtualization and ARIA.
+   Carousel, Listy, QRCode and Tour exist as alpha; autoplay, full preview
+   services and external-target Tour tracking remain open.
 3. **Rich feedback:** Drawer open-state parity, Message/Notification action APIs, richer Spin/Skeleton;
    use real Kit Root overlays and focus management (never paint a fake DOM
    dialog or toast over a WASM screenshot).
-4. **Alpha follow-ups:** viewport Affix, Upload file dialog, Watermark images.
-   Cascader, TreeSelect, ColorPicker, Mentions, Image and Tour already open
+4. **Alpha follow-ups:** Upload file dialog, Watermark images.
+   Cascader, TreeSelect, ColorPicker, Mentions and Tour already open
    through base Popover.
 5. **Parity hardening:** Screenshot/reference diffs against actual Ant Design,
    dark-mode contrast, accessible value/role semantics, focus restoration,
@@ -130,6 +131,7 @@ placement/arrow variants and keyboard-focus tooltip activation remain open.
 
 ## Standard for claiming alpha
 
+- Core advertised behavior works natively; a styled placeholder is insufficient.
 - Exported through crates/antd/src/lib.rs and constructed in a real Rust Gallery.
 - Listed in website/src/main.js with a working WASM iframe, copied Rust sample,
   APIs and accurate partial-feature description.

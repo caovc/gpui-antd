@@ -1,3 +1,4 @@
+import { PUBLIC_COMPONENTS, WITHDRAWN_COMPONENTS } from '../src/component-names.js';
 /**
  * Browser-level GPUI WASM smoke test.
  *
@@ -109,8 +110,33 @@ try {
     ],
   });
 
+  // Old public links must state unavailability, never paint another demo.
+  for (const name of WITHDRAWN_COMPONENTS) {
+    const page = await browser.newPage();
+    const wasmRequests = [];
+    page.on('request', request => {
+      if (/\/wasm\/|gpui_antd_gallery|\.wasm(?:[?#]|$)/.test(request.url()))
+        wasmRequests.push(request.url());
+    });
+    try {
+      await page.goto(base + '#/components/' + name);
+      await page.getByRole('heading', {name: name + ' unavailable', exact: true}).waitFor();
+      if (await page.locator('iframe').count()) throw Error('Withdrawn docs opened a preview');
+      await page.goto(base + 'demo.html?component=' + name);
+      await page.locator('#status.error').waitFor();
+      if (!(await page.locator('#status').textContent()).includes(name + ' is unavailable'))
+        throw Error('Missing withdrawal explanation');
+      if (wasmRequests.length || await page.locator('canvas').count())
+        throw Error('Withdrawn component started a replacement WASM demo');
+      console.log('PASS: ' + name + ' withdrawn from docs and WASM routes');
+    } catch (error) {
+      failures++;
+      console.error('FAIL: withdrawn ' + name, String(error));
+    } finally { await page.close(); }
+  }
+
   const twoToneCases = ['CarryOutTwoTone', 'CheckCircleTwoTone', 'CheckSquareTwoTone', 'CiCircleTwoTone', 'CiTwoTone'];
-  const components = ['Button', 'Radio', 'Input', 'Select', 'DatePicker', 'Form', 'Icons', 'Typography', 'Space', 'Flex', 'Grid', 'Layout', 'Menu', 'MenuTree', 'Dropdown', 'Popover', 'Modal', 'Popconfirm', 'Avatar', 'Statistic', 'Empty', 'Breadcrumb', 'Tabs', 'Tooltip', 'Pagination', 'Steps', 'Rate', 'Collapse', 'Descriptions', 'List', 'Result', 'Skeleton', 'Spin', 'InputNumber', 'Slider', 'Segmented', 'TimePicker', 'AutoComplete', 'Drawer', 'Message', 'Notification', 'Tree', 'Table', 'Timeline', 'Calendar', 'FloatButton', 'Affix', 'Anchor', 'App', 'BorderBeam', 'Carousel', 'Cascader', 'ColorPicker', 'ConfigProvider', 'Image', 'Listy', 'Masonry', 'Mentions', 'QRCode', 'Splitter', 'Tour', 'Transfer', 'TreeSelect', 'Upload', 'Watermark', 'Icon:SearchOutlined', ...twoToneCases.map(name => 'Icon:' + name)];
+  const components = [...PUBLIC_COMPONENTS, 'MenuTree', 'Icon:SearchOutlined', ...twoToneCases.map(name => 'Icon:' + name)];
   const previews = [
     ...components.map(name => ({name, dark:false})),
     {name:'Icon:CheckCircleTwoTone',dark:true},
@@ -241,8 +267,10 @@ try {
     // A selected-component scene routes to an existing Rust Gallery demo.
     // Verify two independent components with the *same* edited theme.
     await studio.locator('#theme-scene').selectOption('single');
-    for (const target of ['Tabs','Menu']) {
+    for (const target of ['Tabs','Menu','QRCode']) {
       await studio.locator('#theme-component').selectOption(target);
+      if (target === 'QRCode' && !(await studio.locator('#theme-coverage').textContent()).includes('native preview only'))
+        throw Error('Preview-only component advertised token override support');
       await studio.waitForFunction(name=>{
         const src=document.querySelector('#theme-preview-frame')?.src;
         const route=src?new URL(src).searchParams.get('component')||'':'';
@@ -410,7 +438,6 @@ try {
       {name:'Cascader',initialOpen:true,bottom:56},
       {name:'ColorPicker',bottom:56},
       {name:'TreeSelect',bottom:56},
-      {name:'Image',bottom:164},
       {name:'Tour',initialOpen:true,bottom:58},
     ]) {
       const page=await browser.newPage({viewport:{width:900,height:550}});

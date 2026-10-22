@@ -254,3 +254,7 @@ No CDN/request to inject runtime executable scripts into native components.
 Never commit secrets, download font files, release WASM blobs or node_modules.
 Don't disable tests or ignore non-transient browser errors just to get a green
 badge.
+
+The public component catalog is checked with `cd website && npm run test:catalog`.
+It compares Rust routes, docs metadata, Studio preview choices and counts.
+Withdrawn APIs and migration guidance are in [COMPONENT_SUPPORT.md](COMPONENT_SUPPORT.md).
