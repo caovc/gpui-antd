@@ -11,6 +11,7 @@ import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stripVTControlCharacters } from 'node:util';
 import { checkIconSources } from './icon-source-smoke.mjs';
 import { checkIconPreviewRecovery } from './icon-preview-smoke.mjs';
 import { checkTabsInteractions } from './tabs-smoke.mjs';
@@ -46,7 +47,7 @@ async function serverReady() {
     try {
       // A different project's existing server may return 200 before this
       // strict-port child reports its bind failure. Wait for *our* Vite URL.
-      if (serverLog.includes(base)) {
+      if (stripVTControlCharacters(serverLog).includes(base)) {
         const res = await fetch(base);
         if (res.ok && server.exitCode === null) return;
       }
