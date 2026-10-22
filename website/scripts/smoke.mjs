@@ -115,7 +115,8 @@ try {
     const page = await browser.newPage();
     const wasmRequests = [];
     page.on('request', request => {
-      if (request.url().includes('/wasm/')) wasmRequests.push(request.url());
+      if (/\/wasm\/|gpui_antd_gallery|\.wasm(?:[?#]|$)/.test(request.url()))
+        wasmRequests.push(request.url());
     });
     try {
       await page.goto(base + '#/components/' + name);
