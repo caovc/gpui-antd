@@ -7,6 +7,8 @@
  * source by scripts/sync_antd_icons.py and committed alongside the SVG assets.
  */
 
+import { createIconPreview } from './icon-preview.js';
+
 const escapeHtml = value => String(value)
   .replaceAll('&','&amp;').replaceAll('<','&lt;')
   .replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -44,6 +46,8 @@ export function iconExplorerHtml() {
     '<h3 id="icon-selected-title">SearchOutlined</h3>' +
     '<p>Official icon rendered by Rust/GPUI. Adjust its colors, size or rotation and copy the Rust API.</p>' +
     '<p><a id="icon-source" class="icon-source" target="_blank" rel="noopener noreferrer" hidden>View upstream SVG</a></p>' +
+    '<p id="icon-preview-status" role="status" tabindex="-1" aria-live="polite" aria-atomic="true">Loading icon preview…</p>' +
+    '<button id="icon-preview-retry" class="icon-reset" type="button" hidden>Retry preview</button>' +
     '<div class="icon-preview-controls">' +
     '<label>Size <select id="icon-size" aria-label="Icon preview size">' +
       '<option value="32">32px</option><option value="64" selected>64px</option>' +
@@ -90,6 +94,8 @@ export async function initIconExplorer(base, dark) {
   const secondaryWrap = root.querySelector('#icon-secondary-wrap');
   const spin = root.querySelector('#icon-spin');
   const reset = root.querySelector('#icon-reset');
+  const navigation = createIconPreview(preview, root.querySelector('#icon-preview-status'),
+    root.querySelector('#icon-preview-retry'));
   const themePalette = dark
     ? { primary:'#1668dc', secondary:'#111d2c', mono:'#f3f3f3' }
     : { primary:'#1677ff', secondary:'#e6f4ff', mono:'#262626' };
@@ -120,11 +126,10 @@ export async function initIconExplorer(base, dark) {
       '&dark=' + (dark ? '1' : '0');
   }
 
-  function refreshPreview() {
+  function refreshPreview({ retry = false } = {}) {
     const name = selectedName();
     if (!name) return;
     const nameCode = 'AntIcon::new(AntIconName::' + name + ')';
-    const defaultColor = selectedStyle === 'twotone' ? themePalette.primary : themePalette.mono;
     let snippet = nameCode + '\\n    .size(' + size.value + '.)\\n    .theme(theme)';
     if (paletteCustomized) {
       const p = primary.value.replace('#','0x');
@@ -138,18 +143,22 @@ export async function initIconExplorer(base, dark) {
     if (spin.checked) snippet += '\\n    .spin(true)';
     code.textContent = snippet.replaceAll('\\n','\n');
     const target = frameSrc(name);
-    if (!preview.src.endsWith(target)) preview.src = target;
+    navigation.request(target, { retry });
   }
 
   let catalog;
   try { catalog = await fetchCatalog(base); }
   catch (error) {
-    if (root.isConnected) count.textContent = 'Unable to load icon catalog: ' + error.message;
+    if (root.isConnected) {
+      count.textContent = 'Unable to load icon catalog: ' + error.message;
+      root.querySelector('#icon-preview-status').textContent = 'Icon preview unavailable';
+    }
     return;
   }
   if (!root.isConnected) return;
   if (!Array.isArray(catalog.icons) || !catalog.icons.length) {
     count.textContent = 'No icons found in the bundled catalog.';
+    root.querySelector('#icon-preview-status').textContent = 'Icon preview unavailable';
     return;
   }
 
@@ -157,6 +166,7 @@ export async function initIconExplorer(base, dark) {
     const match = catalog.icons.find(icon => icon.name === name);
     if (!match) return;
     const switchedStyle = selectedStyle !== match.style;
+    const reselected = selectedName() === name;
     selected.textContent = name;
     const sourceUrl = iconSourceUrl(catalog, match);
     source.hidden = !sourceUrl;
@@ -165,7 +175,7 @@ export async function initIconExplorer(base, dark) {
     source.setAttribute('aria-label', 'View upstream SVG for ' + name + ' (opens in new tab)');
     selectedStyle = match.style;
     if (switchedStyle) resetDisplay();
-    refreshPreview();
+    refreshPreview({ retry: reselected });
     grid.querySelectorAll('button[data-icon-name]').forEach(button => {
       const active = button.dataset.iconName === name;
       button.classList.toggle('selected', active);
