@@ -169,9 +169,11 @@ test('late valid paint resolves a timeout without accepting any previous route',
   f.controller.request(a); f.tick(ICON_PREVIEW_TIMEOUT_MS);
   f.commit(route('SearchOutlined')); f.message(route('SearchOutlined'));
   assert.equal(f.frame.dataset.previewState, 'error');
+  f.frame.ownerDocument.activeElement = f.retry;
   f.commit(a); f.message(a);
   assert.equal(f.frame.dataset.previewState, 'ready');
   assert.equal(f.retry.hidden, true);
+  assert.equal(f.frame.ownerDocument.activeElement, f.status);
   f.controller.destroy();
 });
 

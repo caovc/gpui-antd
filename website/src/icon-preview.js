@@ -28,6 +28,11 @@ export function createIconPreview(frame, status, retry) {
   }
 
   function show(next, message) {
+    // Retry can disappear after activation or a late successful paint.
+    // Preserve a meaningful keyboard target in either case.
+    if (next !== 'error' && document.activeElement === retry) {
+      status.focus({ preventScroll: true });
+    }
     phase = next;
     frame.dataset.previewState = next;
     frame.inert = next !== 'ready';
@@ -97,9 +102,6 @@ export function createIconPreview(frame, status, retry) {
 
   function onRetry() {
     if (!target) return;
-    // Retry disappears while loading. Keep keyboard users at its status
-    // rather than dropping focus to the document body.
-    if (document.activeElement === retry) status.focus({ preventScroll: true });
     request(target, { retry: true });
   }
 
