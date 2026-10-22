@@ -11,6 +11,18 @@ const escapeHtml = value => String(value)
   .replaceAll('&','&amp;').replaceAll('<','&lt;')
   .replaceAll('>','&gt;').replaceAll('"','&quot;');
 
+// Resolve provenance from the generated manifest, never from the Rust name:
+// irregular names such as CiTwoTone should retain their exact SVG slugs.
+export function iconSourceUrl(catalog, icon) {
+  if (catalog?.source !== 'ant-design/ant-design-icons' ||
+      catalog?.revision?.length !== 40 ||
+      !/^[0-9a-f]{40}$/.test(catalog?.revision ?? '')) return null;
+  const path = /^antd-icons\/(outlined|filled|twotone)\/([a-z0-9]+(?:-[a-z0-9]+)*\.svg)$/.exec(icon?.path ?? '');
+  if (!path || path[0] !== icon.path || path[1] !== icon.style) return null;
+  return 'https://github.com/' + catalog.source + '/blob/' + catalog.revision +
+    '/packages/icons-svg/svg/' + path[1] + '/' + path[2];
+}
+
 export function iconExplorerHtml() {
   return '<section id="icon-explorer" class="icon-explorer">' +
     '<div class="doc-section-heading"><h2>Official icon catalog</h2>' +
@@ -31,6 +43,7 @@ export function iconExplorerHtml() {
     '<div><span class="section-eyebrow">RUST / GPUI / WASM</span>' +
     '<h3 id="icon-selected-title">SearchOutlined</h3>' +
     '<p>Official icon rendered by Rust/GPUI. Adjust its colors, size or rotation and copy the Rust API.</p>' +
+    '<p><a id="icon-source" class="icon-source" target="_blank" rel="noopener noreferrer" hidden>View upstream SVG</a></p>' +
     '<div class="icon-preview-controls">' +
     '<label>Size <select id="icon-size" aria-label="Icon preview size">' +
       '<option value="32">32px</option><option value="64" selected>64px</option>' +
@@ -66,6 +79,7 @@ export async function initIconExplorer(base, dark) {
   const query = root.querySelector('#icon-query');
   const style = root.querySelector('#icon-style');
   const selected = root.querySelector('#icon-selected-title');
+  const source = root.querySelector('#icon-source');
   const code = root.querySelector('#icon-selected-code code');
   const preview = root.querySelector('#icon-live-preview');
   const copy = root.querySelector('#icon-copy');
@@ -144,6 +158,11 @@ export async function initIconExplorer(base, dark) {
     if (!match) return;
     const switchedStyle = selectedStyle !== match.style;
     selected.textContent = name;
+    const sourceUrl = iconSourceUrl(catalog, match);
+    source.hidden = !sourceUrl;
+    if (sourceUrl) source.href = sourceUrl;
+    else source.removeAttribute('href');
+    source.setAttribute('aria-label', 'View upstream SVG for ' + name + ' (opens in new tab)');
     selectedStyle = match.style;
     if (switchedStyle) resetDisplay();
     refreshPreview();

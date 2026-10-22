@@ -57,6 +57,10 @@ jobs:
         working-directory: website
         run: npm run test:tokens
 
+      - name: Verify pinned source links for the complete icon catalog
+        working-directory: website
+        run: npm run test:icons
+
       - name: Build documentation and gallery
         working-directory: website
         run: npm run build

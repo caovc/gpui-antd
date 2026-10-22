@@ -11,6 +11,7 @@ import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkIconSources } from './icon-source-smoke.mjs';
 
 const root = new URL('../', import.meta.url);
 const screenshots = join(process.env.RUNNER_TEMP ?? '/tmp', 'gpui-antd-smoke');
@@ -1002,6 +1003,12 @@ try {
     console.error('FAIL: official icon search and GPUI preview', String(error));
   } finally {
     await docs.close();
+  }
+  try {
+    await checkIconSources(browser, base, screenshots);
+  } catch (error) {
+    failures++;
+    console.error('FAIL: pinned official icon source links', String(error));
   }
   if (failures > 0) throw new Error(failures + ' GPUI/WASM browser smoke tests failed');
 } finally {
