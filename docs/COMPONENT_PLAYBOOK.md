@@ -104,9 +104,14 @@ Tabs:
   to individual tabs, not the selected panel, so panel controls keep
   their own key behavior.
 - The pinned Kit TabBar already supplies one `Role::TabList` around the
-  native `Role::Tab` children and their selected/disabled state; do not
+  native `Role::Tab` children and their selected state; do not
   wrap it in another TabList. Selected native content uses `Role::TabPanel`
   and the visible tab's label.
+  Kit 0.7.3 does not write the native disabled flag for Tabs. Disabled input
+  rejection is tested separately; do not claim screen-reader disabled output.
+  Let native Kit/GPUI Enter/Space key-up clicks own confirmation rather than
+  also activating on key-down. Home/End selection requests must not depend
+  on whether focus needs to move; controlled selection can lag behind focus.
 - This is **not** yet complete APG parity: `aria-controls` / `aria-labelledby`
   ID relations and real screen-reader audits remain; add visual keyboard
   simulations and browser smoke before claiming verification.

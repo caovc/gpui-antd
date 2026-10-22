@@ -181,7 +181,9 @@ entrypoints are:
   loading/error states hide stale canvases and allow explicit recovery.
 - `website/demo.html` + `website/src/demo.js`: wasm-bindgen initialization;
   reads `?component=Name&dark=0|1`, invokes `wasm.run(name,dark)`, then waits
-  for a non-zero GPUI canvas. A successful JS call alone doesn't prove paint.
+  for a non-zero GPUI canvas and the actual hidden IME textarea. The canvas
+  can precede keyboard startup; early ready messages would end host focus
+  protection before GPUI's initial focus. A JS return alone doesn't prove paint.
 - `crates/gallery/src/lib.rs`: chooses a *Rust* demo based on component name
   (including `Icon:Name` for individual official icons).
 - `website/scripts/smoke.mjs`: Playwright Chromium startup checks (headless

@@ -24,6 +24,23 @@ export async function checkIconPreviewRecovery(browser, base, screenshots) {
     const intermediateSeen = new Promise(resolve => { intermediateRequested = resolve; });
     try {
       await page.addInitScript(value => localStorage.setItem('gpui-antd-dark', value), dark ? '1' : '0');
+      // Force the real GPUI canvas to exist before its actual keyboard bridge
+      // is attached. Without this gate the GPU/IME ordering depends on load.
+      await page.addInitScript(() => {
+        if (!new URL(location.href).searchParams.get('component')?.startsWith('Icon:CheckCircleFilled')) return;
+        const append = Node.prototype.appendChild;
+        Node.prototype.appendChild = function(node) {
+          if (this === document.body && node instanceof HTMLTextAreaElement) {
+            Node.prototype.appendChild = append;
+            window.__releaseGpuiKeyboard = () => {
+              append.call(document.body, node);
+              node.focus();
+            };
+            return node;
+          }
+          return append.call(this, node);
+        };
+      });
       await page.route('**/demo.html?component=Icon%3ASearchOutlined*', async route => {
         initialRequested();
         await initialGate;
@@ -50,6 +67,14 @@ export async function checkIconPreviewRecovery(browser, base, screenshots) {
           // Complete the prior GPUI startup between focus and Enter. Its IME
           // initialization must not redirect this key into the old canvas.
           releaseIntermediate();
+          await page.waitForFunction(() => {
+            const f = document.querySelector('#icon-live-preview');
+            return f?.contentWindow?.__releaseGpuiKeyboard && f.contentDocument.querySelector('canvas')?.width>0;
+          });
+          assert.equal(await frame.getAttribute('data-preview-state'), 'loading',
+            'Canvas alone must not acknowledge readiness before the GPUI keyboard bridge');
+          assert.equal(await frame.evaluate(f => Boolean(f.contentDocument.querySelector('#status'))), true);
+          await frame.evaluate(f => f.contentWindow.__releaseGpuiKeyboard());
           await waitForIconPreview(page);
           assert.equal(await hit.evaluate(el => el === document.activeElement), true);
         }

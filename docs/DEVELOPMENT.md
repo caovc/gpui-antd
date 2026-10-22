@@ -112,6 +112,10 @@ for the next search result from activating the old canvas; a ready preview
 can still be focused intentionally.
 The same startup guard covers the adjacent same-origin GPUI Icons example;
 it does not redirect focus away from a ready example or preview.
+The child acknowledges readiness only after both the nonzero canvas and GPUI
+Web's body-level IME textarea exist. GPU initialization can leave a canvas
+visible before `ImeMirror::new` appends and focuses that textarea; a canvas-only
+ready signal ends the parent's focus protection too early.
 
 `npm run test:icons` also checks navigation state, stale notifications,
 timeout/retry and cleanup. `icon-preview-smoke.mjs` gates the initial real
@@ -120,6 +124,9 @@ same-icon recovery and deadline/Retry in all four light/dark × desktop/mobile
 combinations. The browser clock advances the deadline without a minute-long
 sleep. Browser assertions wait for both actual GPUI paint and the controller's
 accepted ready state; failure screenshots and frame diagnostics are archived.
+The intermediate-frame regression explicitly holds the actual IME attachment
+after canvas creation, then releases it; ready must stay pending until the
+keyboard bridge is mounted and host focus has been restored.
 
 `npm run smoke` verifies component interactions plus animated TwoTone pixels
 at 2x device pixel ratio. Pages CI on PRs runs
@@ -203,7 +210,7 @@ the GPUI gallery using `component=Icon:SearchOutlined`.
 
 Native CI:
 `cargo check --workspace` followed by `cargo test -p gpui-antd --lib`.
-The native workflow also runs `cargo test -p gpui-antd --test control_interactions --test menu_hover`
+The native workflow also runs `cargo test -p gpui-antd --test control_interactions --test menu_hover --test tabs_interactions`
 for pointer, keyboard, popup geometry and state regression coverage.
 The command label in the workflow might say "Unit tests (theme tokens)" but
 the command actually runs **all library unit tests**.

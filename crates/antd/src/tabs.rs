@@ -3,7 +3,8 @@
 //! Tab selection is owned by the application. GPUI Kit provides pointer
 //! activation, native animation, overflow scrolling and tab accessibility.
 //! The pinned Kit TabBar paints the animated indicator and exposes each
-//! tab's ARIA selected/disabled state. We attach a stable focus handle to
+//! tab's ARIA selected state (Kit 0.7.3 omits the disabled accessibility flag).
+//! We attach a stable focus handle to
 //! every native KitTab for roving focus and automatic keyboard activation,
 //! without replacing the styled tab bar with a DOM or fake visual proxy.
 
@@ -14,9 +15,9 @@ use gpui_kit::component::{
 };
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
-    AnyElement, App, ElementId, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
-    ParentElement as _, RenderOnce, Role, SharedString, StatefulInteractiveElement as _,
-    Styled as _, Window, div, px,
+    AnyElement, App, ClickEvent, ElementId, FocusHandle, InteractiveElement as _, IntoElement,
+    KeyDownEvent, ParentElement as _, RenderOnce, Role, SharedString,
+    StatefulInteractiveElement as _, Styled as _, Window, div, px,
 };
 use std::rc::Rc;
 
@@ -245,11 +246,26 @@ impl RenderOnce for AntTabs {
                 let handles = all_handles.clone();
                 let enabled = enabled_keys.clone();
                 let on_change = keyboard_handler.clone();
+                let activate = keyboard_handler.clone();
+                let pointer_focus = focus.clone();
                 let item = KitTab::new()
                     .label(tab.label.clone())
                     .aria_label(tab.label.clone())
                     .disabled(tab.disabled)
                     .track_focus(&focus.tab_stop(keyboard && tab_stop == Some(index)))
+                    .on_click(move |event, window, cx| {
+                        if keyboard {
+                            window.focus(&pointer_focus, cx);
+                        }
+                        // Kit/GPUI synthesizes Enter/Space clicks on key-up.
+                        // Keep one activation path and avoid reporting a
+                        // no-op keyboard selection as another owner change.
+                        if index != selected || !matches!(event, ClickEvent::Keyboard(_)) {
+                            if let Some(callback) = &activate {
+                                callback(index, window, cx);
+                            }
+                        }
+                    })
                     .when(keyboard && !tab.disabled, |item| {
                         item.on_key_down(
                             move |event: &KeyDownEvent, window: &mut Window, cx: &mut App| {
@@ -265,18 +281,14 @@ impl RenderOnce for AntTabs {
                                 if let Some(next) = next_enabled_tab(&enabled, index, key) {
                                     if next != index {
                                         window.focus(&handles[next], cx);
-                                        if next != selected {
-                                            if let Some(callback) = &on_change {
-                                                callback(next, window, cx);
-                                            }
-                                        }
                                     }
-                                    window.prevent_default();
-                                    cx.stop_propagation();
-                                } else if matches!(key, "enter" | "space") {
-                                    if index != selected {
+                                    // A controlled owner may not have applied
+                                    // the last request yet. Home/End still
+                                    // activate their target when focus is
+                                    // already there but selection is stale.
+                                    if next != selected {
                                         if let Some(callback) = &on_change {
-                                            callback(index, window, cx);
+                                            callback(next, window, cx);
                                         }
                                     }
                                     window.prevent_default();
@@ -291,18 +303,6 @@ impl RenderOnce for AntTabs {
                 bar.child(item)
             },
         );
-        let pointer_handles = tab_focus;
-        let pointer_handler = self.on_change;
-        let bar = bar.on_click(move |index, window, cx| {
-            if allowed.get(*index).copied() == Some(true) {
-                if keyboard {
-                    window.focus(&pointer_handles[*index], cx);
-                }
-                if let Some(callback) = &pointer_handler {
-                    callback(*index, window, cx);
-                }
-            }
-        });
         let active_label = self
             .tabs
             .get(selected)
@@ -321,7 +321,7 @@ impl RenderOnce for AntTabs {
             .gap(px(0.))
             // Kit's inner Tabs already has Role::TabList. Do NOT create a
             // nested second TabList: each KitTab supplies Role::Tab and
-            // aria-selected/disabled through GPUI Base.
+            // aria-selected through GPUI Base (disabled flag is missing).
             .child(div().child(bar))
             .when_some(panel, |this, panel| {
                 this.child(
