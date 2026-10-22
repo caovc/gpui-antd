@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 
-async function waitForIconPreview(page) {
+export async function waitForIconPreview(page) {
   await page.locator('#icon-live-preview').scrollIntoViewIfNeeded();
   await page.waitForFunction(() => {
     const frame = document.querySelector('#icon-live-preview');
     const doc = frame?.contentDocument;
-    return doc?.URL === frame.src && doc.querySelector('canvas')?.width > 0 &&
+    return frame?.dataset.previewState === 'ready' && doc?.URL === frame.src && doc.querySelector('canvas')?.width > 0 &&
       !doc.querySelector('#status');
   }, null, { timeout: 60000 });
 }

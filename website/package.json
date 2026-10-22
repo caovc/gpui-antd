@@ -9,7 +9,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "smoke": "node scripts/smoke.mjs",
     "test:tokens": "node --test scripts/token-studio.test.mjs",
-    "test:icons": "node --test scripts/icon-source.test.mjs",
+    "test:icons": "node --test scripts/icon-source.test.mjs scripts/icon-preview.test.mjs",
     "audit:icons": "node scripts/audit-icons.mjs"
   },
   "devDependencies": {

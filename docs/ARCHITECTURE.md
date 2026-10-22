@@ -176,6 +176,9 @@ entrypoints are:
   API tables, overview, theme switch, and component cards.
 - `website/src/icons-explorer.js`: generated icon-name search and style
   filter; uses real GPUI iframe for the selected SVG.
+- `website/src/icon-preview.js`: selected-icon navigation lifecycle. The
+  requested route is separate from the acknowledged real GPUI document;
+  loading/error states hide stale canvases and allow explicit recovery.
 - `website/demo.html` + `website/src/demo.js`: wasm-bindgen initialization;
   reads `?component=Name&dark=0|1`, invokes `wasm.run(name,dark)`, then waits
   for a non-zero GPUI canvas. A successful JS call alone doesn't prove paint.

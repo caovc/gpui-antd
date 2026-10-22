@@ -256,7 +256,10 @@ Sider menu items and route navigation belong to the consuming app.
 
 The icon explorer supports size, color and spin options while the SVG
 is painted by the Rust GPUI/WASM gallery, not HTML/React. Each selected icon
-links to its official upstream SVG at the exact bundled commit. A deterministic
+links to its official upstream SVG at the exact bundled commit. The inspector
+shows loading/ready state, hides a previous icon while switching, and offers
+Retry after renderer failure or a 60-second readiness deadline. Reselecting
+the desired icon retries a cancelled navigation. A deterministic
 visual-audit command additionally renders the entire pinned 848-icon catalog
 in 36 native-GPUI gallery grids:
 
