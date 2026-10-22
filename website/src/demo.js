@@ -1,3 +1,5 @@
+import { WITHDRAWN_COMPONENTS } from './component-names.js';
+
 // Import generated wasm-bindgen bindings. Never substitute a DOM component
 // gallery here: the visible controls are real Rust gpui-antd views.
 const status = document.getElementById('status');
@@ -23,6 +25,10 @@ const observer = new MutationObserver(records => {
 observer.observe(document.body, {childList: true});
 
 try {
+  const name = component.split('|')[0];
+  if (WITHDRAWN_COMPONENTS.includes(name)) {
+    throw new Error(name + ' is unavailable: its placeholder implementation was withdrawn. See the component support guide.');
+  }
   const wasm = await import('./wasm/gpui_antd_gallery.js');
   await wasm.default();
   status.querySelector('span').textContent = 'Initializing GPU surface…';

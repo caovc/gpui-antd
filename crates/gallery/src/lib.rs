@@ -10,27 +10,27 @@ use std::{
 };
 
 use gpui_antd::{
-    AntAffix, AntAlert, AntAnchor, AntAnchorLink, AntApp, AntAutoComplete, AntAvatar, AntBadge,
-    AntBorderBeam, AntBreadcrumb, AntBreadcrumbItem, AntButton, AntCalendar, AntCard, AntCarousel,
+    AntAlert, AntAnchor, AntAnchorLink, AntAutoComplete, AntAvatar, AntBadge, AntBorderBeam,
+    AntBreadcrumb, AntBreadcrumbItem, AntButton, AntCalendar, AntCard, AntCarousel,
     AntCarouselSlide, AntCascader, AntCascaderOption, AntCheckbox, AntCol, AntCollapse,
-    AntCollapseItem, AntColorPicker, AntConfig, AntConfigProvider, AntContent, AntDatePicker,
-    AntDescriptionItem, AntDescriptions, AntDirection, AntDivider, AntDrawer, AntDropdown,
-    AntDropdownItem, AntEmpty, AntFlex, AntFloatAction, AntFloatButton, AntFloatButtonGroup,
-    AntFooter, AntForm, AntFormItem, AntHeader, AntIcon, AntIconAssets, AntIconName, AntImage,
-    AntInput, AntInputNumber, AntLayout, AntLink, AntList, AntListItem, AntListyItem, AntMasonry,
-    AntMasonryItem, AntMentionOption, AntMentions, AntMenu, AntMenuItem, AntMenuMode,
-    AntMenuTrigger, AntMessage, AntMobileDrawer, AntModal, AntNotification, AntPagination,
-    AntParagraph, AntPopconfirm, AntPopover, AntProgress, AntQrCode, AntRadio, AntRadioGroup,
-    AntRate, AntResolvedToken, AntResult, AntRow, AntSegmented, AntSegmentedOption, AntSelect,
-    AntSider, AntSkeleton, AntSlider, AntSpace, AntSpin, AntSplitter, AntStatistic, AntStep,
-    AntSteps, AntSwitch, AntTab, AntTable, AntTableColumn, AntTableRow, AntTabs, AntTag, AntText,
-    AntTheme, AntTimePicker, AntTimeline, AntTimelineItem, AntTitle, AntTokenLayer, AntTokenValue,
-    AntTooltip, AntTour, AntTourStep, AntTransfer, AntTransferItem, AntTree, AntTreeNode,
-    AntTreeSelect, AntTypography, AntUpload, AntUploadFile, AntWatermark, AvatarShape, AvatarSize,
-    ControlSize, DrawerPlacement, FlexAlign, FlexJustify, FloatShape, FloatVariant, FormRule,
-    FormSchema, GridBreakpoint, InputStatus, InputVariant, ListSize, ListySlot, NoticeTone,
-    ResultStatus, SpaceSize, StepStatus, TableSort, TabsVariant, TextTone, TimelineMode,
-    TimelineTone, Tone, UploadStatus, ant_listy, apply_mention, listy_slots,
+    AntCollapseItem, AntColorPicker, AntContent, AntDatePicker, AntDescriptionItem,
+    AntDescriptions, AntDivider, AntDrawer, AntDropdown, AntDropdownItem, AntEmpty, AntFlex,
+    AntFloatAction, AntFloatButton, AntFloatButtonGroup, AntFooter, AntForm, AntFormItem,
+    AntHeader, AntIcon, AntIconAssets, AntIconName, AntInput, AntInputNumber, AntLayout, AntLink,
+    AntList, AntListItem, AntListyItem, AntMasonry, AntMasonryItem, AntMentionOption, AntMentions,
+    AntMenu, AntMenuItem, AntMenuMode, AntMenuTrigger, AntMessage, AntMobileDrawer, AntModal,
+    AntNotification, AntPagination, AntParagraph, AntPopconfirm, AntPopover, AntProgress,
+    AntQrCode, AntRadio, AntRadioGroup, AntRate, AntResolvedToken, AntResult, AntRow, AntSegmented,
+    AntSegmentedOption, AntSelect, AntSider, AntSkeleton, AntSlider, AntSpace, AntSpin,
+    AntSplitter, AntStatistic, AntStep, AntSteps, AntSwitch, AntTab, AntTable, AntTableColumn,
+    AntTableRow, AntTabs, AntTag, AntText, AntTheme, AntTimePicker, AntTimeline, AntTimelineItem,
+    AntTitle, AntTokenLayer, AntTokenValue, AntTooltip, AntTour, AntTourStep, AntTransfer,
+    AntTransferItem, AntTree, AntTreeNode, AntTreeSelect, AntTypography, AntUpload, AntUploadFile,
+    AntWatermark, AvatarShape, AvatarSize, ControlSize, DrawerPlacement, FlexAlign, FlexJustify,
+    FloatShape, FloatVariant, FormRule, FormSchema, GridBreakpoint, InputStatus, InputVariant,
+    ListSize, ListySlot, NoticeTone, ResultStatus, SpaceSize, StepStatus, TableSort, TabsVariant,
+    TextTone, TimelineMode, TimelineTone, Tone, UploadStatus, ant_listy, apply_mention,
+    listy_slots,
 };
 #[cfg(target_family = "wasm")]
 use gpui_kit::App;
@@ -155,15 +155,11 @@ pub const COMPONENTS: &[&str] = &[
     "Segmented",
     "TimePicker",
     "AutoComplete",
-    "Affix",
     "Anchor",
-    "App",
     "BorderBeam",
     "Carousel",
     "Cascader",
     "ColorPicker",
-    "ConfigProvider",
-    "Image",
     "Listy",
     "Masonry",
     "Mentions",
@@ -336,7 +332,6 @@ pub struct Gallery {
     mentions_input: Entity<InputState>,
     anchor_key: String,
     carousel_index: usize,
-    image_open: bool,
     tour_index: usize,
     tour_open: bool,
     transfer_target: BTreeSet<String>,
@@ -588,7 +583,6 @@ impl Gallery {
             mentions_input,
             anchor_key: "overview".into(),
             carousel_index: 0,
-            image_open: false,
             tour_index: 0,
             tour_open: true,
             transfer_target: BTreeSet::new(),
@@ -614,10 +608,6 @@ impl Gallery {
         });
         let carousel = cx.listener(|this, index: &usize, _, cx| {
             this.carousel_index = *index;
-            cx.notify();
-        });
-        let image = cx.listener(|this, open: &bool, _, cx| {
-            this.image_open = *open;
             cx.notify();
         });
         let tour = cx.listener(|this, index: &usize, _, cx| {
@@ -689,41 +679,6 @@ impl Gallery {
             cx.notify();
         });
         match name {
-            "ConfigProvider" => div()
-                .flex()
-                .flex_col()
-                .gap(px(12.))
-                .child(label(
-                    "Config is an explicit value. GPUI has no React context.",
-                    t,
-                ))
-                .child(
-                    AntConfigProvider::new(
-                        AntConfig::new(t)
-                            .size(ControlSize::Large)
-                            .direction(AntDirection::Ltr),
-                    )
-                    .child(AntText::new("Provider surface uses the config theme.").theme(t)),
-                )
-                .into_any_element(),
-            "App" => AntApp::new(AntConfig::new(t))
-                .child(
-                    AntText::new(
-                        "AntApp paints the config surface. Message stays an imperative toast.",
-                    )
-                    .theme(t),
-                )
-                .into_any_element(),
-            "Affix" => AntAffix::new()
-                .theme(t)
-                .offset(0.)
-                .child(AntText::new("Pinned in this parent, not the viewport.").theme(t))
-                .body(
-                    AntText::new("Scroll content sits under the bar.")
-                        .theme(t)
-                        .tone(TextTone::Secondary),
-                )
-                .into_any_element(),
             "Anchor" => AntAnchor::new("anchor-demo")
                 .theme(t)
                 .active(self.anchor_key.clone())
@@ -801,11 +756,6 @@ impl Gallery {
                 ))
                 .on_change(move |index, window, cx| tour(&index, window, cx))
                 .on_close(move |window, cx| tour_close(&(), window, cx))
-                .into_any_element(),
-            "Image" => AntImage::new("image-demo", "Preview")
-                .theme(t)
-                .open(self.image_open)
-                .on_open(move |open, window, cx| image(&open, window, cx))
                 .into_any_element(),
             "Listy" => {
                 let items = vec![
@@ -4641,12 +4591,12 @@ impl Render for Gallery {
             "List" => self.list_demo(t),
             "Calendar" => self.calendar_demo(t),
             "FloatButton" => self.float_button_demo(t, cx),
-            "Affix" | "Anchor" | "App" | "BorderBeam" | "Carousel" | "Cascader" | "ColorPicker"
-            | "ConfigProvider" | "Image" | "Listy" | "Masonry" | "Mentions" | "QRCode"
-            | "Splitter" | "Tour" | "Transfer" | "TreeSelect" | "Upload" | "Watermark" => {
-                self.catalog_demo(route, t, cx)
-            }
-            _ => self.button_demo(t, cx),
+            "Anchor" | "BorderBeam" | "Carousel" | "Cascader" | "ColorPicker" | "Listy"
+            | "Masonry" | "Mentions" | "QRCode" | "Splitter" | "Tour" | "Transfer"
+            | "TreeSelect" | "Upload" | "Watermark" => self.catalog_demo(route, t, cx),
+            _ => AntText::new("Component unavailable. See docs/COMPONENT_SUPPORT.md.")
+                .theme(t)
+                .into_any_element(),
         };
         div()
             .id("gallery-root")
@@ -4735,6 +4685,11 @@ mod icon_preview_tests {
         for name in COMPONENTS {
             let route = format!("ThemeLab|colorPrimary=1677ff|scene=single|preview={name}");
             assert_eq!(theme_preview_target(&route), Some(*name));
+        }
+        for name in ["Affix", "App", "ConfigProvider", "Image"] {
+            assert!(!COMPONENTS.contains(&name));
+            let route = format!("ThemeLab|scene=single|preview={name}");
+            assert_eq!(theme_preview_target(&route), None);
         }
         assert_eq!(
             theme_preview_target("ThemeLab|scene=single|preview=NotAComponent"),

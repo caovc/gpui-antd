@@ -1,3 +1,5 @@
+import { PUBLIC_COMPONENTS } from './component-names.js';
+
 /**
  * Token Studio: DOM editing UI around the REAL Rust GPUI/WASM ThemeLab.
  * Never substitute DOM components for the GPU preview.
@@ -132,7 +134,7 @@ function previewParam(state,scene='components',selectedComponent='Button'){
   if(scene==='tokens')parts.push('scene=tokens');
   if(scene==='single'){
     // Strict allowlist: never forward arbitrary editor text as a gallery route.
-    const target=COMPONENTS.includes(selectedComponent)?selectedComponent:'Button';
+    const target=PUBLIC_COMPONENTS.includes(selectedComponent)?selectedComponent:'Button';
     parts.push('scene=single','preview='+target);
   }
   for(const [layer,values] of [['map',state.map],['alias',state.alias]])
@@ -261,8 +263,8 @@ export function themeDesignerHtml(){
     '<p class="theme-caption">Alias overrides apply after Map derivation and before component-specific values.</p>'+
     '<div id="theme-alias-fields" class="token-form-grid"></div></details>'+
     '<details open><summary>Component Token · independent overrides</summary>'+
-    '<p class="theme-caption">All 53 namespaces can be exported. Only fields marked Live are connected to the Rust renderer; unimplemented fields cannot be edited here.</p>'+
-    '<label>Component<select id="theme-component">'+COMPONENTS.map(x=>
+    '<p class="theme-caption">'+PUBLIC_COMPONENTS.length+' native previews; '+COMPONENTS.length+' token namespaces can be exported. Only fields marked Live are connected to the Rust renderer; unimplemented fields cannot be edited here.</p>'+
+    '<label>Component<select id="theme-component">'+PUBLIC_COMPONENTS.map(x=>
       '<option value="'+x+'">'+x+'</option>').join('')+'</select></label>'+
     '<p id="theme-coverage" class="theme-coverage"></p>'+
     '<div id="theme-fields" class="token-form-grid"></div>'+
@@ -327,7 +329,9 @@ export function initThemeDesigner(base){
     const live=COVERAGE[component]||[];
     $('#theme-coverage').textContent=live.length?
       component+': '+live.length+' live native token fields. Other fields are not implemented.':
-      component+': namespace registered, but native component token adoption is not implemented.';
+      COMPONENTS.includes(component)?
+      component+': namespace registered, but native component token adoption is not implemented.':
+      component+': native preview only; component token overrides are unavailable.';
     fields.innerHTML=FIELDS.map(([key,label,type])=>{
       const enabled=Object.hasOwn(config,key);
       const supported=live.includes(key);

@@ -101,14 +101,14 @@ pub use list::{AntList, AntListItem, ListSize};
 
 pub use calendar::AntCalendar;
 pub use catalog::{
-    AntAffix, AntAnchor, AntAnchorLink, AntApp, AntBorderBeam, AntCarousel, AntCarouselSlide,
-    AntCascader, AntCascaderOption, AntColorPicker, AntConfig, AntConfigProvider, AntDirection,
-    AntImage, AntListyItem, AntMasonry, AntMasonryItem, AntMentionOption, AntMentions, AntQrCode,
-    AntSplitter, AntTour, AntTourStep, AntTransfer, AntTransferItem, AntTreeSelect, AntUpload,
-    AntUploadFile, AntWatermark, ListySlot, QrMatrix, UploadStatus, ant_listy, apply_mention,
-    carousel_index, cascader_column, cascader_labels, cascader_select, hsv_to_rgb, listy_slots,
-    masonry_columns, mention_matches, mention_query, next_anchor_index, parse_hex, qr_matrix,
-    tour_index, transfer_move, tree_select_title, upload_accepted, upload_without, watermark_count,
+    AntAnchor, AntAnchorLink, AntBorderBeam, AntCarousel, AntCarouselSlide, AntCascader,
+    AntCascaderOption, AntColorPicker, AntListyItem, AntMasonry, AntMasonryItem, AntMentionOption,
+    AntMentions, AntQrCode, AntSplitter, AntTour, AntTourStep, AntTransfer, AntTransferItem,
+    AntTreeSelect, AntUpload, AntUploadFile, AntWatermark, ListySlot, QrMatrix, UploadStatus,
+    ant_listy, apply_mention, carousel_index, cascader_column, cascader_labels, cascader_select,
+    hsv_to_rgb, listy_slots, masonry_columns, mention_matches, mention_query, next_anchor_index,
+    parse_hex, qr_matrix, tour_index, transfer_move, tree_select_title, upload_accepted,
+    upload_without, watermark_count,
 };
 pub use float_button::{
     AntFloatAction, AntFloatButton, AntFloatButtonGroup, FloatShape, FloatVariant, float_offset,
