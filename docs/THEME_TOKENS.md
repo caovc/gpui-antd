@@ -64,6 +64,44 @@ Global themes are **copyable Rust values**, passed via each component's
 `cx.notify()`. The library deliberately does not imply that nested
 `ConfigProvider` inheritance or live CSS variables already exist.
 
+## Kit application theme bridge
+
+After `gpui_kit::init(cx)`, call `theme.apply_to_kit(cx)` during application
+initialization and explicit theme changes. Continue passing `.theme(theme)`
+to Ant wrappers. Kit-backed interiors (Tabs, editors, calendars and popup
+infrastructure) also read Kit's application theme; the Gallery now applies
+the same resolved Rust theme to that layer before creating view state.
+Token Studio's exported Rust includes the explicit application call.
+
+The operation affects all windows in one `App`; it is not a scoped provider
+and must not run in `Render`/`RenderOnce`. A single application theme owner
+coordinates its windows. Kit appearance changes load Kit's registered palette;
+the bridge then maps these existing Ant roles using `Theme::update`:
+
+| Kit roles | Ant source |
+| --- | --- |
+| Background / foreground | `surface` / `text` |
+| Primary, hover, active / foreground | `primary`, `primary_hover`, `primary_active` / bright `layout_dark_text` |
+| Secondary and muted surfaces / foreground | `surface_secondary` / `text` or `text_secondary` |
+| Secondary interaction / accent surfaces | `primary_bg` |
+| Accent foreground / focus ring | `primary` |
+| Popover surface / foreground | `bg_elevated` / `text` |
+| Border / input border | `border` |
+| Text selection | `primary_bg` |
+| Tab bar and segmented bar / active surface | `surface_secondary` / `surface` |
+| Tab foreground / selected foreground | `text` / `primary` |
+
+Both solid colors and renderable background tokens are written, including
+replacement of an existing same-representative-color Kit gradient with the
+requested Ant solid. Kit then synchronizes its Base projection and refreshes
+windows. Context tests cover repeated light/dark/custom application and this
+gradient case; a real window verifies retained editor text/focus and Tabs.
+
+Unmapped palette roles, typography, spacing, radii, shadows and motion follow
+Kit's configuration. This adds no new native token, JSON field or derivation
+algorithm; the import format remains `gpui-antd-theme-v1`. Scoped providers,
+locale, direction, size and disabled inheritance remain roadmap work (#3).
+
 ## Derived Map and Alias override layers
 
 `AntTheme::from_seed` resolves a Seed into native GPUI Map and Alias tokens.

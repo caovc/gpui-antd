@@ -56,9 +56,11 @@ practical OS screen-reader announcements and official Ant Design screenshot
 comparisons remain open. Chromium comparisons check behavior across states,
 not equivalence to an official reference. Issue #6 stays open.
 
-The dark Gallery screenshot also shows an existing theme mismatch: Kit-owned
-tab colors follow the Kit application theme, while `.theme(AntTheme::dark())`
-sets wrapper/panel colors. Card/Segmented backgrounds and some labels/icons
-therefore still have poor dark contrast. Both-theme interaction tests do not
-certify dark visual parity. A Kit/Ant application-theme bridge needs its own
-coverage across the Gallery's other Kit-backed components.
+The earlier dark Gallery mismatch came from Kit-owned tab colors using the
+Kit application theme while wrapper/panel colors used Ant dark tokens.
+`AntTheme::apply_to_kit(cx)` now explicitly synchronizes application appearance
+and shared colors; Gallery calls it before constructing state. Pixel checks
+reject bright Card/Segmented bands and invisible unselected icons in dark mode,
+and verify Ant primary selection at desktop/mobile widths and custom Token
+Studio colors. This fixes those observed regressions; official per-variant,
+per-size reference comparisons and practical accessibility remain open.

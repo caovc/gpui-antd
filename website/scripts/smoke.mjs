@@ -14,8 +14,14 @@ import { fileURLToPath } from 'node:url';
 import { checkIconSources } from './icon-source-smoke.mjs';
 import { checkIconPreviewRecovery } from './icon-preview-smoke.mjs';
 import { checkTabsInteractions } from './tabs-smoke.mjs';
+import { checkKitTheme } from './kit-theme-smoke.mjs';
 
 const root = new URL('../', import.meta.url);
+const port = Number(process.env.GPUI_SMOKE_PORT ?? 4173);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  throw new Error('GPUI_SMOKE_PORT must be an integer between 1 and 65535');
+}
+const base = 'http://127.0.0.1:' + port + '/gpui-antd/';
 const screenshots = join(process.env.RUNNER_TEMP ?? '/tmp', 'gpui-antd-smoke');
 await mkdir(screenshots, { recursive: true });
 
@@ -23,7 +29,7 @@ await mkdir(screenshots, { recursive: true });
 // while its Vite grandchild keeps inherited stdio pipes open forever, causing
 // an otherwise successful smoke test to hang until the workflow timeout.
 const viteCli = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
-const server = spawn(process.execPath, [viteCli, 'preview', '--host', '127.0.0.1', '--port', '4173', '--strictPort'], {
+const server = spawn(process.execPath, [viteCli, 'preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {
   cwd: fileURLToPath(root),
   stdio: ['ignore', 'pipe', 'pipe'],
   env: { ...process.env, CI: '1' },
@@ -32,15 +38,18 @@ let serverLog = '';
 server.stdout.on('data', chunk => { serverLog += chunk.toString(); });
 server.stderr.on('data', chunk => { serverLog += chunk.toString(); });
 
-const base = 'http://127.0.0.1:4173/gpui-antd/';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function serverReady() {
   for (let i = 0; i < 90; i++) {
     if (server.exitCode !== null) throw new Error('Preview server exited early: ' + serverLog);
     try {
-      const res = await fetch(base);
-      if (res.ok) return;
+      // A different project's existing server may return 200 before this
+      // strict-port child reports its bind failure. Wait for *our* Vite URL.
+      if (serverLog.includes(base)) {
+        const res = await fetch(base);
+        if (res.ok && server.exitCode === null) return;
+      }
     } catch {}
     await sleep(500);
   }
@@ -660,6 +669,7 @@ try {
   }
 
   try {
+    await checkKitTheme(browser,base,screenshots);
     await checkTabsInteractions(browser,base,screenshots);
   } catch (error) {
     failures++;

@@ -114,6 +114,12 @@ disabled styling, state backgrounds, control height and border radius.
 It has `light()` and `dark()` constructors; both are values, not a global
 React-style context. Pass `.theme(t)` to each wrapper until a tested theme
 provider is introduced.
+For Kit-backed interiors, applications explicitly call `t.apply_to_kit(cx)`
+after Kit initialization and on theme changes. This synchronizes the Kit
+application appearance/shared colors, background tokens and Base projection
+across all windows. Gallery does so before creating its widget state. The
+operation belongs to application updates; stateless renders do not mutate the
+global theme. Full scoped ConfigProvider inheritance remains open (#3).
 
 Baseline:
 - primary light blue `#1677ff`, middle control height **32 px**;
