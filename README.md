@@ -165,10 +165,16 @@ tab icons, scrolling and existing Kit animation. Each enabled tab has
 an independent, stable GPUI focus handle; only the selected tab is in
 the keyboard Tab order. Left/Right/Home/End rove focus and request controlled
 selection (wrapping and skipping disabled tabs), while Enter/Space activate
-the focused tab. Kit supplies native Tab/TabList roles and selected/disabled
-semantics; the selected content has a labeled TabPanel role.
+the focused tab through GPUI's native key-up click, once per activation.
+Home/End can request a target already focused while the owner delays selection.
+Kit supplies native Tab/TabList roles and selected state; the selected content
+has a labeled TabPanel role. Disabled tabs reject input and are skipped, but
+Kit 0.7.3 does not expose their native disabled accessibility flag.
 Explicit per-tab aria-controls/aria-labelledby ID relationships and tested
 screen-reader announcements remain separate accessibility work.
+Native window interaction tests cover focus, callback counts, panel input and
+Tab order; Chromium checks actual WASM panels and a controlled switch in both
+themes. See [Tabs interaction verification](docs/TABS.md) for scope and limits.
 
 `AntTooltip` composes a theme-aware tooltip with GPUI Kit's native
 registered provider rather than absolute-positioned HTML. Hover and disabled

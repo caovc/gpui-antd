@@ -282,6 +282,7 @@ pub struct Gallery {
     paragraph_expanded: bool,
     tabs_index: usize,
     tabs_card_index: usize,
+    tabs_settings_checked: bool,
     layout_collapsed: bool,
     layout_mobile_open: bool,
     layout_selected: String,
@@ -525,6 +526,7 @@ impl Gallery {
             paragraph_expanded: false,
             tabs_index: 0,
             tabs_card_index: 1,
+            tabs_settings_checked: true,
             layout_collapsed: false,
             layout_mobile_open: false,
             layout_selected: "dashboard".into(),
@@ -4375,6 +4377,10 @@ impl Gallery {
             this.tabs_card_index = *next;
             cx.notify();
         });
+        let change_setting = cx.listener(|this, checked: &bool, _, cx| {
+            this.tabs_settings_checked = *checked;
+            cx.notify();
+        });
         div().flex().flex_col().gap(px(16.))
             .child(label("Line tabs · controlled state and panel content", theme))
             .child(div().text_color(theme.text_secondary).text_size(px(12.))
@@ -4395,7 +4401,9 @@ impl Gallery {
                         .icon(AntIconName::SettingOutlined)
                         .content(div().flex().flex_col().gap(px(10.))
                             .child("Settings panel")
-                            .child(AntSwitch::new("tabs-settings-toggle").checked(true).theme(theme))))
+                            .child(AntSwitch::new("tabs-settings-toggle")
+                                .checked(self.tabs_settings_checked).theme(theme)
+                                .on_change(move |checked, window, cx| change_setting(&checked, window, cx)))))
                     .child(AntTab::new("Disabled")
                         .disabled(true)
                         .content(div().child("Should never activate")))
