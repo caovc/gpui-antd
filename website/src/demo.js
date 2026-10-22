@@ -4,6 +4,7 @@ const status = document.getElementById('status');
 const params = new URLSearchParams(location.search);
 const component = params.get('component') || 'Button';
 const dark = params.get('dark') === '1';
+const previewRequest = params.get('previewRequest');
 document.body.classList.toggle('dark', dark);
 
 const touchOnly = matchMedia('(hover: none) and (pointer: coarse)').matches;
@@ -35,7 +36,9 @@ try {
       if (canvas && canvas.width > 0 && canvas.height > 0) {
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         status.remove();
-        if(window.parent!==window)window.parent.postMessage({type:'gpui-antd:ready',component},location.origin);
+        if(window.parent!==window)window.parent.postMessage({
+          type:'gpui-antd:ready',component,previewRequest,url:location.href
+        },location.origin);
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -49,6 +52,6 @@ try {
   status.innerHTML = '<strong>Unable to start GPUI preview</strong><p></p>';
   status.querySelector('p').textContent = String(error?.message || error);
   if(window.parent!==window)window.parent.postMessage({
-    type:'gpui-antd:error',component,error:String(error?.message||error)
+    type:'gpui-antd:error',component,previewRequest,url:location.href,error:String(error?.message||error)
   },location.origin);
 }

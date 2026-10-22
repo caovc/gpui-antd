@@ -19,8 +19,12 @@ Keep selection, source links and Rust code in `icons-explorer.js`. A small
 `icon-preview.js` controller owns requested route, loading/ready/error state,
 one 60-second readiness deadline and cleanup. It reuses the real GPUI
 `gpui-antd:ready/error` messages. Accept readiness only from the current frame,
-same origin, expected component and exact loaded document URL, with a nonzero
+same origin, expected component, unique attempt token and exact sender/loaded
+document URLs, with a nonzero
 canvas and no startup overlay. A src assignment or load event is insufficient.
+Each navigation gets a `previewRequest` query value echoed by `demo.js` in
+both ready and error messages; even a queued error from an identical-route
+retry cannot fail the new attempt.
 
 Hide and make the previous frame inert while loading or failed. Preserve its
 layout, show progress and expose Retry after renderer failure or timeout.

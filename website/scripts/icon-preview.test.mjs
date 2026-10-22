@@ -4,6 +4,11 @@ import { createIconPreview, ICON_PREVIEW_TIMEOUT_MS } from '../src/icon-preview.
 
 const base = 'https://example.test/gpui-antd/';
 const route = name => base + 'demo.html?component=Icon%3A' + name + '&dark=0';
+function withoutAttempt(url) {
+  const value = new URL(url);
+  value.searchParams.delete('previewRequest');
+  return value.href;
+}
 
 function fixture() {
   let now = 0, next = 0;
@@ -34,14 +39,19 @@ function fixture() {
   const retry = Object.assign(new EventTarget(), { hidden: true });
   const status = { textContent: '', focus() { frame.ownerDocument.activeElement = this; } };
   const controller = createIconPreview(frame, status, retry);
+  function currentAttempt(url) {
+    return frame.src && withoutAttempt(frame.src) === url ? frame.src : url;
+  }
   function commit(url, { width = 128, height = 128, startup = false } = {}) {
-    frame.contentDocument = { URL: url, querySelector: selector =>
+    frame.contentDocument = { URL: currentAttempt(url), querySelector: selector =>
       selector === 'canvas' ? { width, height } : selector === '#status' && startup ? {} : null };
     frame.dispatchEvent(new Event('load'));
   }
   function message(url, { type = 'gpui-antd:ready', source = frame.contentWindow, origin = owner.location.origin } = {}) {
+    const sender = new URL(currentAttempt(url));
     for (const handler of messages) handler({ source, origin,
-      data: { type, component: new URL(url).searchParams.get('component') } });
+      data: { type, component: sender.searchParams.get('component'),
+        previewRequest: sender.searchParams.get('previewRequest'), url: sender.href } });
   }
   function tick(ms) {
     now += ms;
@@ -103,25 +113,26 @@ test('rapid selection ignores previous readiness and expired previous deadlines'
   f.controller.request(b);
   f.commit(a); f.message(a); oldDeadline();
   assert.equal(f.frame.dataset.previewState, 'loading');
-  assert.equal(f.requests.at(-1), b);
+  assert.equal(withoutAttempt(f.requests.at(-1)), b);
   f.commit(b); f.message(b);
   oldDeadline(); f.tick(ICON_PREVIEW_TIMEOUT_MS);
   assert.equal(f.frame.dataset.previewState, 'ready');
   f.controller.destroy();
 });
 
-test('reselecting the desired icon retries cancelled navigation despite identical src', () => {
+test('reselecting the desired icon retries cancellation despite an unchanged desired route', () => {
   const f = fixture(), a = route('SearchOutlined'), b = route('CiTwoTone');
   f.controller.request(a); f.commit(a); f.message(a);
   f.controller.request(b); // cancellation leaves the actual document at a
-  assert.equal(f.frame.src, b);
-  assert.equal(f.frame.contentDocument.URL, a);
+  assert.equal(withoutAttempt(f.frame.src), b);
+  assert.equal(withoutAttempt(f.frame.contentDocument.URL), a);
   assert.equal(f.frame.inert, true);
   f.message(a);
   assert.equal(f.frame.dataset.previewState, 'loading');
   assert.equal(f.controller.request(b), false); // duplicate settings event
   assert.equal(f.controller.request(b, { retry: true }), true);
-  assert.deepEqual(f.requests, [a, b, b]);
+  assert.deepEqual(f.requests.map(withoutAttempt), [a, b, b]);
+  assert.notEqual(f.requests[1], f.requests[2]);
   f.commit(b); f.message(b);
   assert.equal(f.frame.dataset.previewState, 'ready');
   f.controller.destroy();
@@ -142,7 +153,8 @@ test('readiness deadline offers retry and keeps the stale canvas inert', () => {
   assert.equal(f.frame.ownerDocument.activeElement, f.status);
   assert.equal(f.frame.dataset.previewState, 'loading');
   assert.equal(f.retry.hidden, true);
-  assert.deepEqual(f.requests, [a, a]);
+  assert.deepEqual(f.requests.map(withoutAttempt), [a, a]);
+  assert.notEqual(f.requests[0], f.requests[1]);
   f.commit(a); f.message(a);
   assert.equal(f.frame.dataset.previewState, 'ready');
   f.controller.destroy();
@@ -174,6 +186,23 @@ test('late valid paint resolves a timeout without accepting any previous route',
   assert.equal(f.frame.dataset.previewState, 'ready');
   assert.equal(f.retry.hidden, true);
   assert.equal(f.frame.ownerDocument.activeElement, f.status);
+  f.controller.destroy();
+});
+
+test('an error queued by an earlier same-route retry cannot fail the new attempt', () => {
+  const f = fixture(), a = route('CiTwoTone');
+  f.controller.request(a);
+  const previous = f.frame.src;
+  f.commit(a, { startup: true });
+  f.controller.request(a, { retry: true });
+  f.commit(a, { startup: true });
+  f.message(previous, { type: 'gpui-antd:error' });
+  assert.equal(f.frame.dataset.previewState, 'loading');
+  f.commit(a);
+  f.message(previous);
+  assert.equal(f.frame.dataset.previewState, 'loading');
+  f.message(a);
+  assert.equal(f.frame.dataset.previewState, 'ready');
   f.controller.destroy();
 });
 

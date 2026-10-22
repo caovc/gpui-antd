@@ -6,6 +6,7 @@ export function createIconPreview(frame, status, retry) {
   const document = frame.ownerDocument;
   const owner = document.defaultView;
   let target = '';
+  let documentUrl = '';
   let phase = 'idle';
   let attempt = 0;
   let timer;
@@ -18,7 +19,7 @@ export function createIconPreview(frame, status, retry) {
   function painted() {
     const doc = currentDocument();
     const canvas = doc?.querySelector('canvas');
-    return doc?.URL === target && canvas?.width > 0 && canvas?.height > 0 &&
+    return doc?.URL === documentUrl && canvas?.width > 0 && canvas?.height > 0 &&
       !doc.querySelector('#status');
   }
 
@@ -69,12 +70,15 @@ export function createIconPreview(frame, status, retry) {
     }
     target = href;
     attempt++;
+    const navigation = new URL(href);
+    navigation.searchParams.set('previewRequest', String(attempt));
+    documentUrl = navigation.href;
     show('loading', 'Loading icon preview…');
     armDeadline();
     // An active inspector request must start even while the old frame is
     // hidden. Reassigning the same URL intentionally retries cancellation.
     frame.loading = 'eager';
-    frame.src = href;
+    frame.src = documentUrl;
     return true;
   }
 
@@ -82,9 +86,10 @@ export function createIconPreview(frame, status, retry) {
     if (disposed || !target || !frame.isConnected) return;
     if (event.origin !== owner.location.origin || event.source !== frame.contentWindow) return;
     if (event.data?.component !== new URL(target).searchParams.get('component')) return;
+    if (event.data?.previewRequest !== String(attempt) || event.data?.url !== documentUrl) return;
     // WindowProxy identity survives iframe navigations. Also verify the
     // actual loaded document, including all color/size/theme parameters.
-    if (currentDocument()?.URL !== target) return;
+    if (currentDocument()?.URL !== documentUrl) return;
     if (event.data?.type === 'gpui-antd:ready' && painted()) {
       clearDeadline();
       show('ready', 'Preview ready');

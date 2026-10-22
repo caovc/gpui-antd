@@ -97,7 +97,8 @@ Chromium smoke checks selection, keyboard access and theme/mobile rendering.
 The inspector requests its selected preview eagerly and exposes
 loading/ready/error state through `icon-preview.js`. A `src` assignment or a
 load event is insufficient: readiness requires the current frame's
-same-origin GPUI message, expected component, exact document URL, nonzero
+same-origin GPUI message, expected component, unique `previewRequest` attempt,
+sender and actual document URLs, nonzero
 canvas and removed startup overlay. Old canvases are hidden and inert during
 navigation. A 60-second readiness deadline offers **Retry preview**;
 reselecting the desired icon also retries a cancelled navigation. Healthy
