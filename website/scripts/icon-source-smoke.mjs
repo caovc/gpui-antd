@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 
+async function waitForIconPreview(page) {
+  await page.locator('#icon-live-preview').scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => {
+    const frame = document.querySelector('#icon-live-preview');
+    const doc = frame?.contentDocument;
+    return doc?.URL === frame.src && doc.querySelector('canvas')?.width > 0 &&
+      !doc.querySelector('#status');
+  }, null, { timeout: 60000 });
+}
+
 // Used by full smoke and the focused local QA run. Every preview remains
 // the production Rust/WASM iframe; only provenance navigation is DOM UI.
 export async function checkIconSources(browser, base, screenshots) {
@@ -45,33 +55,30 @@ export async function checkIconSources(browser, base, screenshots) {
         assert.ok(decodeURIComponent(src).includes('Icon:' + name));
         assert.equal(new URL(src, base).searchParams.get('dark'), dark ? '1' : '0');
       }
-      // WASM initialization focuses its canvas. Wait for the selected frame
-      // before testing the surrounding documentation's keyboard order.
-      await page.frameLocator('#icon-live-preview').locator('canvas').first()
-        .waitFor({ state: 'visible', timeout: 60000 });
-      await page.waitForFunction(() => {
-        const doc = document.querySelector('#icon-live-preview')?.contentDocument;
-        return doc?.querySelector('canvas')?.width > 0 && !doc.querySelector('#status');
-      }, null, { timeout: 60000 });
+      // A src change can leave the previous ready document visible until
+      // navigation commits. Match the current URL as well as canvas readiness
+      // so the new WASM startup cannot steal focus during the next assertion.
+      await waitForIconPreview(page);
       await page.locator('#icon-size').focus();
       await page.keyboard.press('Shift+Tab');
-      assert.equal(await source.evaluate(el => el === document.activeElement), true,
-        'Expected source link focus; got ' + await page.evaluate(() => document.activeElement?.outerHTML));
-      assert.equal(await source.evaluate(el => getComputedStyle(el).outlineStyle), 'solid');
+      const focus = await source.evaluate(el => ({
+        active: el === document.activeElement,
+        visible: el.matches(':focus-visible'),
+        outline: getComputedStyle(el).outlineStyle,
+      }));
+      assert.deepEqual(focus, { active: true, visible: true, outline: 'solid' });
       const selectedSource = await source.getAttribute('href');
       await page.locator('#icon-size').selectOption('96');
+      await waitForIconPreview(page);
       await page.locator('#icon-spin').check();
+      await waitForIconPreview(page);
       await page.locator('#icon-primary').fill('#52c41a');
+      await waitForIconPreview(page);
       await page.locator('#icon-reset').click();
+      await waitForIconPreview(page);
       await page.locator('#icon-query').fill('no-icon-with-this-name');
       await page.locator('.icon-empty-results').waitFor();
       assert.equal(await source.getAttribute('href'), selectedSource);
-      await page.frameLocator('#icon-live-preview').locator('canvas').first()
-        .waitFor({ state: 'visible', timeout: 60000 });
-      await page.waitForFunction(() => {
-        const doc = document.querySelector('#icon-live-preview')?.contentDocument;
-        return doc?.querySelector('canvas')?.width > 0 && !doc.querySelector('#status');
-      }, null, { timeout: 60000 });
       await source.scrollIntoViewIfNeeded();
       const bounds = await source.boundingBox();
       assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= page.viewportSize().width);
@@ -79,6 +86,17 @@ export async function checkIconSources(browser, base, screenshots) {
       assert.deepEqual(errors, []);
       await page.screenshot({ path: join(screenshots, 'icon-source-' + (dark ? 'mobile-dark' : 'desktop-light') + '.png') });
       console.log('PASS: pinned icon source, keyboard selection/focus, empty search and real GPUI preview (' + (dark ? 'mobile dark' : 'desktop light') + ')');
+    } catch (error) {
+      console.error('Icon preview failure state:', await page.evaluate(() => {
+        const frame = document.querySelector('#icon-live-preview');
+        const doc = frame?.contentDocument;
+        return { target: frame?.src, documentUrl: doc?.URL,
+          status: doc?.querySelector('#status')?.textContent,
+          canvasWidth: doc?.querySelector('canvas')?.width,
+          focus: document.activeElement?.id };
+      }));
+      await page.screenshot({ path: join(screenshots, 'icon-source-failed-' + (dark ? 'mobile-dark' : 'desktop-light') + '.png') });
+      throw error;
     } finally {
       await page.close();
     }
