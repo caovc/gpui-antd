@@ -29,11 +29,15 @@ try {
   wasm.run(component, dark);
   // run_embedded starts asynchronous graphics initialization. A return from
   // wasm.run is NOT proof that rendering succeeded. Keep the status visible
-  // until a canvas has been inserted and has real dimensions.
+  // until both the canvas and GPUI Web's hidden IME textarea exist. The
+  // canvas can precede asynchronous GPU setup and ImeMirror::new, which
+  // focuses that textarea; acknowledging earlier ends host focus protection
+  // before keyboard initialization has actually completed.
   const waitForCanvas = async () => {
     for (let i = 0; i < 600; i++) {
       const canvas = document.querySelector('canvas');
-      if (canvas && canvas.width > 0 && canvas.height > 0) {
+      const keyboard = document.querySelector('body > textarea');
+      if (canvas && canvas.width > 0 && canvas.height > 0 && keyboard) {
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         status.remove();
         if(window.parent!==window)window.parent.postMessage({

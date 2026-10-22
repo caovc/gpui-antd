@@ -38,3 +38,15 @@ Official Ant Design reference screenshots, all accessibility ID relations and
 OS assistive-technology behavior remain open under #6 unless independently
 verified. This change must document exact results without closing that issue
 prematurely.
+
+## Full-suite finding: WASM readiness
+
+The full local suite passed Tabs but failed the existing mobile icon startup
+focus regression. Event tracing found ready delivered before GPUI's hidden
+IME textarea was created/focused. Source confirms canvas insertion precedes
+asynchronous GPU setup and `ImeMirror::new`. The icon regression now gates
+the actual IME DOM attachment after canvas creation; canvas-only readiness
+failed deterministically. `demo.js` must wait for both real artifacts before
+publishing ready, preserving the existing parent startup-focus guard. This is
+tracked by reopened #31 and included in the keyboard verification change;
+the initial production transport cancellation cause is still unknown.
