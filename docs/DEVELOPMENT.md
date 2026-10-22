@@ -94,6 +94,13 @@ at the pinned commit, including irregular names such as `CiTwoTone`.
 `cd website && npm run test:icons` checks all 848 links against
 the bundled assets and verifies invalid metadata cannot create a source link.
 Chromium smoke checks selection, keyboard access and theme/mobile rendering.
+Before asserting the documentation's focus ring, wait for the iframe's
+document URL to match its current `src` as well as a ready canvas. During a
+navigation the previous icon can still have a ready canvas; its readiness
+does not mean the new WASM instance has finished taking startup focus.
+Bring the lazy iframe into view and wait for each inspector edit's preview
+before moving on; changing filters can otherwise defer a pending navigation.
+Source-link assertion failures also archive a screenshot of the failing page.
 
 `npm run smoke` verifies component interactions plus animated TwoTone pixels
 at 2x device pixel ratio. Pages CI on PRs runs
