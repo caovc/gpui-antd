@@ -197,7 +197,10 @@ function rustCode(state){
     if(chain)lines.push('    .with_component(AntComponent::'+component+
       ', AntComponentToken::default()'+chain+')');
   }
-  lines.push('    ;');
+  lines.push('    ;','',
+    '// In application init or theme-change updates, after gpui_kit::init(cx):',
+    '// Applies shared Kit colors to every window; pass .theme(theme) to Ant controls.',
+    'theme.apply_to_kit(cx);');
   return lines.join('\n');
 }
 function renderLayerFields(layer,fields,values){

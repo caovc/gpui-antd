@@ -84,6 +84,18 @@ test('component scoped overrides remain independent in generated Rust',()=>{
   assert.match(code,/color_primary\(color\(0x12aa77\)\)/);
 });
 
+test('generated Rust applies the resolved theme at the application boundary',()=>{
+  const state=emptyTheme();
+  state.algorithm='dark';
+  state.components.Card={padding:'32'};
+  const code=rustCode(state);
+  assert.match(code,/AntThemeAlgorithm::Dark/);
+  assert.match(code,/application init or theme-change updates/);
+  assert.match(code,/every window/);
+  assert.ok(code.indexOf('theme.apply_to_kit(cx);')>code.indexOf('.with_component('));
+  assert.equal(code.match(/theme\.apply_to_kit\(cx\);/g).length,1);
+});
+
 test('Map and Alias layers roundtrip through JSON, preview URL and Rust API',()=>{
   const state=emptyTheme();
   state.seed.colorPrimary='#635bdf';

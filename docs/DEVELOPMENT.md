@@ -36,6 +36,10 @@ npm run smoke
 npm run dev
 ```
 
+Smoke defaults to `127.0.0.1:4173`. If another project owns that port, use
+`GPUI_SMOKE_PORT=4176 npm run smoke`. The strict-port child must announce its
+own Vite URL before readiness succeeds; another server's HTTP 200 is not proof.
+
 The browser `build-wasm.sh` may download a pinned IBM Plex Sans subset on
 first use and generates ignored `website/src/wasm/` bindings. Don't commit
 binary fonts or generated `*.wasm` artifacts. `Cargo.lock` is not currently
@@ -210,8 +214,14 @@ the GPUI gallery using `component=Icon:SearchOutlined`.
 
 Native CI:
 `cargo check --workspace` followed by `cargo test -p gpui-antd --lib`.
-The native workflow also runs `cargo test -p gpui-antd --test control_interactions --test menu_hover --test tabs_interactions`
+The native workflow also runs `cargo test -p gpui-antd --test control_interactions --test menu_hover --test tabs_interactions --test kit_theme`
 for pointer, keyboard, popup geometry and state regression coverage.
+`kit_theme` checks repeated Ant/Kit/Base palette synchronization, gradient
+replacement and a live editor retaining its value/focus through theme changes.
+Browser `kit-theme-smoke.mjs` checks painted Card/Segmented surfaces, icons,
+line/filled selection and custom Token Studio primary color at desktop and
+mobile widths. It rejects the earlier dark bright-band/black-label failure;
+these checks establish specific color regressions, not official image parity.
 The command label in the workflow might say "Unit tests (theme tokens)" but
 the command actually runs **all library unit tests**.
 

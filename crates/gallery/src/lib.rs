@@ -352,6 +352,15 @@ pub struct Gallery {
 
 impl Gallery {
     pub fn new(component: String, dark: bool, window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let theme_override = ThemeLabSpec::parse(&component, dark).map(|spec| spec.theme);
+        let theme = theme_override.unwrap_or_else(|| {
+            if dark {
+                AntTheme::dark()
+            } else {
+                AntTheme::light()
+            }
+        });
+        theme.apply_to_kit(cx);
         let input = cx.new(|cx| InputState::new(window, cx).placeholder("Type your message..."));
         let input_filled = cx.new(|cx| InputState::new(window, cx).placeholder("Filled input"));
         let input_borderless =
@@ -489,7 +498,6 @@ impl Gallery {
                 cx.notify();
             },
         ));
-        let theme_override = ThemeLabSpec::parse(&component, dark).map(|spec| spec.theme);
         Self {
             component,
             dark,

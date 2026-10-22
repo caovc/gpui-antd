@@ -22,6 +22,7 @@ mod icon_palette;
 pub mod icons;
 pub mod input;
 pub mod input_number;
+mod kit_theme;
 pub mod layout;
 pub mod list;
 pub mod menu;

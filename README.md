@@ -114,6 +114,18 @@ let save = AntButton::new("save", "Save")
 ```
 
 Initialize GPUI Kit (`gpui_kit::init(cx)`) before creating component views.
+For Kit-backed controls, synchronize the application theme at initialization
+and in theme-change updates, then pass the same value via `.theme(theme)`:
+
+```rust
+gpui_kit::init(cx);
+let theme = gpui_antd::AntTheme::dark();
+theme.apply_to_kit(cx);
+```
+
+`apply_to_kit` updates appearance and shared Kit colors across every window
+in the App. Call it from application updates. See the
+[theme bridge contract](docs/THEME_TOKENS.md#kit-application-theme-bridge).
 
 FormSchema provides deterministic Rust validation (required, length, email and
 matching fields). AntForm and AntFormItem use the same native GPUI input
@@ -175,6 +187,9 @@ screen-reader announcements remain separate accessibility work.
 Native window interaction tests cover focus, callback counts, panel input and
 Tab order; Chromium checks actual WASM panels and a controlled switch in both
 themes. See [Tabs interaction verification](docs/TABS.md) for scope and limits.
+The Gallery applies the Ant/Kit theme bridge before creating its stateful
+controls, so Kit-owned TabBar surfaces/icons and Token Studio primary colors
+follow the same Rust theme.
 
 `AntTooltip` composes a theme-aware tooltip with GPUI Kit's native
 registered provider rather than absolute-positioned HTML. Hover and disabled
