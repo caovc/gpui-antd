@@ -88,6 +88,13 @@ comparison of 848 icons remains future parity work.
 
 ## Full official icon visual-audit tool
 
+The icon explorer's **View upstream SVG** link uses the generated manifest's
+repository, revision and asset path. It opens the corresponding official SVG
+at the pinned commit, including irregular names such as `CiTwoTone`.
+`cd website && npm run test:icons` checks all 848 links against
+the bundled assets and verifies invalid metadata cannot create a source link.
+Chromium smoke checks selection, keyboard access and theme/mobile rendering.
+
 `npm run smoke` verifies component interactions plus animated TwoTone pixels
 at 2x device pixel ratio. Pages CI on PRs runs
 `npm run audit:icons -- --sample --dpr=2` to sample four real-GPUI icon grids
