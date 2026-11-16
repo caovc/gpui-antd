@@ -49,7 +49,7 @@ Ant Design-equivalent implementation still requires multiple release cycles.
 | Slider | Native Kit pointer/touch drag, value/range state, vertical/reverse, themed track, focusable single-value keyboard controls, caller-supplied track marks | Range keyboard thumbs, drag tooltip, custom handle formatting |
 | Segmented | Controlled selection, disabled options, official icon slots, Arrow/Home/End roving focus, block and size | Animated selection indicator and more exact Ant CSS geometry |
 | TimePicker | Persistent native segmented editor plus scrollable hour/minute/second and AM/PM popup columns, scroll-to-selected rows, keyboard edit, status/disabled | Presets, clear/null semantics, range selection, localization |
-| AutoComplete | InputState free-form text, filtered suggestion list, click/Enter/Escape, parent-controlled open/active | Anchored collision-aware popover (current panel is inline), outside click close, full ARIA combobox, virtualization |
+| AutoComplete | InputState free-form text, Base Popup suggestions, parent-controlled open/active/value, outside click, Tab and focus-loss close requests, clamped corner placement | Automatic corner flipping, full screen-reader relationships, virtualization |
 
 DatePicker retains Kit's calendar/preset panel and datetime editor so the
 parent-owned state's disabled-date rules remain authoritative. Its outer field
@@ -112,7 +112,7 @@ placement/arrow variants and keyboard-focus tooltip activation remain open.
 
 ## Next batches (dependency order)
 
-1. **Data-entry parity:** AutoComplete and TimePicker popup semantics, Slider
+1. **Data-entry parity:** TimePicker popup semantics, Slider
    range keyboard, InputNumber formatter/parser. Cascader, ColorPicker,
    Mentions and TreeSelect open through base Popover; search, Transfer search
    and the Upload file dialog are still open.
